@@ -20,7 +20,7 @@ labels directly.
 
 ### Secrets (build-time & runtime)
 
-- I4: **Secrets travel only via BuildKit `--mount=type=secret` and Podman secrets.** Never `ARG`, never `ENV`, never committed to the image or the repo. This invariant covers both build-time and runtime, so other specs need not restate it.
+- I4: **Secrets travel only via BuildKit `--mount=type=secret` (build-time) and `BW_SESSION` in the interactive shell (runtime).** Never `ARG`, never `ENV` in the Containerfile, never committed to the image or the repo, never in `.env`. The runtime `BW_SESSION` lives in the user's shell env only. See [`13-secret-management.md`](13-secret-management.md) §6 I-S3.
 
 ### Build (`Containerfile`)
 
@@ -43,13 +43,13 @@ labels directly.
 | Topic | File |
 |---|---|
 | Containerfile stage breakdown, layer ordering, acceptance criteria | [`21-container-build-flow.md`](21-container-build-flow.md) |
-| Build-time env vars (`HOST_UID`, `HOST_GID`, `JOBS`, `BW_ID`) | [`22-container-build-pre-required-envs.md`](22-container-build-pre-required-envs.md) |
-| Host pre-requirements (Bitwarden, rbw, chezmoi) | [`11-pre-required-env-values.md`](11-pre-required-env-values.md) |
+| Build-time env vars (`HOST_UID`, `HOST_GID`, `JOBS`) | [`22-container-build-pre-required-envs.md`](22-container-build-pre-required-envs.md) |
+| Host pre-requirements (Bitwarden `bw`, chezmoi) | [`11-pre-required-env-values.md`](11-pre-required-env-values.md) |
 | Make target contract | [`03-makefile.md`](03-makefile.md) |
 | Chezmoi-in-container gotchas (safe.directory, UID remap) | [`../references/2026-06-25-chezmoi-in-containers.md`](../references/2026-06-25-chezmoi-in-containers.md) |
 | Podman conventions used in this repo | [`../references/podman_defact_standard.md`](../references/podman_defact_standard.md) |
 
 ## Open questions
 
-- Q1: Is the container intended to be **disposable** (apply at every `up`) or **persistent** (apply once, bind home from host)? Closing this determines whether `chezmoi apply` lives in the build stage or the entrypoint.
+- Q1: ~~Is the container intended to be **disposable** (apply at every `up`) or **persistent** (apply once, bind home from host)?~~ **Resolved:** `chezmoi apply` runs at runtime (container start / interactive session), not during `make build`. The image stays secret-free. See [`13-secret-management.md`](13-secret-management.md) §5.
 - Q2: What is the policy for `paru` / AUR builds inside a non-root user namespace?

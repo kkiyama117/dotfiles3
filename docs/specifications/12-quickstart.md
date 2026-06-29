@@ -20,8 +20,9 @@ bind is mounted at `/home/$USERNAME`. See
 [`03-makefile.md`](03-makefile.md) and
 [`22-container-build-pre-required-envs.md`](22-container-build-pre-required-envs.md).
 
-The Bitwarden CLI choice (`bw` vs `rbw`) and per-item-ID secret list are
-still being decided; see [`11-pre-required-env-values.md`](11-pre-required-env-values.md).
+The Bitwarden CLI is `bw` (package `bitwarden-cli`); the per-item-ID secret
+list is being enumerated in [`11-pre-required-env-values.md`](11-pre-required-env-values.md).
+The secret-management design lives in [`13-secret-management.md`](13-secret-management.md).
 
 ## Local
 
@@ -81,7 +82,6 @@ make down
 | `HOST_UID`  | `id -u` (auto)   | yes              | passed as `--build-arg` |
 | `HOST_GID`  | `id -g` (auto)   | yes              | passed as `--build-arg` |
 | `JOBS`      | env (default `1`)| no               | parallel build jobs |
-| `BW_ID`     | file path        | optional         | when the file exists it is mounted as a BuildKit secret named `bitwarden_id`. See [`22-container-build-pre-required-envs.md`](22-container-build-pre-required-envs.md) |
 | `IMAGE`     | Makefile default | no               | `localhost/dotfiles-manjaro:latest` |
 | `CONTAINER` | Makefile default | no               | `dotfiles-manjaro` |
 
@@ -92,14 +92,14 @@ make down
   whose `/home/$USERNAME` is the host bind dir but with no dotfiles applied.
   See [`21-container-build-flow.md`](21-container-build-flow.md).
 - `make gen-deps` — see [`08-automations.md`](08-automations.md).
-- **rbw / Bitwarden secret bind at runtime** — `make up` currently only
-  bind-mounts the home dir. The plan is to also bind the host `rbw`
-  config/session so chezmoi templates that call `rbw` resolve at apply time
-  inside the container. This is the runtime counterpart to the build-time
-  `BW_ID` BuildKit secret (see
-  [`22-container-build-pre-required-envs.md`](22-container-build-pre-required-envs.md)
-  and [`11-pre-required-env-values.md`](11-pre-required-env-values.md)).
-  Gated on Layer 2 landing.
+- **Bitwarden auth + `chezmoi apply` at runtime** — `make up` currently
+  only bind-mounts the home dir. The plan is to run `bw login --apikey` +
+  `bw unlock` (setting `BW_SESSION`) then `chezmoi apply` inside the
+  container at start, so chezmoi templates that call `bitwarden*` resolve
+  at apply time. The image stays secret-free. See
+  [`13-secret-management.md`](13-secret-management.md) and
+  [`11-pre-required-env-values.md`](11-pre-required-env-values.md).
+  Gated on Layer 2 / runtime-apply landing.
 
 ## Reference
 

@@ -58,9 +58,10 @@ the map of which top-level path serves which concern.
   (`make gen-deps`); hand-editing generated files violates I8 in
   [`20-container-rules.md`](20-container-rules.md).
 - **I-FS4: secrets never live in the repo tree.** `.env` carries only
-  non-secret machine config (`USERNAME`); secrets travel via the `$(BW_ID)`
-  file path + BuildKit secret mount (I4 in
-  [`20-container-rules.md`](20-container-rules.md), and
+  non-secret machine config (`USERNAME`); secrets are sourced at runtime
+  from Bitwarden via `bw` (`BW_SESSION` in the shell env) — never in the
+  repo or image (I4 in [`20-container-rules.md`](20-container-rules.md),
+  [`13-secret-management.md`](13-secret-management.md), and
   [`22-container-build-pre-required-envs.md`](22-container-build-pre-required-envs.md)).
 - **I-FS5: `docs/` is placement-governed by
   [`00-document-management.md`](00-document-management.md).** No ad-hoc files

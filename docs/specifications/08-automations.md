@@ -10,9 +10,10 @@
 | Name | Status | Trigger | Inputs | Outputs |
 |---|---|---|---|---|
 | dependency generation | active | `make gen-deps` | `dependencies/packages.toml` | `dependencies/layer_<N>/<manager>.txt` (layers >= 1; `pacman`/`paru`/`nix`/`uv`) + AUTO-GEN block in [`02-installed-programs.md`](02-installed-programs.md) |
-| container build | active | `make build` | `Containerfile`, `dependencies/layer_<N>/<manager>.txt`, `HOST_UID`/`HOST_GID`, `BW_ID` | Podman image |
-| chezmoi deploy (host) | manual | `chezmoi apply` | repo source + Bitwarden secrets via `rbw` | `~` files |
-| chezmoi deploy (container) | planned | container entrypoint or build stage | repo source + BuildKit secret `bitwarden_id` | `$HOME` files inside image / bind |
+| container build | active | `make build` | `Containerfile`, `dependencies/layer_<N>/<manager>.txt`, `HOST_UID`/`HOST_GID` | Podman image |
+| bitwarden auth | planned | `make bw-login` | `BW_CLIENTID`/`BW_CLIENTSECRET` (shell env) | `BW_SESSION` in shell env |
+| chezmoi deploy (host) | manual | `chezmoi apply` | repo source + Bitwarden secrets via `bw` | `~` files |
+| chezmoi deploy (container) | planned | `make apply` (runtime, not build) | repo source + runtime `BW_SESSION` | `$HOME` files in bind mount (image secret-free) |
 
 ## Acceptance contracts
 
@@ -32,7 +33,7 @@ See [`21-container-build-flow.md`](21-container-build-flow.md) for stage invaria
 ### chezmoi deploy
 
 - The host path is documented in [`12-quickstart.md` § Local](12-quickstart.md#local).
-- The container path is open (see Q1 in [`21-container-build-flow.md`](21-container-build-flow.md)).
+- The container path runs at runtime via `make apply` (not build); see [`13-secret-management.md`](13-secret-management.md) §5.
 
 ## Out of scope
 

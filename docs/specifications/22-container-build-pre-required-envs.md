@@ -13,7 +13,6 @@
 | `HOST_GID` | `id -g` (Makefile resolves) | yes | — | same as above |
 | `USERNAME` | `.env` (gitignored, repo-root) | yes (build, up) | — | passed as `--build-arg`. The `Containerfile` renames the base image's `builder` account to this name and sets `/home/$USERNAME` as the home dir; `make up` bind-mounts `container/bind/home_dir/` at the same path. `make build` and `make up` fail fast with `"USERNAME is not set"` if absent. |
 | `JOBS`     | env, overridable by `make JOBS=N` | no | `1` | `podman build --jobs` |
-| `BW_ID`    | path to a file containing the Bitwarden item ID | conditional | `TEST` (placeholder) | When the file at `$BW_ID` exists, it is mounted as the BuildKit secret `bitwarden_id`. When it does not exist, the build still succeeds but any layer that consumes `bitwarden_id` will fail. |
 
 ### `.env` contract
 
@@ -25,19 +24,18 @@ file is gitignored, per-machine, and uses `KEY=VALUE` shell syntax.
 USERNAME=kiyama
 ```
 
-`.env` MUST NOT carry secrets — secrets travel via `$(BW_ID)` file + BuildKit
-secret mount only.
+`.env` MUST NOT carry secrets — runtime secrets (`BW_CLIENTID`,
+`BW_CLIENTSECRET`, `BW_SESSION`) live in the interactive shell env only;
+see [`13-secret-management.md`](13-secret-management.md).
 
-## `BW_ID` contract
+## Removed: `BW_ID` build-time mechanism
 
-- The variable holds a **path**, not the ID itself. The contents of the
-  file are mounted at `/run/secrets/bitwarden_id` inside the build.
-- The contents must be a single Bitwarden item ID. Newlines are
-  trimmed; no surrounding whitespace.
-- File permissions: 0400 (BuildKit accepts 0600 but consumers in this
-  repo assume 0400).
-- Never commit a real `BW_ID` file. Default value `TEST` is intentionally
-  invalid so a missing file path is harmless.
+The previous `BW_ID` build-time BuildKit-secret mechanism (mounting a
+Bitwarden item-ID file at `/run/secrets/bitwarden_id`) has been
+**removed**. `chezmoi apply` now runs at runtime with `BW_SESSION` set in
+the interactive shell; the image is secret-free. See
+[`13-secret-management.md`](13-secret-management.md) §5 and the Makefile
+(`BW_ID` / `BW_SECRET` skeleton deleted).
 
 ## Related
 
