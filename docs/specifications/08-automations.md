@@ -11,7 +11,7 @@
 |---|---|---|---|---|
 | dependency generation | active | `make gen-deps` | `dependencies/packages.toml` | `dependencies/layer_<N>/<manager>.txt` (layers >= 1; `pacman`/`paru`/`nix`/`uv`) + AUTO-GEN block in [`02-installed-programs.md`](02-installed-programs.md) |
 | container build | active | `make build` | `Containerfile`, `dependencies/layer_<N>/<manager>.txt`, `HOST_UID`/`HOST_GID` | Podman image |
-| bitwarden auth | active | `make bw-login` | `BW_CLIENTID`/`BW_CLIENTSECRET` (shell env) | `BW_SESSION` in shell env |
+| bitwarden auth | manual | `bw login --apikey` + `bw unlock --raw` (shell) | `BW_CLIENTID`/`BW_CLIENTSECRET` (shell env) | `BW_SESSION` in shell env |
 | chezmoi deploy (host) | manual | `chezmoi apply` | repo source + Bitwarden secrets via `bw` | `~` files |
 | chezmoi deploy (container) | planned | `make apply` (runtime, not build) | repo source + runtime `BW_SESSION` | `$HOME` files in bind mount (image secret-free) |
 
