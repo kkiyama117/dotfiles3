@@ -1,0 +1,76 @@
+# Managed by chezmoi. Sourced by all zsh invocations (including non-interactive
+# subshells), so this is the right place for environment defaults that should
+# be visible to every process started from a zsh in the container.
+# And it should contain only the environment variables that are
+# common to all zsh invocations. If we can use it in other zsh config files,
+# (especially managed by `sheldon`), we should.
+
+# Secrets MUST NOT live here — chezmoi bakes this file into the image-bound
+# source tree at /var/lib/chezmoi-source. Use Podman secrets for credentials.
+
+################################################################################
+# PATH config(general)
+################################################################################
+: "PATH config" && {
+  ## Avoid duplicates
+  typeset -U path PATH manpath sudo_path
+
+  ## "SUDO" path config
+  ## references:
+  ## - https://github.com/clear-code/zsh.d/blob/master/zshenv
+
+  typeset -xT SUDO_PATH sudo_path
+
+  ## (N-/): 存在しないディレクトリは登録しない
+  ##    パス(...): ...という条件にマッチするパスのみ残す
+  ##            N: NULL_GLOBオプションを設定
+  ##               globがマッチしなかったり存在しないパスを無視する
+  ##            -: シンボリックリンク先のパスを評価
+  ##            /: ディレクトリのみ残す
+  sudo_path=({,/usr/pkg,/usr/local,/usr}/sbin(N-/))
+  if [[ ( -a /sbin/id) && ( $(/sbin/id -u) -eq 0 )]]; then
+      # rootの場合はsudo用のパスもPATHに加える。
+      path=($sudo_path $path)
+  else
+      # 一般ユーザーの場合はsudo時にsudo用のパスをPATHに加える。
+      alias sudo="sudo env PATH=\"$SUDO_PATH:$PATH\""
+      :
+  fi
+
+  ## Add ".local/bin" to path
+  path=($HOME/.local/bin(N-/) $path)
+}
+
+################################################################################
+# Env values config
+################################################################################
+: "Env config" && {
+  : "TERM" && {
+    ## TERM config
+    export TERM="${TERM:-xterm-256color}"
+  }
+  : "LANG, LC_ALL, TZ" && {
+    export LANG=ja_JP.UTF-8
+    #export LC_ALL=ja_JP.UTF-8
+    #export TZ=UTC
+  }
+  : "EDITOR, VISUAL, PAGER" && {
+    ## EDITOR and pager config; require `neovim` and `less`
+    export EDITOR="${EDITOR:-nvim}"
+    export VISUAL="${VISUAL:-nvim}"
+    export PAGER="${PAGER:-less}"
+  }
+}
+
+################################################################################
+# XDG config
+################################################################################
+: "XDG" && {
+  # --- XDG basics (resolve to runtime $HOME so bind-mounted dotfiles land right) ---
+  export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+  export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+  export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+  export GNUPGHOME="${GNUPGHOME:-$XDG_DATA_HOME/gnupg}"
+  export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
+  export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$UID}"
+}
