@@ -13,3 +13,15 @@ LABEL org.opencontainers.image.title="dotfiles-manjaro"
 #           it should be overridden when `chezmoi apply` is run again
 #           in the container.)
 FROM base AS no-config-base
+ARG HOST_UID
+ARG HOST_GID
+# Remap the existing `builder` user/group to the host uid/gid so
+# bind-mounted files keep correct ownership. manjarolinux/base already
+# ships builder at 1000:1000, so only change when it differs.
+RUN if [ "$(id -g builder)" != "${HOST_GID}" ]; then \
+        groupmod -g ${HOST_GID} builder; \
+    fi \
+ && if [ "$(id -u builder)" != "${HOST_UID}" ] || [ "$(id -g builder)" != "${HOST_GID}" ]; then \
+        usermod -u ${HOST_UID} -g ${HOST_GID} builder; \
+    fi
+USER builder
