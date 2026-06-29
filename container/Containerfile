@@ -7,15 +7,21 @@
 FROM docker.io/manjarolinux/base:latest AS base
 
 LABEL org.opencontainers.image.title="dotfiles-manjaro"
+LABEL org.opencontainers.image.description="Manjaro base image for testing dotfiles"
 
 # Layer 1-1: Get arguments from Outer ENV values
 ARG HOST_UID # GIVEN BY `Makefile` as a default
 ARG HOST_GID # GIVEN BY `Makefile` as a default
 ARG USERNAME # GIVEN BY `.env` (required; build fails if not set)
 
-# Layer 1-2: install the user's shell (zsh) so `make exec` works.
+# Layer 1-2: seed a Japan-optimized pacman mirrorlist, then install base packages.
 
+# Install the curated mirrorlist from the build context
+# (bind/layer_1_files/pacman_mirrorlist) as /etc/pacman.d/mirrorlist so every
+# subsequent `pacman -Sy` uses fast Japan mirrors. This is a pacman-mirrors
+# "custom mirrorlist"; reset with `pacman-mirrors -c all` / `-id`.
 # Runs as root (the default until USER ${USERNAME} below).
+COPY bind/layer_1_files/pacman_mirrorlist /etc/pacman.d/mirrorlist
 RUN pacman -Sy --noconfirm --needed zsh \
  && rm -rf /var/cache/pacman/pkg/*
 
