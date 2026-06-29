@@ -38,7 +38,6 @@
 | `HOST_UID`  | int  | `$(id -u)` | passed as `--build-arg` |
 | `HOST_GID`  | int  | `$(id -g)` | passed as `--build-arg` |
 | `USERNAME`  | str  | — (required; sourced from `.env`) | passed as `--build-arg`; also drives the `up` bind target `/home/$(USERNAME)`. See [`11-pre-required-env-values.md`](11-pre-required-env-values.md). |
-| `BW_ID`     | path | `TEST` | mounted as BuildKit secret `bitwarden_id` when the file exists. See [`22-container-build-pre-required-envs.md`](22-container-build-pre-required-envs.md). |
 | `IMAGE`     | str  | `localhost/dotfiles-manjaro:latest` | image tag. Matches `LABEL org.opencontainers.image.title` in `Containerfile`. |
 | `CONTAINER` | str  | `dotfiles-manjaro` | container name used by `up`/`exec`/`down`. |
 
@@ -51,5 +50,7 @@ gitignored; per-machine. Currently it must define:
 USERNAME=<your container username>
 ```
 
-`.env` MUST NOT carry secrets — secrets travel via `$(BW_ID)` file + BuildKit
-secret mount only. See [`22-container-build-pre-required-envs.md`](22-container-build-pre-required-envs.md).
+`.env` MUST NOT carry secrets — runtime secrets (`BW_CLIENTID`,
+`BW_CLIENTSECRET`, `BW_SESSION`) live in the interactive shell env only. See
+[`13-secret-management.md`](13-secret-management.md) and
+[`22-container-build-pre-required-envs.md`](22-container-build-pre-required-envs.md).

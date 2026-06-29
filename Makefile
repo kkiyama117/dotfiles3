@@ -12,15 +12,6 @@ JOBS ?= 1
 # The build / up targets fail if .env does not define USERNAME.
 -include .env
 
-# Bitwarden item id file consumed as a BuildKit secret by the Containerfile.
-# Only passed when the file actually exists, so a placeholder value is harmless.
-# TODO: IMPLEMENT
-BW_ID := TEST
-BW_SECRET :=
-ifneq ($(wildcard $(BW_ID)),)
-BW_SECRET := --secret id=bitwarden_id,src=$(BW_ID)
-endif
-
 # Bind mount for the container home directory
 HOME_DIR := $(CURDIR)/container/bind/home_dir
 
@@ -55,7 +46,6 @@ build: _require_username ## Build the image matching your host uid/gid
 	--build-arg HOST_GID=$(HOST_GID) \
 	--build-arg USERNAME=$(USERNAME) \
 	--build-context deps=$(CURDIR)/dependencies \
-	$(BW_SECRET) \
 	-t $(IMAGE) \
 	$(BUILD_CTX)
 

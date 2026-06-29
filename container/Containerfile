@@ -62,7 +62,7 @@ RUN if [ "$(id -g builder)" != "${HOST_GID}" ]; then \
     fi \
  && usermod -s /usr/bin/zsh ${USERNAME}
 
-# Layer 1-4: create the user and use it as `paru` user
+# Layer 1-4: create the non-root user and use it as `paru` user
 
 # paru + makepkg refuse to run as root. install-paru itself bootstraps paru from the AUR PKGBUILD if the
 # binary is missing, then installs everything from paru/packages.txt.

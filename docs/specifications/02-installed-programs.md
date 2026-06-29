@@ -52,6 +52,7 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | name | manager | configs | description |
 |---|---|---|---|
 | `base-devel` | pacman | no | base meta-package: gcc, make, binutils, etc. |
+| `bitwarden-cli` | pacman | no | Bitwarden CLI (`bw`); secret backend for chezmoi templates |
 | `chezmoi` | pacman | no | dotfiles manager |
 | `curl` | pacman | no |  |
 | `git` | pacman | no |  |

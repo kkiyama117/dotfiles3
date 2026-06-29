@@ -20,6 +20,7 @@ TODO: refactor and classify documents
 | Spec | Status | Summary |
 |---|---|---|
 | [`11-pre-required-env-values.md`](11-pre-required-env-values.md) | DRAFT | Secrets, Bitwarden items, env vars required before apply/build. |
+| [`13-secret-management.md`](13-secret-management.md) | DRAFT | Secret-management design: two-tier, `bw` auth, runtime apply. |
 | [`12-quickstart.md`](12-quickstart.md) | DRAFT | User-facing quickstart (local + container). |
 
 ### 2x — Container
@@ -28,7 +29,7 @@ TODO: refactor and classify documents
 |---|---|---|
 | [`20-container-rules.md`](20-container-rules.md) | DRAFT (stub) | Rootless / userns / bind-mount invariants. |
 | [`21-container-build-flow.md`](21-container-build-flow.md) | empty (stub) | Containerfile layer breakdown and stage ordering. |
-| [`22-container-build-pre-required-envs.md`](22-container-build-pre-required-envs.md) | DRAFT | Build-time envs (`HOST_UID`, `HOST_GID`, `BW_ID`, `JOBS`). |
+| [`22-container-build-pre-required-envs.md`](22-container-build-pre-required-envs.md) | DRAFT | Build-time envs (`HOST_UID`, `HOST_GID`, `JOBS`). |
 
 ### Functional docs (non-`NN-`)
 
