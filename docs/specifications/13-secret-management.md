@@ -109,7 +109,7 @@ Chezmoi apply runs in two phases:
 
 - [`11`](11-pre-required-env-values.md) — host pre-required envs (`BW_CLIENTID`, etc.)
 - [`20`](20-container-rules.md) I4 — build-time secret transport; runtime `BW_SESSION`
-- [`21`](21-container-build-flow.md) — Layer 2 `no-config-base` stays secret-free (no build-time apply)
+- [`21`](21-container-build-flow.md) — Stage 2 `build-prepass` stays secret-free (build-time apply is `build_mode = true` pre-pass; no secret baked into layers)
 - [`22`](22-container-build-pre-required-envs.md) — `BW_ID` build-time mechanism removed (runtime auth instead)
 - [`08`](08-automations.md) — `make apply` (planned) automation
 
