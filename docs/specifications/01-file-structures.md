@@ -45,17 +45,8 @@ the map of which top-level path serves which concern.
 ├── programs/           # host-side tooling / codegen
 │   └── generate_deps/  # implementation of `make gen-deps` (see 08-automations.md)
 │
-└── docs/               # documentation tree (placement: see 00-document-management.md)
-    ├── README.md       # index only
-    ├── issues/         # issues + result-logs
-    ├── plans/         # implementation plans
-    ├── references/     # external/host reference snapshots
-    ├── reviews/        # review pass/letter/aggregate/prompt
-    └── specifications/
-        ├── 0x-*.md     # repository-wide rules (this file, doc-mgmt, makefile, ...)
-        ├── 1x-*.md     # common definitions of the dotfiles
-        ├── 2x-*.md     # container specs
-        └── implementation/  # per-issue design DRAFTs
+└── docs/               # documentation tree (placement: see [here](00-document-management.md))
+│   └── ... delegate it to `00-document-management.md`
 ```
 
 ## 3. Invariants
