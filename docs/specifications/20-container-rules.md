@@ -20,7 +20,7 @@ labels directly.
 
 ### Secrets (build-time & runtime)
 
-- I4: **Secrets travel only via BuildKit `--mount=type=secret` (build-time) and `BW_SESSION` in the interactive shell (runtime).** Never `ARG`, never `ENV` in the Containerfile, never committed to the image or the repo, never in `.env`. The runtime `BW_SESSION` lives in the user's shell env only. See [`13-secret-management.md`](13-secret-management.md) §6 I-S3.
+- I4: The image is secret-free in both phases. The build-time `chezmoi apply` pre-pass (Containerfile Stage 2) uses `build_mode = true`, which guards every Bitwarden-bound template; the scratch destination is deleted in Stage 4. The runtime `chezmoi apply` (entrypoint) consumes `BW_SESSION` only into the running container's $HOME, never into image layers.
 
 ### Build (`Containerfile`)
 
@@ -51,5 +51,5 @@ labels directly.
 
 ## Open questions
 
-- Q1: ~~Is the container intended to be **disposable** (apply at every `up`) or **persistent** (apply once, bind home from host)?~~ **Resolved:** `chezmoi apply` runs at runtime (container start / interactive session), not during `make build`. The image stays secret-free. See [`13-secret-management.md`](13-secret-management.md) §5.
+- Q1: Resolved. Chezmoi apply runs in two phases — a build-time pre-pass in Stage 2 (`build_mode = true`, scratch destination) and a runtime apply via the entrypoint. See [`13-secret-management.md`](13-secret-management.md) §5 for the contract.
 - Q2: What is the policy for `paru` / AUR builds inside a non-root user namespace?
