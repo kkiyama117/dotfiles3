@@ -414,7 +414,8 @@ RUN mkdir -p /home/${USERNAME}/.config/chezmoi \
 build_mode = true
 TOML
 
-RUN chezmoi apply \
+RUN mkdir -p /tmp/build-home \
+ && chezmoi apply \
       --source /tmp/chezmoi-src \
       --destination /tmp/build-home \
       --no-tty \
@@ -455,7 +456,7 @@ Expected: build succeeds; chezmoi apply prints managed paths and exits 0.
 Run:
 ```bash
 podman run --rm dotfiles-prepass-test bash -c \
-  'test -f /tmp/build-home/.zshenv && grep -E "^export (CARGO_HOME|RUSTUP_HOME|MISE_DATA_DIR)" /tmp/build-home/.zshenv'
+  'test -f /tmp/build-home/.zshenv && grep -E "export (CARGO_HOME|RUSTUP_HOME|MISE_DATA_DIR)=" /tmp/build-home/.zshenv'
 ```
 Expected: three matching `export` lines printed; exit 0.
 
@@ -500,13 +501,13 @@ After the Stage 2 `RUN chezmoi apply --destination /tmp/build-home ...` block, a
 FROM build-prepass AS toolchain
 
 RUN --mount=type=cache,target=/home/${USERNAME}/.cache/cargo-install,uid=${HOST_UID},gid=${HOST_GID} \
-    bash -c 'set -e; \
+    zsh -c 'set -eo pipefail; \
       source /tmp/build-home/.zshenv; \
       curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs \
         | sh -s -- -y --no-modify-path --default-toolchain stable --profile minimal; \
     '
 
-RUN bash -c 'set -e; \
+RUN zsh -c 'set -eo pipefail; \
       source /tmp/build-home/.zshenv; \
       curl https://mise.run | sh; \
     '
@@ -515,7 +516,7 @@ COPY --from=deps layer_3/cargo.txt /tmp/cargo_tools.txt
 
 RUN --mount=type=cache,target=/home/${USERNAME}/.local/share/cargo/registry,uid=${HOST_UID},gid=${HOST_GID} \
     --mount=type=cache,target=/home/${USERNAME}/.local/share/cargo/git,uid=${HOST_UID},gid=${HOST_GID} \
-    bash -c 'set -e; \
+    zsh -c 'set -eo pipefail; \
       source /tmp/build-home/.zshenv; \
       pkgs=$(sed "s/#.*//" /tmp/cargo_tools.txt | xargs); \
       if [ -n "$pkgs" ]; then \
@@ -545,7 +546,7 @@ Expected: build succeeds; rustup prints `Rust is installed now.`; mise prints it
 
 Run:
 ```bash
-podman run --rm dotfiles-toolchain-test bash -lc \
+podman run --rm dotfiles-toolchain-test zsh -lc \
   'source /tmp/build-home/.zshenv && rustc --version && cargo --version && mise --version'
 ```
 Expected: three version strings printed (e.g. `rustc 1.x.x`, `cargo 1.x.x`, `mise 2024.x.x`).
@@ -653,8 +654,8 @@ Expected: build succeeds end-to-end across all 4 stages.
 Run:
 ```bash
 USERNAME=$(grep ^USERNAME .env | cut -d= -f2)
-podman run --rm localhost/dotfiles-manjaro:latest bash -c \
-  "test ! -d /tmp/chezmoi-src && test ! -d /tmp/build-home && test ! -d /home/${USERNAME}/.config/chezmoi"
+podman run --rm --entrypoint bash localhost/dotfiles-manjaro:latest -c \
+  "test ! -d /tmp/chezmoi-src && test ! -d /tmp/build-home && test ! -d /home/${USERNAME}/.config/chezmoi && echo OK_ALL_REMOVED"
 ```
 Expected: exit 0 (all three removed).
 
@@ -870,13 +871,17 @@ Expected (criterion #1): build completes without manual intervention.
 
 - [ ] **Step 10.3: Verify scratch removed (criterion #2)**
 
-Run: `podman run --rm localhost/dotfiles-manjaro:latest /bin/bash -c 'test ! -d /tmp/chezmoi-src && test ! -d /tmp/build-home'; echo $?`
-Expected: `0`.
+Run: `podman run --rm --entrypoint bash localhost/dotfiles-manjaro:latest -c 'test ! -d /tmp/chezmoi-src && test ! -d /tmp/build-home && echo OK'`
+Expected: `OK`. (`--entrypoint bash` bypasses the runtime entrypoint, which would otherwise try to run `chezmoi apply` and fail in an ephemeral container with no host bind.)
 
 - [ ] **Step 10.4: Verify toolchain versions (criterion #3)**
 
-Run: `podman run --rm localhost/dotfiles-manjaro:latest /bin/bash -lc 'rustc --version && cargo --version && mise --version'`
-Expected: three version strings.
+The runtime image does NOT bake `.zshenv` (Stage 2 writes it to `/tmp/build-home`, which Stage 4 deletes); the toolchain PATH is rendered only when the entrypoint runs `chezmoi apply` against the host-bind source at container start. So criterion #3 is verified inside the running container (after Step 10.5 `make up`), with a zsh login shell (the PATH lives in `.zshenv`, which bash does not source):
+
+```bash
+podman exec dotfiles-manjaro zsh -lc 'rustc --version && cargo --version && mise --version'
+```
+Expected: three version strings. (Run after Step 10.5.)
 
 - [ ] **Step 10.5: Verify runtime apply succeeded (criterion #4)**
 
@@ -894,7 +899,7 @@ Expected: `0`.
 Run:
 ```bash
 USERNAME=$(grep ^USERNAME .env | cut -d= -f2)
-podman exec dotfiles-manjaro bash -lc 'echo $CARGO_HOME'
+podman exec dotfiles-manjaro zsh -lc 'echo $CARGO_HOME'
 ```
 Expected: `/home/${USERNAME}/.local/share/cargo`.
 
@@ -914,7 +919,7 @@ Run:
 make down
 make up
 sleep 2
-podman exec dotfiles-manjaro bash -lc 'rustc --version'
+podman exec dotfiles-manjaro zsh -lc 'rustc --version'
 ```
 Expected: same rustc version as Step 10.4 (volume preserved the toolchain).
 
@@ -1106,8 +1111,12 @@ Append items 5-8 to the existing numbered list:
 ```
 5. The final image has no `/tmp/chezmoi-src`, `/tmp/build-home`, or
    `~/.config/chezmoi` directory (Stage 4 scratch removal asserted).
-6. `podman run --rm <image> bash -lc 'echo $CARGO_HOME'` outputs
-   `~/.local/share/cargo` (XDG-compliant).
+6. After `make up`, `podman exec <container> zsh -lc 'echo $CARGO_HOME'`
+   outputs `~/.local/share/cargo` (XDG-compliant; the toolchain PATH/HOMEs
+   live in `.zshenv`, rendered by the entrypoint at runtime, so verify via
+   `podman exec` with a zsh login shell — not an ephemeral `podman run`
+   with `bash -lc`, which neither runs the entrypoint nor sources
+   `.zshenv`).
 7. After `make up`, `~/.local/share/chezmoi/.git` is visible inside the
    container (host bind verified).
 8. `make down && make up` preserves toolchain binaries (named-volume
