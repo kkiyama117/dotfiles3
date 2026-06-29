@@ -1,27 +1,52 @@
 # 21 — Container build flow
 
-> Spec status: **DRAFT (stub)**. Normative spec for the Containerfile layer
+> Spec status: **DRAFT**. Normative spec for the Containerfile stage / layer
 > ordering. The implementation lives in
-> [`../../container/Containerfile`](../../container/Containerfile).
+> [`../../container/Containerfile`](../../container/Containerfile). This file
+> was resynced to the implementation on 2026-06-29; see
+> [`../issues/2026-06-29-spec21-sync-containerfile.md`](../issues/2026-06-29-spec21-sync-containerfile.md).
 
 ## Stage (Layer) ordering
 
-| Stage (`FROM ... AS`) | Layer | Purpose | Inputs |
-|---|---|---|---|
-| `base`            | 0 | minimum packages required for `chezmoi apply` (base-devel, sudo, curl, git). | `manjarolinux/base:latest`, `dependencies/layer_1.txt` |
-| `no-config-base`  | 1 | remap the `builder` user to host uid/gid for bind-mount ownership. | `HOST_UID`, `HOST_GID` build-args |
-| _(planned)_ `chezmoi-apply` | 2 | run `chezmoi apply` once with secrets injected via BuildKit `--secret` mounts. | `BW_ID` secret, `/var/lib/chezmoi-source` bind |
-| _(planned)_ `tooling` | 3+ | install per-layer tool sets (`paru`, `nix`, `mise`, `uv`) per `dependencies/layer_<N>.txt`. | layer txt files |
+The Containerfile is a multi-stage build. Each `FROM ... AS <stage>` is a
+stage; within a stage, numbered **sub-layers** (`Layer N-M`) group related
+`RUN` / `ARG` / `USER` directives. The table below reflects the file as of
+2026-06-29.
+
+| Stage (`FROM ... AS`) | Sub-layer | Directive(s) | Purpose | Inputs |
+|---|---|---|---|---|
+| `base` (`manjarolinux/base:latest`) | 1-1 | `ARG` | Receive build-args from the outer environment. | `HOST_UID`, `HOST_GID`, `USERNAME` |
+| `base` | 1-2 | `RUN pacman -Sy ... zsh` (as root) | Install the user's login shell so `make exec` works. Cache is purged after install. | — |
+| `base` | 1-3 | `RUN groupmod/usermod ...` then `USER ${USERNAME}` | Remap the base image's existing `builder` user/group to the host uid/gid and rename it to `${USERNAME}` when set; set the login shell to `/usr/bin/zsh`. Switches to the non-root user for subsequent layers. Manjaro base ships `builder` at 1000:1000, so uid/gid only change when they differ from the host. | `HOST_UID`, `HOST_GID`, `USERNAME` |
+| `base` | 1-4 | `RUN set -e; ...` | UID-collision fallback + sudoers. If `${HOST_UID}` already exists, adopt that account (fix shell + home); otherwise create the user/group fresh. Ensures `/home/${USERNAME}` exists with `HOST_UID:HOST_GID` / `0755`. Writes `/etc/sudoers.d/dotfiles` granting `${ACTUAL_USER} ALL=(ALL) NOPASSWD: ALL` at `0440` so `paru` / `makepkg` can run non-interactively. | `HOST_UID`, `HOST_GID`, `USERNAME` |
+| `no-config-base` (`FROM base`) | 2 | _(TODO, currently empty)_ | Intended to run `chezmoi apply` once with secrets injected via BuildKit `--mount=type=secret`. Also the planned home for `pacman` config and `base-devel` installation required by chezmoi-managed packages. | `BW_ID` secret, `/var/lib/chezmoi-source` bind |
+| _(planned)_ `tooling` | 3+ | — | Install per-layer tool sets (`paru`, `nix`, `mise`, `uv`) per `dependencies/layer_<N>.txt`. Not yet implemented. | `dependencies/layer_<N>.txt` (generated from `dependencies/packages.toml`) |
+
+### Notes on the current state
+
+- The `base` stage is the only fully-implemented stage today. It performs the
+  shell install and the full user-remap / sudoers setup; it does **not** yet
+  consume `dependencies/layer_1.txt` (I5 / I8 in
+  [`20-container-rules.md`](20-container-rules.md) are forward-looking).
+- `no-config-base` exists as a named stage (`FROM base AS no-config-base`)
+  but its body is a TODO comment only. `chezmoi apply` has not been wired into
+  the build yet.
+- Layer 1-3 and Layer 1-4 together realize invariant **I7** of spec 20
+  (`builder` remapped to `${USERNAME}` is the only non-root account; `USER`
+  is set before any installation step that does not require root). The
+  `USER ${USERNAME}` directive sits between 1-3 and 1-4; 1-4 still runs as
+  root because it edits `/etc/sudoers.d/`.
 
 ## Acceptance criteria
 
 A new stage may land only when:
 
-1. its name appears in this spec under "Stage ordering"
+1. its name appears in this spec under "Stage (Layer) ordering"
 2. its `dependencies/layer_<N>.txt` is generated, not hand-written
 3. the corresponding [`02-installed-programs.md`](02-installed-programs.md) entries are reachable from `packages.toml`
-4. invariants I6–I8 hold after the change
+4. invariants I6–I8 in [`20-container-rules.md`](20-container-rules.md) hold after the change
 
 ## Open questions
 
-- Q1: how are AUR packages installed without an interactive sudo password inside the build? `--mount=type=bind,from=...` of a pacman cache, or `makepkg --noconfirm`?
+- Q1: how are AUR packages installed without an interactive sudo password inside the build? **Partly resolved:** Layer 1-4 now provisions `/etc/sudoers.d/dotfiles` with `NOPASSWD: ALL` for the remapped user, so `paru` / `makepkg` can run non-interactively. The remaining open part is whether AUR builds happen in a build stage or at container start, and whether a pacman/paru cache is bind-mounted via `--mount=type=bind,from=...` to speed up rebuilds.
+- Q2: does `chezmoi apply` live in the `no-config-base` build stage (apply once, bake into image) or in the container entrypoint (apply at every `up`)? This is the same question as Q1 in [`20-container-rules.md`](20-container-rules.md); resolving it unblocks the body of `no-config-base`.
