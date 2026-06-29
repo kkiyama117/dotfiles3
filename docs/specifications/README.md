@@ -10,9 +10,10 @@ TODO: refactor and classify documents
 | Spec | Status | Summary |
 |---|---|---|
 | [`00-document-management.md`](00-document-management.md) | active | Document placement, naming, lifecycle. SoT for all docs. |
-| [`01-automations.md`](01-automations.md) | DRAFT (stub) | Make targets and generators (`make gen-deps`, chezmoi deploy). |
+| [`01-file-structures.md`](01-file-structures.md) | DRAFT (stub) | Repository directory layout and what lives where. |
 | [`02-installed-programs.md`](02-installed-programs.md) | DRAFT | Normative contract for tool inventory. Pairs with [`02-installed-programs.md`](02-installed-programs.md). |
 | [`03-makefile.md`](03-makefile.md) | empty (stub) | Target naming + dependency contract for `Makefile`. |
+| [`08-automations.md`](08-automations.md) | DRAFT (stub) | Make targets and generators (`make gen-deps`, chezmoi deploy). |
 
 ### 1x — Common definition of the dotfiles 
 

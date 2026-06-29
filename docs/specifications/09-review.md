@@ -1,6 +1,6 @@
 # Review protocol
 
-> Spec status: **DRAFT**. レビューの pass/letter model・出力スキーマ・重要度・
+> Spec status: **active**. レビューの pass/letter model・出力スキーマ・重要度・
 > ステータス・集約レビュー・design 側の対応義務を定義する。ファイルの置き場所・
 > 命名・ライフサイクルは
 > [document management spec](00-document-management.md) に従う。

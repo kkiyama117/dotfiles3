@@ -1,3 +1,14 @@
 # Repository metadata and programs
-docs
+# they are not needed in the target environment or avoid to duplicate
 container
+dependencies
+docs
+programs
+.env.example
+.gitignore
+AGENTS.md
+Makefile
+README.md
+
+# User generated files for container
+.env

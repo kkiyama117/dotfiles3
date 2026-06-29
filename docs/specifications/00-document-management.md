@@ -20,8 +20,10 @@ docs/
 ├── references/                     # 外部 / ホスト状態の参照資料
 ├── reviews/                        # レビュー (pass-N / letter 別 / aggregate / prompt)
 └── specifications/
-    ├── 00-document-management.md   # ← This file
-    ├── 02-installed-programs.md    # ツール一覧仕様 (旧 installed_programs.md と統合)
+    ├── 00-document-management.md   # This file
+    ├── 0x-...                      # Rules of this repo
+    ├── 1x-...                      # Specifications for dotfiles3
+    ├── 2x-...                      # Specifications for Container image
     └── implementation/             # 個別実装の design draft
         └── YYYY-MM-DD-<slug>-design.md
 ```

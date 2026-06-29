@@ -1,5 +1,5 @@
 # Makefile for some tools and manage container.
-# For details, see about [Makefile](docs/specifications/01-automation.md) for automation,
+# For details, see about [Makefile](docs/specifications/08-automations.md) for automation,
 # and [rules to manage Container](docs/specifications/20-container-rules.md).
 # Pre _requirements should be [here](docs/specifications/22-container-build-pre-requirements.md).
 
@@ -31,7 +31,7 @@ BUILD_CTX := $(CURDIR)/container
 IMAGE     := localhost/dotfiles-manjaro:latest
 CONTAINER := dotfiles-manjaro
 
-.PHONY: help build build_container up exec down _require_username
+.PHONY: help build build_container up exec down _require_username gen-deps
 
 help:
 	@echo "Usage: make [target]"
@@ -48,11 +48,13 @@ _require_username:
 		exit 1; \
 	fi
 
+# CONTAINER MANAGEMENT
 build: _require_username ## Build the image matching your host uid/gid
 	podman build --jobs $(JOBS) \
 	--build-arg HOST_UID=$(HOST_UID) \
 	--build-arg HOST_GID=$(HOST_GID) \
 	--build-arg USERNAME=$(USERNAME) \
+	--build-context deps=$(CURDIR)/dependencies \
 	$(BW_SECRET) \
 	-t $(IMAGE) \
 	$(BUILD_CTX)
@@ -70,3 +72,7 @@ exec: ## Open an interactive shell in the running container
 down: ## Stop and remove the container
 	-podman stop $(CONTAINER)
 	-podman rm $(CONTAINER)
+
+# META PROGRAMS
+gen-deps: ## Regenerate dependencies/layer_<N>/<manager>.txt + 02 AUTO-GEN block from packages.toml
+	python3 programs/generate_deps/main.py
