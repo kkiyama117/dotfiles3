@@ -33,7 +33,7 @@ help:
 	@echo "Targets:"
 	@echo "  build           Build the image matching your host uid/gid"
 	@echo "  build_container Build the container (alias of build)"
-	@echo "  up              Start a detached container with the home bind mount (--userns=keep-id, --replace)"
+	@echo "  up              Start a detached container with chezmoi bind + toolchain volumes (--userns=keep-id, --replace)"
 	@echo "  exec            Open an interactive shell in the running container"
 	@echo "  down            Stop and remove the container"
 	@echo "  clean           Stop container, remove image, and delete toolchain volumes"
