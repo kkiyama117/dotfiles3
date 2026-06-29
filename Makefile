@@ -6,7 +6,7 @@ HOST_GID := $(shell id -g)
 JOBS ?= 1
 
 # Container username: read from .env (gitignored, machine-specific).
-# The build target fails if .env does not define USERNAME.
+# The build / up targets fail if .env does not define USERNAME.
 -include .env
 
 # Bitwarden item id file consumed as a BuildKit secret by the Containerfile.
@@ -23,23 +23,52 @@ HOME_DIR := $(CURDIR)/container/bind/home_dir
 # Build context (holds Containerfile + bind mount source)
 BUILD_CTX := $(CURDIR)/container
 
-.PHONY: help build build_container
+# Image and container names. Image tag matches LABEL org.opencontainers.image.title
+IMAGE     := localhost/dotfiles-manjaro:latest
+CONTAINER := dotfiles-manjaro
+
+# Default shell used by `make exec`. Override with `make exec SHELL_BIN=zsh`
+# once zsh is installed in the image.
+SHELL_BIN ?= bash
+
+.PHONY: help build build_container up exec down _require_username
 
 help:
 	@echo "Usage: make [target]"
 	@echo "Targets:"
 	@echo "  build           Build the image matching your host uid/gid"
-	@echo "  build_container Build the container"
-	@echo "  "
+	@echo "  build_container Build the container (alias of build)"
+	@echo "  up              Start a detached container with the home bind mount (--userns=keep-id, --replace)"
+	@echo "  exec            Open an interactive shell ($(SHELL_BIN)) in the running container"
+	@echo "  down            Stop and remove the container"
 
-build: ## Build the image matching your host uid/gid
+_require_username:
 	@if [ -z "$(USERNAME)" ]; then \
 		echo "make: *** USERNAME is not set. Define it in .env (e.g. USERNAME=kiyama)" >&2; \
 		exit 1; \
 	fi
+
+build: _require_username ## Build the image matching your host uid/gid
 	podman build --jobs $(JOBS) \
 	--build-arg HOST_UID=$(HOST_UID) \
 	--build-arg HOST_GID=$(HOST_GID) \
 	--build-arg USERNAME=$(USERNAME) \
 	$(BW_SECRET) \
+	-t $(IMAGE) \
 	$(BUILD_CTX)
+
+build_container: build
+
+up: _require_username ## Start a detached container with the home bind mount
+	@mkdir -p $(HOME_DIR)
+	podman run -d --replace --name $(CONTAINER) \
+		--userns=keep-id \
+		-v $(HOME_DIR):/home/$(USERNAME) \
+		$(IMAGE) sleep infinity
+
+exec: ## Open an interactive shell in the running container
+	podman exec -it $(CONTAINER) $(SHELL_BIN)
+
+down: ## Stop and remove the container
+	-podman stop $(CONTAINER)
+	-podman rm $(CONTAINER)
