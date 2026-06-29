@@ -7,11 +7,11 @@ You can either install onto an existing host, or use the self-contained Podman c
 ## Quickstart
 
 Read [`here`](docs/specifications/12-quickstart.md) to get started with the quickstart guide. 
-[pre requirements](docs/specifications/11-pre-required-env-values.md) may help you get started. And full list of managed programs is [here](docs/specifications/02-installed_programs.md).
+[pre requirements](docs/specifications/11-pre-required-env-values.md) may help you get started. And full list of managed programs is [here](docs/specifications/02-installed-programs.md).
 
 ### Notes for AI agents
 
-- Everything and every rules of this repository is defined in [`specifications/`](docs/specifications/) (and this README.md). Whenever you make a change, please read or update the specs accordingly. especially, YOU MUST FOLLOW [document management rule](docs/specifications/00-documents.md).
+- Everything and every rules of this repository is defined in [`specifications/`](docs/specifications/) (and this README.md). Whenever you make a change, please read or update the specs accordingly. especially, YOU MUST FOLLOW [document management rule](docs/specifications/00-document-management.md) and the review/output schema in [`AGENTS.md`](AGENTS.md).
 
 ## Program files
 
@@ -21,4 +21,4 @@ managing shell plugins (and zsh config files).
 and `mise` for managing language toolchain versions.
 `nix` is only used for subdir that uses `flake.nix` (so don't use it here).
 
-Full list of managed programs is [here](docs/specifications/02-installed_programs.md).
+Full list of managed programs is [here](docs/specifications/02-installed-programs.md).

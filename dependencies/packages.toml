@@ -3,7 +3,7 @@
 # This file is HAND-EDITED. Run `make gen-deps` (from containers/) to
 # regenerate:
 #   - dependencies/<package_manager>/packages.txt
-#   - docs/specifications/installed_programs.md (AUTO-GEN block)
+#   - docs/specifications/02-installed-programs.md (AUTO-GEN block)
 #
 #
 # [[tool]]

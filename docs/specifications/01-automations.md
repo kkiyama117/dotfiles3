@@ -1,16 +1,37 @@
-# Automations
+# 01 — Automations
 
-TODO: write it by correct document formats.
+> Spec status: **DRAFT**. Normative spec for the project's automation
+> pipelines. Concrete Make-target invocations are in [`03-makefile.md`](03-makefile.md);
+> the underlying scripts will live under `dependencies/` or `container/`.
 
-## Generate dependencies list
+## Inventory of automations
 
-Run `make gen-deps` to generate the dependencies list.
-TODO: write details and implementation.
+| Name | Status | Trigger | Inputs | Outputs |
+|---|---|---|---|---|
+| dependency generation | planned | `make gen-deps` | `dependencies/packages.toml` | `dependencies/layer_<N>.txt`, AUTO-GEN block in [`02-installed-programs.md`](02-installed-programs.md), tool-list block in [`02-installed-programs.md`](02-installed-programs.md) |
+| container build | active | `make build` | `Containerfile`, `dependencies/layer_<N>.txt`, `HOST_UID`/`HOST_GID`, `BW_ID` | Podman image |
+| chezmoi deploy (host) | manual | `chezmoi apply` | repo source + Bitwarden secrets via `rbw` | `~` files |
+| chezmoi deploy (container) | planned | container entrypoint or build stage | repo source + BuildKit secret `bitwarden_id` | `$HOME` files inside image / bind |
 
-## Containerization
+## Acceptance contracts
 
-Read [Container rules](20-container-rules.md). 
+### dependency generation (`make gen-deps`)
 
-## deploy chezmoi
+- MUST be idempotent — running twice in a row produces a no-op diff
+- MUST fail fast on malformed `packages.toml` rather than emitting partial output
+- MUST not call the network during generation
+- Output files MUST carry a banner indicating they are generated and pointing back to `packages.toml`
 
-Read other files (TODO: write the doc about chezmoi or deploy)
+### container build (`make build`)
+
+See [`21-container-build-flow.md`](21-container-build-flow.md) for stage invariants and [`22-container-build-pre-required-envs.md`](22-container-build-pre-required-envs.md) for the env contract.
+
+### chezmoi deploy
+
+- The host path is documented in [`12-quickstart.md` § Local](12-quickstart.md#local).
+- The container path is open (see Q1 in [`21-container-build-flow.md`](21-container-build-flow.md)).
+
+## Out of scope
+
+- CI/CD pipelines (none yet — when added, document under a `04-ci.md`).
+- Secret rotation flows.
