@@ -1,0 +1,44 @@
+# Single source of truth for container tool dependencies.
+#
+# This file is HAND-EDITED. Run `make gen-deps` (from containers/) to
+# regenerate:
+#   - dependencies/<package_manager>/packages.txt
+#   - docs/specifications/installed_programs.md (AUTO-GEN block)
+#
+#
+# [[tool]]
+# name = "base-devel"
+# manager = "pacman"
+# layer = 1
+# has_configs = false
+# description = "base meta-package: gcc, make, binutils, etc."
+
+schema = 1
+
+# Layer 1: Base image, minimum installation only for chezmoi apply
+#          And install that must be used in our environment.
+
+[[tool]]
+name = "base-devel"
+manager = "pacman"
+layer = 1
+has_configs = false
+description = "base meta-package: gcc, make, binutils, etc."
+
+[[tool]]
+name = "sudo"
+manager = "pacman"
+layer = 1
+has_configs = false
+
+[[tool]]
+name = "curl"
+manager = "pacman"
+layer = 1
+has_configs = false
+
+[[tool]]
+name = "git"
+manager = "pacman"
+layer = 1
+has_configs = false
