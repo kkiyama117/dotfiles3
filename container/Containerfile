@@ -8,20 +8,24 @@ FROM docker.io/manjarolinux/base:latest AS base
 
 LABEL org.opencontainers.image.title="dotfiles-manjaro"
 
-# Get arguments from Outer ENV values
+# Layer 1-1: Get arguments from Outer ENV values
 ARG HOST_UID # GIVEN BY `Makefile` as a default
 ARG HOST_GID # GIVEN BY `Makefile` as a default
 ARG USERNAME # GIVEN BY `.env` (required; build fails if not set)
 
-# Layer 1 packages: install the user's shell (zsh) so `make exec` works.
+# Layer 1-2: install the user's shell (zsh) so `make exec` works.
+
 # Runs as root (the default until USER ${USERNAME} below).
 RUN pacman -Sy --noconfirm --needed zsh \
  && rm -rf /var/cache/pacman/pkg/*
+
+# Layer 1-3: create the user and set up ownership.
 
 # Remap the existing `builder` user/group to the host uid/gid (and rename it
 # to $USERNAME when set) so bind-mounted files keep correct ownership.
 # manjarolinux/base ships `builder` at 1000:1000, so uid/gid only change when
 # they differ from the host. Also set the login shell to zsh.
+
 RUN if [ "$(id -g builder)" != "${HOST_GID}" ]; then \
         groupmod -g ${HOST_GID} builder; \
     fi \
@@ -34,6 +38,27 @@ RUN if [ "$(id -g builder)" != "${HOST_GID}" ]; then \
     fi \
  && usermod -s /usr/bin/zsh ${USERNAME}
 USER ${USERNAME}
+
+# Layer 1-4: create the user and use it as `paru` user
+
+# paru + makepkg refuse to run as root. install-paru itself bootstraps paru from the AUR PKGBUILD if the
+# binary is missing, then installs everything from paru/packages.txt.
+
+RUN set -e; \
+    if id -u "${HOST_UID}" >/dev/null 2>&1; then \
+        ACTUAL_USER=$(getent passwd "${HOST_UID}" | cut -d: -f1); \
+        usermod -s /usr/bin/zsh "${ACTUAL_USER}" || true; \
+        usermod -d "/home/${USERNAME}" "${ACTUAL_USER}"; \
+    else \
+        if ! getent group "${HOST_GID}" >/dev/null; then \
+            groupadd -g "${HOST_GID}" "${USERNAME}"; \
+        fi; \
+        useradd -m -u "${HOST_UID}" -g "${HOST_GID}" -s /usr/bin/zsh "${USERNAME}"; \
+        ACTUAL_USER="${USERNAME}"; \
+    fi; \
+    install -d -o "${HOST_UID}" -g "${HOST_GID}" -m 0755 "/home/${USERNAME}"; \
+    echo "${ACTUAL_USER} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/dotfiles; \
+    chmod 0440 /etc/sudoers.d/dotfiles
 
 # ---------------------------------------------------------------------------
 # Layer 2: chezmoi apply our dotfiles
