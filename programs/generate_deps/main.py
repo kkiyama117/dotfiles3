@@ -46,21 +46,21 @@ TXT_HEADER = (
 )
 
 
-def die(msg: str) -> None:
+def fail(msg: str) -> None:
     print(f"generate_deps: {msg}", file=sys.stderr)
     sys.exit(1)
 
 
 def load_tools() -> list[dict]:
     if not TOOLS_TOML.is_file():
-        die(f"source of truth not found: {TOOLS_TOML.relative_to(REPO_ROOT)}")
+        fail(f"source of truth not found: {TOOLS_TOML.relative_to(REPO_ROOT)}")
     with TOOLS_TOML.open("rb") as f:
         data = tomllib.load(f)
     if data.get("schema") != SCHEMA:
-        die(f"unsupported schema {data.get('schema')!r}; expected {SCHEMA}")
+        fail(f"unsupported schema {data.get('schema')!r}; expected {SCHEMA}")
     tools = data.get("tool", [])
     if not isinstance(tools, list):
-        die("[[tool]] must be an array of tables")
+        fail("[[tool]] must be an array of tables")
     for t in tools:
         validate(t)
     return tools
@@ -69,19 +69,19 @@ def load_tools() -> list[dict]:
 def validate(t: dict) -> None:
     name = t.get("name")
     if not isinstance(name, str) or not name:
-        die(f"entry missing `name`: {t!r}")
+        fail(f"entry missing `name`: {t!r}")
     mgr = t.get("manager")
     if mgr not in ALL_MANAGERS:
-        die(f"{name}: unknown manager {mgr!r} (allowed: {ALL_MANAGERS})")
+        fail(f"{name}: unknown manager {mgr!r} (allowed: {ALL_MANAGERS})")
     layer = t.get("layer")
     if not isinstance(layer, int) or isinstance(layer, bool) or layer < 0:
-        die(f"{name}: `layer` must be a non-negative integer, got {layer!r}")
+        fail(f"{name}: `layer` must be a non-negative integer, got {layer!r}")
     hc = t.get("has_configs")
     if not isinstance(hc, bool):
-        die(f"{name}: `has_configs` must be bool, got {hc!r}")
+        fail(f"{name}: `has_configs` must be bool, got {hc!r}")
     desc = t.get("description")
     if desc is not None and not isinstance(desc, str):
-        die(f"{name}: `description` must be a string, got {desc!r}")
+        fail(f"{name}: `description` must be a string, got {desc!r}")
 
 
 def group_by_layer(tools: list[dict]) -> dict[int, list[dict]]:
@@ -175,7 +175,7 @@ def write_txt_files(by_layer: dict[int, list[dict]]) -> int:
 def write_doc(block: str) -> bool:
     src = DOC_PATH.read_text()
     if MD_BEGIN not in src or MD_END not in src:
-        die(
+        fail(
             f"{DOC_PATH.relative_to(REPO_ROOT)} missing AUTO-GEN markers "
             f"({MD_BEGIN!r} / {MD_END!r}); add them around the section to regenerate"
         )
