@@ -1,4 +1,7 @@
 # Makefile for some tools and manage container.
+# For details, see about [Makefile](docs/specifications/01-automation.md) for automation,
+# and [rules to manage Container](docs/specifications/20-container-rules.md).
+# Pre _requirements should be [here](docs/specifications/22-container-build-pre-requirements.md).
 
 HOST_UID := $(shell id -u)
 HOST_GID := $(shell id -g)
@@ -53,8 +56,6 @@ build: _require_username ## Build the image matching your host uid/gid
 	$(BW_SECRET) \
 	-t $(IMAGE) \
 	$(BUILD_CTX)
-
-build_container: build
 
 up: _require_username ## Start a detached container with the home bind mount
 	@mkdir -p $(HOME_DIR)

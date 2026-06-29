@@ -146,8 +146,6 @@ issue (closed)
 
 ### 6.3 review prompt (`reviews/*-review-prompt[-passN].md`)
 
-リファレンス: [`docs/reviews/2026-06-27-container-two-stage-review-prompt.md`](../reviews/2026-06-27-container-two-stage-review-prompt.md)
-
 最低限の構造:
 
 - subject の相対パス
@@ -185,7 +183,7 @@ issue (closed)
 
 ### 6.6 result-log (`issues/<phase>-<topic>.md`)
 
-該当 plan の Acceptance を満たした証拠を表 / ログとして添える。リファレンス: [`docs/issues/2026-06-28-phase7-smoke-matrix.md`](../issues/2026-06-28-phase7-smoke-matrix.md)
+該当 plan の Acceptance を満たした証拠を表 / ログとして添える。
 
 ### 6.7 reference
 

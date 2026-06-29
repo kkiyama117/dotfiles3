@@ -9,7 +9,7 @@
 
 | Variable | Source | Required | Default | Notes |
 |---|---|---|---|---|
-| `HOST_UID` | `id -u` (Makefile resolves) | yes | — | passed as `--build-arg`; used by `Containerfile` to remap the `builder` user (see I2 in [`21-container-build-flow.md`](21-container-build-flow.md)) |
+| `HOST_UID` | `id -u` (Makefile resolves) | yes | — | passed as `--build-arg`; used by `Containerfile` to remap the `builder` user (see the `no-config-base` stage in [`21-container-build-flow.md`](21-container-build-flow.md); the non-root-account rule is I7 in [`20-container-rules.md`](20-container-rules.md)) |
 | `HOST_GID` | `id -g` (Makefile resolves) | yes | — | same as above |
 | `USERNAME` | `.env` (gitignored, repo-root) | yes (build, up) | — | passed as `--build-arg`. The `Containerfile` renames the base image's `builder` account to this name and sets `/home/$USERNAME` as the home dir; `make up` bind-mounts `container/bind/home_dir/` at the same path. `make build` and `make up` fail fast with `"USERNAME is not set"` if absent. |
 | `JOBS`     | env, overridable by `make JOBS=N` | no | `1` | `podman build --jobs` |

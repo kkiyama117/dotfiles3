@@ -1,6 +1,7 @@
 # Specifications
 
 Normative specs for `dotfiles3`. Conventions: see [`00-document-management.md`](00-document-management.md).
+TODO: refactor and classify documents
 
 ## Index
 
