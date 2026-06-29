@@ -1,10 +1,16 @@
 # Base image is `Manjaro Linux`
+# Read `docs/specifications/20-container-rules.md` for whole rules of the container build.
+# Read `docs/specifications/21-container-build-flow.md` for layer ordering and package selection.
 
 # ---------------------------------------------------------------------------
-# Layer 1: Base image, minimum installation only for chezmoi apply
-#          And install that must be used in our environment.
+# Layer 0: Base image
 # ---------------------------------------------------------------------------
 FROM docker.io/manjarolinux/base:latest AS base
+
+# ---------------------------------------------------------------------------
+# Layer 1: Minimum installation only for chezmoi apply
+#          And install that must be used in our environment.
+# ---------------------------------------------------------------------------
 
 LABEL org.opencontainers.image.title="dotfiles-manjaro"
 LABEL org.opencontainers.image.description="Manjaro base image for testing dotfiles"
