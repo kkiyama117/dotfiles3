@@ -55,7 +55,6 @@ RUN if [ "$(id -g builder)" != "${HOST_GID}" ]; then \
      && groupmod -n ${USERNAME} builder; \
     fi \
  && usermod -s /usr/bin/zsh ${USERNAME}
-USER ${USERNAME}
 
 # Layer 1-4: create the user and use it as `paru` user
 
@@ -77,6 +76,12 @@ RUN set -e; \
     install -d -o "${HOST_UID}" -g "${HOST_GID}" -m 0755 "/home/${USERNAME}"; \
     echo "${ACTUAL_USER} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/dotfiles; \
     chmod 0440 /etc/sudoers.d/dotfiles
+
+# Switch to the non-root ${USERNAME} for all subsequent steps (Layer 2
+# `chezmoi apply` and the future `paru`/`makepkg` builds, which refuse to
+# run as root). The sudoers provisioning above MUST run as root, so USER
+# is set only after it.
+USER ${USERNAME}
 
 # ---------------------------------------------------------------------------
 # Layer 2: chezmoi apply our dotfiles
