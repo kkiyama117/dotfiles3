@@ -19,7 +19,7 @@
 
 | Target | Class | Status | Acceptance criteria |
 |---|---|---|---|
-| `gen-deps` | codegen | planned (see [`08-automations.md`](08-automations.md)) | regenerates `dependencies/layer_<N>.txt` and the AUTO-GEN block in [`02-installed-programs.md`](02-installed-programs.md) from `dependencies/packages.toml`. Idempotent. |
+| `gen-deps` | codegen | active (see [`08-automations.md`](08-automations.md)) | regenerates `dependencies/layer_<N>/<manager>.txt` and the AUTO-GEN block in [`02-installed-programs.md`](02-installed-programs.md) from `dependencies/packages.toml`. Idempotent. |
 
 ## Contract
 

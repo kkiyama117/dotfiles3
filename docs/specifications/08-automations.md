@@ -10,7 +10,7 @@
 | Name | Status | Trigger | Inputs | Outputs |
 |---|---|---|---|---|
 | dependency generation | active | `make gen-deps` | `dependencies/packages.toml` | `dependencies/layer_<N>/<manager>.txt` (layers >= 1; `pacman`/`paru`/`nix`/`uv`) + AUTO-GEN block in [`02-installed-programs.md`](02-installed-programs.md) |
-| container build | active | `make build` | `Containerfile`, `dependencies/layer_<N>.txt`, `HOST_UID`/`HOST_GID`, `BW_ID` | Podman image |
+| container build | active | `make build` | `Containerfile`, `dependencies/layer_<N>/<manager>.txt`, `HOST_UID`/`HOST_GID`, `BW_ID` | Podman image |
 | chezmoi deploy (host) | manual | `chezmoi apply` | repo source + Bitwarden secrets via `rbw` | `~` files |
 | chezmoi deploy (container) | planned | container entrypoint or build stage | repo source + BuildKit secret `bitwarden_id` | `$HOME` files inside image / bind |
 
