@@ -5,6 +5,10 @@ HOST_GID := $(shell id -g)
 
 JOBS ?= 1
 
+# Container username: read from .env (gitignored, machine-specific).
+# The build target fails if .env does not define USERNAME.
+-include .env
+
 # Bitwarden item id file consumed as a BuildKit secret by the Containerfile.
 # Only passed when the file actually exists, so a placeholder value is harmless.
 BW_ID := TEST
@@ -29,8 +33,13 @@ help:
 	@echo "  "
 
 build: ## Build the image matching your host uid/gid
+	@if [ -z "$(USERNAME)" ]; then \
+		echo "make: *** USERNAME is not set. Define it in .env (e.g. USERNAME=kiyama)" >&2; \
+		exit 1; \
+	fi
 	podman build --jobs $(JOBS) \
 	--build-arg HOST_UID=$(HOST_UID) \
 	--build-arg HOST_GID=$(HOST_GID) \
+	--build-arg USERNAME=$(USERNAME) \
 	$(BW_SECRET) \
 	$(BUILD_CTX)
