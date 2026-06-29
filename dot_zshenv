@@ -74,3 +74,13 @@
   export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
   export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$UID}"
 }
+
+################################################################################
+# Toolchain HOMEs (XDG-compliant)
+################################################################################
+: "Toolchain HOMEs" && {
+  export CARGO_HOME="${CARGO_HOME:-$XDG_DATA_HOME/cargo}"
+  export RUSTUP_HOME="${RUSTUP_HOME:-$XDG_DATA_HOME/rustup}"
+  export MISE_DATA_DIR="${MISE_DATA_DIR:-$XDG_DATA_HOME/mise}"
+  path=($CARGO_HOME/bin(N-/) $MISE_DATA_DIR/shims(N-/) $path)
+}
