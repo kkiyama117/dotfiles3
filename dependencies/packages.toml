@@ -67,6 +67,13 @@ layer = 1
 has_configs = false
 
 [[tool]]
+name = "bitwarden-cli"
+manager = "pacman"
+layer = 1
+has_configs = false
+description = "Bitwarden CLI (`bw`); secret backend for chezmoi templates"
+
+[[tool]]
 name = "zsh"
 manager = "pacman"
 layer = 1
