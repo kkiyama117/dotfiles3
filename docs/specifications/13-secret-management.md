@@ -61,7 +61,7 @@ tiers:
    are cached for the duration of the run.
 5. On finish: `bw lock` (or `bw logout`) invalidates `BW_SESSION`.
 
-`make bw-login` automates steps 2–3; `make apply` runs `chezmoi apply`
+`make bw-login` automates steps 2–3; `make apply` (planned) runs `chezmoi apply`
 assuming `BW_SESSION` is set (see [`08-automations.md`](08-automations.md)).
 
 ## §5 Where secrets are applied: runtime, not build
@@ -100,7 +100,7 @@ assuming `BW_SESSION` is set (see [`08-automations.md`](08-automations.md)).
 - [`20`](20-container-rules.md) I4 — build-time secret transport; runtime `BW_SESSION`
 - [`21`](21-container-build-flow.md) — Layer 2 `no-config-base` stays secret-free (no build-time apply)
 - [`22`](22-container-build-pre-required-envs.md) — `BW_ID` build-time mechanism removed (runtime auth instead)
-- [`08`](08-automations.md) — `make bw-login` / `make apply` automations
+- [`08`](08-automations.md) — `make bw-login` (active) / `make apply` (planned) automations
 
 ## §8 Open questions
 

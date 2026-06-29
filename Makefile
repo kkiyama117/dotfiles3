@@ -32,7 +32,7 @@ help:
 	@echo "  up              Start a detached container with the home bind mount (--userns=keep-id, --replace)"
 	@echo "  exec            Open an interactive shell in the running container"
 	@echo "  down            Stop and remove the container"
-	@echo "  bw-login        Authenticate bw (API key + unlock); prints 'export BW_SESSION=...'"
+	@echo "  bw-login        bw login --apikey + unlock --raw; prints 'export BW_SESSION=...' (eval it)"
 
 _require_username:
 	@if [ -z "$(USERNAME)" ]; then \
@@ -69,7 +69,8 @@ gen-deps: ## Regenerate dependencies/layer_<N>/<manager>.txt + 02 AUTO-GEN block
 	python3 programs/generate_deps/main.py
 
 # BITWARDEN / CHEZMOI (runtime; see docs/specifications/13-secret-management.md)
-bw-login: ## Authenticate bw: `bw login --apikey` (needs BW_CLIENTID/BW_CLIENTSECRET in shell env) then `bw unlock` (prints `export BW_SESSION=...`; eval it)
+bw-login: ## Authenticate bw: `bw login --apikey` (needs BW_CLIENTID/BW_CLIENTSECRET in shell env) then `bw unlock --raw`; prints `export BW_SESSION=...` for `eval "$$(make bw-login)"
 	@test -n "$$BW_CLIENTID" && test -n "$$BW_CLIENTSECRET" || { echo "make: *** BW_CLIENTID/BW_CLIENTSECRET not set in shell env (see docs/specifications/13-secret-management.md §4)" >&2; exit 1; }
-	@bw login --check 2>/dev/null || bw login --apikey
-	@bw unlock
+	@bw login --check >/dev/null 2>&1 || bw login --apikey
+	@session="$$(bw unlock --raw)" || exit 1; \
+	 printf 'export BW_SESSION="%s"\n' "$$session"
