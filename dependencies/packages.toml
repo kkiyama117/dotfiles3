@@ -58,6 +58,7 @@ name = "chezmoi"
 manager = "pacman"
 layer = 1
 has_configs = false
+description = "dotfiles manager"
 
 [[tool]]
 name = "openssh"
