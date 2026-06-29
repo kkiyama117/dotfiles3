@@ -13,6 +13,9 @@
 # layer = 1
 # has_configs = false
 # description = "base meta-package: gcc, make, binutils, etc."
+#
+# Allowed `manager` values: pacman, paru, nix, uv, cargo, mise.
+# `cargo` entries land in layer 3 (Containerfile `toolchain` stage).
 
 schema = 1
 

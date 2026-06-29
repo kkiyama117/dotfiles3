@@ -32,10 +32,17 @@ TOOLS_TOML = DEPS_DIR / "packages.toml"
 DOC_PATH = REPO_ROOT / "docs" / "specifications" / "02-installed-programs.md"
 
 # Managers that install from a flat package list -> emit a .txt file.
-LIST_MANAGERS = ("pacman", "paru", "nix", "uv")
+LIST_MANAGERS = ("pacman", "paru", "nix", "uv", "cargo")
 # mise is version-pinned (no flat list); it only appears in the doc.
 DOC_ONLY_MANAGERS = ("mise",)
 ALL_MANAGERS = LIST_MANAGERS + DOC_ONLY_MANAGERS
+
+# (layer, manager) pairs that always have a generated install list file,
+# even when no entries exist. Required because the Containerfile COPYs
+# `dependencies/layer_3/cargo.txt` unconditionally; a missing file breaks
+# the build. Keeping the file generator-owned satisfies spec §9 criterion
+# #10 (never hand-edited).
+EXPECTED_EMPTY_FILES: tuple[tuple[int, str], ...] = ((3, "cargo"),)
 
 MD_BEGIN = "<!-- BEGIN AUTO-GEN: installed-programs -->"
 MD_END = "<!-- END AUTO-GEN: installed-programs -->"
@@ -169,6 +176,17 @@ def write_txt_files(by_layer: dict[int, list[dict]]) -> int:
             out = DEPS_DIR / f"layer_{layer}" / f"{mgr}.txt"
             if write_if_changed(out, render_packages_txt(layer, mgr, entries)):
                 written += 1
+    # Emit empty install-list files for (layer, manager) pairs that the
+    # build expects unconditionally (see EXPECTED_EMPTY_FILES above).
+    for layer, mgr in EXPECTED_EMPTY_FILES:
+        existing = [
+            t for t in by_layer.get(layer, []) if t["manager"] == mgr
+        ]
+        if existing:
+            continue  # already emitted by the main loop
+        out = DEPS_DIR / f"layer_{layer}" / f"{mgr}.txt"
+        if write_if_changed(out, render_packages_txt(layer, mgr, [])):
+            written += 1
     return written
 
 
