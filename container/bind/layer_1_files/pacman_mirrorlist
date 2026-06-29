@@ -1,0 +1,18 @@
+# TODO: auto generate mirrorlist
+
+##
+## Manjaro Linux custom mirrorlist
+##
+## use 'pacman-mirrors -id' To reset custom mirrorlist
+## use 'pacman-mirrors -c all' To reset custom mirrorlist
+## To remove custom config run  'pacman-mirrors -c all'
+##
+
+## Country : Japan
+Server = https://mirror.phoepsilonix.love/manjaro/unstable/$repo/$arch
+
+## Country : Japan
+Server = https://ftp.tsukuba.wide.ad.jp/Linux/manjaro/unstable/$repo/$arch
+
+## Country : Australia
+Server = https://gsl-syd.mm.fcix.net/manjaro/unstable/$repo/$arch
