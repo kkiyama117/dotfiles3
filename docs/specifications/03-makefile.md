@@ -3,6 +3,7 @@
 > Spec status: **DRAFT**. Normative contract for `Makefile` target
 > naming and behaviour. The Makefile itself is the SoT for actual commands;
 > this spec governs **what targets are allowed and what they must guarantee**.
+It may be moved in `1x-` or `2x-` because it is not a rule of metadata or documents
 
 ## Current targets
 
