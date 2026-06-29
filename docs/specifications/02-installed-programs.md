@@ -9,7 +9,7 @@
 
 - Hand-edited SoT for tool definitions: [`../../dependencies/packages.toml`](../../dependencies/packages.toml)
 - Generated artifacts (all derived from `packages.toml`):
-  - `../../dependencies/layer_<N>/<manager>.txt` — per-layer install lists for the Containerfile (layers >= 1; list managers `pacman`/`paru`/`nix`/`uv` only)
+  - `../../dependencies/layer_<N>/<manager>.txt` — per-layer install lists for the Containerfile (layers >= 1; list managers `pacman`/`paru`/`nix`/`uv`/`cargo`)
   - The AUTO-GEN block at the end of this document
 
 `packages.toml` schema is documented at the top of that file. New tool
@@ -20,7 +20,7 @@ entries belong there only — never edit the AUTO-GEN block by hand.
 | Field | Required | Allowed values |
 |---|---|---|
 | `name`        | yes | string |
-| `manager`     | yes | `pacman` / `paru` / `nix` / `mise` / `uv` |
+| `manager`     | yes | `pacman` / `paru` / `nix` / `mise` / `uv` / `cargo` |
 | `layer`       | yes | integer ≥ 1 (Containerfile layer index) |
 | `has_configs` | yes | bool — true if config is templated under chezmoi |
 | `description` | no  | string — used in the AUTO-GEN block |
@@ -32,6 +32,10 @@ entries belong there only — never edit the AUTO-GEN block by hand.
 - `mise`: To install programming languages and tools excepts `Rust`.
 - `nix`: Now we use `nix` only for apply `flake.nix`
 - `uv`: installed via `uv` (Python package manager)
+- `cargo`: installed via `cargo install --locked` from
+  `dependencies/layer_3/cargo.txt`. Belongs to layer 3 (Containerfile
+  `toolchain` stage); the registry index and git checkouts are backed
+  by BuildKit `--mount=type=cache` and never copied into image layers.
 
 ## Regeneration
 
