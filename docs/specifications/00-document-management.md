@@ -1,6 +1,6 @@
 # 00 — Document management spec
 
-このリポジトリ (`/data/dotfiles2`) における文書の置き場所、命名、ライフサイクル、形式を定義する。[`AGENTS.md`](../../AGENTS.md) §2 から参照される。
+このリポジトリ (`dotfiles3`) における文書の置き場所、命名、ライフサイクル、形式を定義する。[`AGENTS.md`](../../AGENTS.md) §1 から参照される。
 
 すべての AI エージェント / 人間メンテナはこの仕様に従う。
 
@@ -22,8 +22,7 @@ docs/
 ├── reviews/                        # レビュー (pass-N / letter 別 / aggregate / prompt)
 └── specifications/
     ├── 00-document-management.md   # ← This file
-    ├── api.md                      # 全体 API 仕様
-    ├── installed_programs.md       # ツール一覧仕様
+    ├── 02-installed-programs.md    # ツール一覧仕様 (旧 installed_programs.md と統合)
     └── implementation/             # 個別実装の design draft
         └── YYYY-MM-DD-<slug>-design.md
 ```
@@ -147,8 +146,6 @@ issue (closed)
 
 ### 6.3 review prompt (`reviews/*-review-prompt[-passN].md`)
 
-リファレンス: [`docs/reviews/2026-06-27-container-two-stage-review-prompt.md`](../reviews/2026-06-27-container-two-stage-review-prompt.md)
-
 最低限の構造:
 
 - subject の相対パス
@@ -186,7 +183,7 @@ issue (closed)
 
 ### 6.6 result-log (`issues/<phase>-<topic>.md`)
 
-該当 plan の Acceptance を満たした証拠を表 / ログとして添える。リファレンス: [`docs/issues/2026-06-28-phase7-smoke-matrix.md`](../issues/2026-06-28-phase7-smoke-matrix.md)
+該当 plan の Acceptance を満たした証拠を表 / ログとして添える。
 
 ### 6.7 reference
 
