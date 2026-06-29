@@ -89,6 +89,22 @@ RUN set -e; \
 # is set only after it.
 USER ${USERNAME}
 
+# Layer 1-5: XDG-compliant home subdirectories
+#
+# Owner-correct directories must exist so the four runtime mounts (one bind
+# for chezmoi source, three named volumes for cargo/rustup/mise) attach to
+# a properly-owned ~/.local/share/ parent. install -d as root, then return
+# to ${USERNAME} so subsequent stages stay non-root.
+USER root
+RUN install -d -o ${HOST_UID} -g ${HOST_GID} -m 0755 \
+    /home/${USERNAME}/.local \
+    /home/${USERNAME}/.local/share \
+    /home/${USERNAME}/.local/share/cargo \
+    /home/${USERNAME}/.local/share/rustup \
+    /home/${USERNAME}/.local/share/mise \
+    /home/${USERNAME}/.local/share/chezmoi
+USER ${USERNAME}
+
 # ---------------------------------------------------------------------------
 # Layer 2: chezmoi apply our dotfiles
 # ---------------------------------------------------------------------------
