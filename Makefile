@@ -31,7 +31,7 @@ BUILD_CTX := $(CURDIR)/container
 IMAGE     := localhost/dotfiles-manjaro:latest
 CONTAINER := dotfiles-manjaro
 
-.PHONY: help build build_container up exec down _require_username
+.PHONY: help build build_container up exec down _require_username gen-deps
 
 help:
 	@echo "Usage: make [target]"
@@ -70,3 +70,6 @@ exec: ## Open an interactive shell in the running container
 down: ## Stop and remove the container
 	-podman stop $(CONTAINER)
 	-podman rm $(CONTAINER)
+
+gen-deps: ## Regenerate dependencies/layer_<N>/<manager>.txt + 02 AUTO-GEN block from packages.toml
+	python3 programs/generate_deps/main.py

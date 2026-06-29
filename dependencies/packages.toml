@@ -1,11 +1,12 @@
 # Single source of truth for container tool dependencies.
 #
-# This file is HAND-EDITED. Run `make gen-deps` (from containers/) to
+# This file is HAND-EDITED. Run `make gen-deps` (from the repo root) to
 # regenerate:
-#   - dependencies/<package_manager>/packages.txt
+#   - dependencies/layer_<N>/<manager>.txt  (layers >= 1; list managers only)
 #   - docs/specifications/02-installed-programs.md (AUTO-GEN block)
+# Generator: programs/generate_deps/main.py
 #
-#
+# Example of entry:
 # [[tool]]
 # name = "base-devel"
 # manager = "pacman"
@@ -14,6 +15,15 @@
 # description = "base meta-package: gcc, make, binutils, etc."
 
 schema = 1
+
+# Layer 0: Already installed by base image
+
+[[tool]]
+name = "pacman"
+manager = "pacman"
+layer = 0
+# [mirrorlist](./container/layer_1_files/pacman_mirrorlist) is concreted for Japanese people.
+has_configs = true
 
 # Layer 1: Base image, minimum installation only for chezmoi apply
 #          And install that must be used in our environment.
@@ -39,6 +49,18 @@ has_configs = false
 
 [[tool]]
 name = "git"
+manager = "pacman"
+layer = 1
+has_configs = false
+
+[[tool]]
+name = "chezmoi"
+manager = "pacman"
+layer = 1
+has_configs = false
+
+[[tool]]
+name = "openssh"
 manager = "pacman"
 layer = 1
 has_configs = false

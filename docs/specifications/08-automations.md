@@ -2,13 +2,14 @@
 
 > Spec status: **DRAFT**. Normative spec for the project's automation
 > pipelines. Concrete Make-target invocations are in [`03-makefile.md`](03-makefile.md);
-> the underlying scripts will live under `dependencies/` or `container/`.
+> the underlying scripts live under `programs/` (e.g. `programs/generate_deps/`)
+> and `container/`.
 
 ## Inventory of automations
 
 | Name | Status | Trigger | Inputs | Outputs |
 |---|---|---|---|---|
-| dependency generation | planned | `make gen-deps` | `dependencies/packages.toml` | `dependencies/layer_<N>.txt`, AUTO-GEN block in [`02-installed-programs.md`](02-installed-programs.md), tool-list block in [`02-installed-programs.md`](02-installed-programs.md) |
+| dependency generation | active | `make gen-deps` | `dependencies/packages.toml` | `dependencies/layer_<N>/<manager>.txt` (layers >= 1; `pacman`/`paru`/`nix`/`uv`) + AUTO-GEN block in [`02-installed-programs.md`](02-installed-programs.md) |
 | container build | active | `make build` | `Containerfile`, `dependencies/layer_<N>.txt`, `HOST_UID`/`HOST_GID`, `BW_ID` | Podman image |
 | chezmoi deploy (host) | manual | `chezmoi apply` | repo source + Bitwarden secrets via `rbw` | `~` files |
 | chezmoi deploy (container) | planned | container entrypoint or build stage | repo source + BuildKit secret `bitwarden_id` | `$HOME` files inside image / bind |
@@ -16,6 +17,8 @@
 ## Acceptance contracts
 
 ### dependency generation (`make gen-deps`)
+
+Implemented by [`programs/generate_deps/main.py`](../../programs/generate_deps/main.py).
 
 - MUST be idempotent — running twice in a row produces a no-op diff
 - MUST fail fast on malformed `packages.toml` rather than emitting partial output
