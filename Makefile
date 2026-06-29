@@ -12,15 +12,6 @@ JOBS ?= 1
 # The build / up targets fail if .env does not define USERNAME.
 -include .env
 
-# Bitwarden item id file consumed as a BuildKit secret by the Containerfile.
-# Only passed when the file actually exists, so a placeholder value is harmless.
-# TODO: IMPLEMENT
-BW_ID := TEST
-BW_SECRET :=
-ifneq ($(wildcard $(BW_ID)),)
-BW_SECRET := --secret id=bitwarden_id,src=$(BW_ID)
-endif
-
 # Bind mount for the container home directory
 HOME_DIR := $(CURDIR)/container/bind/home_dir
 
@@ -31,7 +22,7 @@ BUILD_CTX := $(CURDIR)/container
 IMAGE     := localhost/dotfiles-manjaro:latest
 CONTAINER := dotfiles-manjaro
 
-.PHONY: help build build_container up exec down _require_username gen-deps
+.PHONY: help build build_container up exec down _require_username gen-deps bw-login
 
 help:
 	@echo "Usage: make [target]"
@@ -41,6 +32,7 @@ help:
 	@echo "  up              Start a detached container with the home bind mount (--userns=keep-id, --replace)"
 	@echo "  exec            Open an interactive shell in the running container"
 	@echo "  down            Stop and remove the container"
+	@echo "  bw-login        Authenticate bw (API key + unlock); prints 'export BW_SESSION=...'"
 
 _require_username:
 	@if [ -z "$(USERNAME)" ]; then \
@@ -55,7 +47,6 @@ build: _require_username ## Build the image matching your host uid/gid
 	--build-arg HOST_GID=$(HOST_GID) \
 	--build-arg USERNAME=$(USERNAME) \
 	--build-context deps=$(CURDIR)/dependencies \
-	$(BW_SECRET) \
 	-t $(IMAGE) \
 	$(BUILD_CTX)
 
@@ -76,3 +67,9 @@ down: ## Stop and remove the container
 # META PROGRAMS
 gen-deps: ## Regenerate dependencies/layer_<N>/<manager>.txt + 02 AUTO-GEN block from packages.toml
 	python3 programs/generate_deps/main.py
+
+# BITWARDEN / CHEZMOI (runtime; see docs/specifications/13-secret-management.md)
+bw-login: ## Authenticate bw: `bw login --apikey` (needs BW_CLIENTID/BW_CLIENTSECRET in shell env) then `bw unlock` (prints `export BW_SESSION=...`; eval it)
+	@test -n "$$BW_CLIENTID" && test -n "$$BW_CLIENTSECRET" || { echo "make: *** BW_CLIENTID/BW_CLIENTSECRET not set in shell env (see docs/specifications/13-secret-management.md §4)" >&2; exit 1; }
+	@bw login --check 2>/dev/null || bw login --apikey
+	@bw unlock
