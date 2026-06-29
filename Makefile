@@ -11,6 +11,7 @@ JOBS ?= 1
 
 # Bitwarden item id file consumed as a BuildKit secret by the Containerfile.
 # Only passed when the file actually exists, so a placeholder value is harmless.
+# TODO: IMPLEMENT
 BW_ID := TEST
 BW_SECRET :=
 ifneq ($(wildcard $(BW_ID)),)
@@ -27,10 +28,6 @@ BUILD_CTX := $(CURDIR)/container
 IMAGE     := localhost/dotfiles-manjaro:latest
 CONTAINER := dotfiles-manjaro
 
-# Default shell used by `make exec`. Override with `make exec SHELL_BIN=zsh`
-# once zsh is installed in the image.
-SHELL_BIN ?= bash
-
 .PHONY: help build build_container up exec down _require_username
 
 help:
@@ -39,7 +36,7 @@ help:
 	@echo "  build           Build the image matching your host uid/gid"
 	@echo "  build_container Build the container (alias of build)"
 	@echo "  up              Start a detached container with the home bind mount (--userns=keep-id, --replace)"
-	@echo "  exec            Open an interactive shell ($(SHELL_BIN)) in the running container"
+	@echo "  exec            Open an interactive shell in the running container"
 	@echo "  down            Stop and remove the container"
 
 _require_username:
@@ -67,7 +64,7 @@ up: _require_username ## Start a detached container with the home bind mount
 		$(IMAGE) sleep infinity
 
 exec: ## Open an interactive shell in the running container
-	podman exec -it $(CONTAINER) $(SHELL_BIN)
+	podman exec -it $(CONTAINER) zsh
 
 down: ## Stop and remove the container
 	-podman stop $(CONTAINER)

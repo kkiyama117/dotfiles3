@@ -8,17 +8,20 @@ FROM docker.io/manjarolinux/base:latest AS base
 
 LABEL org.opencontainers.image.title="dotfiles-manjaro"
 
-
-FROM base AS no-config-base
 # Get arguments from Outer ENV values
 ARG HOST_UID # GIVEN BY `Makefile` as a default
 ARG HOST_GID # GIVEN BY `Makefile` as a default
 ARG USERNAME # GIVEN BY `.env` (required; build fails if not set)
 
+# Layer 1 packages: install the user's shell (zsh) so `make exec` works.
+# Runs as root (the default until USER ${USERNAME} below).
+RUN pacman -Sy --noconfirm --needed zsh \
+ && rm -rf /var/cache/pacman/pkg/*
+
 # Remap the existing `builder` user/group to the host uid/gid (and rename it
 # to $USERNAME when set) so bind-mounted files keep correct ownership.
 # manjarolinux/base ships `builder` at 1000:1000, so uid/gid only change when
-# they differ from the host.
+# they differ from the host. Also set the login shell to zsh.
 RUN if [ "$(id -g builder)" != "${HOST_GID}" ]; then \
         groupmod -g ${HOST_GID} builder; \
     fi \
@@ -28,7 +31,8 @@ RUN if [ "$(id -g builder)" != "${HOST_GID}" ]; then \
  && if [ -n "${USERNAME}" ] && [ "${USERNAME}" != "builder" ]; then \
         usermod -l ${USERNAME} -d /home/${USERNAME} -m builder \
      && groupmod -n ${USERNAME} builder; \
-    fi
+    fi \
+ && usermod -s /usr/bin/zsh ${USERNAME}
 USER ${USERNAME}
 
 # ---------------------------------------------------------------------------
@@ -39,3 +43,5 @@ USER ${USERNAME}
 #           it is used for installation of packages that requires some ENV value
 #           it should be overridden when `chezmoi apply` is run again
 #           in the container.)
+
+FROM base AS no-config-base
