@@ -65,3 +65,10 @@ name = "openssh"
 manager = "pacman"
 layer = 1
 has_configs = false
+
+[[tool]]
+name = "zsh"
+manager = "pacman"
+layer = 1
+has_configs = false
+description = "user's login shell"

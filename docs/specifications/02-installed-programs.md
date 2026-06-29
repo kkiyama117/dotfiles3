@@ -52,9 +52,10 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | name | manager | configs | description |
 |---|---|---|---|
 | `base-devel` | pacman | no | base meta-package: gcc, make, binutils, etc. |
-| `chezmoi` | pacman | no |  |
+| `chezmoi` | pacman | no | dotfiles manager |
 | `curl` | pacman | no |  |
 | `git` | pacman | no |  |
 | `openssh` | pacman | no |  |
 | `sudo` | pacman | no |  |
+| `zsh` | pacman | no | user's login shell |
 <!-- END AUTO-GEN: installed-programs -->
