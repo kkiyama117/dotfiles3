@@ -11,15 +11,13 @@ point**; normative details live in the specifications under
 
 - Target repository: `dotfiles3` (chezmoi source + Podman container)
 - Applies to: every action that produces a design / plan / review / result-log
-- Read these files:
-  - Document placement & naming → [`00-document-management.md`](docs/specifications/00-document-management.md)
+- When doing everything, read related specifications first.
+- When writing code, check specs, update specifications if not updated, and follow the protocol. 
+
+## Must Read specs
+  - Document placement & naming: [`00-document-management.md`](docs/specifications/00-document-management.md)
   - Review protocol (pass/letter model, output schema, severity, status, aggregate review, response obligations) → [`09-review.md`](docs/specifications/09-review.md)
   - Secret management → [`docs/specifications/11-pre-required-env-values.md`](docs/specifications/11-pre-required-env-values.md)
-  - Coding standards → `~/.config/claude/rules/ecc/common/coding-style.md`
-
-> Review rules were previously inlined here (§2–§5). They have been moved to
-> [`09-review.md`](docs/specifications/09-review.md). Do not duplicate them in
-> this file — update the spec instead.
 
 ---
 
