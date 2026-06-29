@@ -48,6 +48,7 @@ _require_username:
 		exit 1; \
 	fi
 
+# CONTAINER MANAGEMENT
 build: _require_username ## Build the image matching your host uid/gid
 	podman build --jobs $(JOBS) \
 	--build-arg HOST_UID=$(HOST_UID) \
@@ -72,5 +73,6 @@ down: ## Stop and remove the container
 	-podman stop $(CONTAINER)
 	-podman rm $(CONTAINER)
 
+# META PROGRAMS
 gen-deps: ## Regenerate dependencies/layer_<N>/<manager>.txt + 02 AUTO-GEN block from packages.toml
 	python3 programs/generate_deps/main.py
