@@ -1,9 +1,8 @@
 # 00 — Document management spec
 
-このリポジトリ (`dotfiles3`) における文書の置き場所、命名、ライフサイクル、形式を定義する。[`AGENTS.md`](../../AGENTS.md) §1 から参照される。
+> Spec status: **active**.  このリポジトリ (`dotfiles3`) における文書の置き場所、命名、ライフサイクル、形式を定義する。[`AGENTS.md`](../../AGENTS.md) §1 から参照される。
 
 すべての AI エージェント / 人間メンテナはこの仕様に従う。
-
 
 ## 1. 目的
 
@@ -86,7 +85,7 @@ issue (closed)
 ```
 
 - design は review pass を経るたび `DRAFT → in-review → Approved` と status を上げる
-- security に触れる design は最低 letter A + B + D を経ること（[AGENTS.md](../../AGENTS.md) §2）
+- security に触れる design は最低 letter A + B + D を経ること（[09-review.md](09-review.md) §2.2）
 - plan が走り切ったら **acceptance を満たした証拠** を `docs/issues/` に result-log として残す（PR description が無い環境のため）
 
 ## 5. Status 語彙
@@ -95,7 +94,7 @@ issue (closed)
 
 `DRAFT` / `awaiting reviewers` / `in-review` / `Approved` / `pending` / `executing` / `executed` / `closed` / `superseded`
 
-### review finding status (`AGENTS.md` §3 と同じ)
+### review finding status ([`09-review.md`](09-review.md) §3.2 と同じ)
 
 `open` / `RESOLVED` / `REGRESSION` / `INCOMPLETE` / `addressed` / `blocked`
 
@@ -149,12 +148,12 @@ issue (closed)
 最低限の構造:
 
 - subject の相対パス
-- 共通出力フォーマット（[AGENTS.md](../../AGENTS.md) §3 への参照で可）
+- 共通出力フォーマット（[`09-review.md`](09-review.md) §3 への参照で可）
 - 各 Reviewer-X の **役割 / 読むもの / 評価論点 / 期待する出力形式**
 
 ### 6.4 review (`reviews/*-review[-passN][-<letter>-<topic>].md`)
 
-[AGENTS.md](../../AGENTS.md) §3 のスキーマに従う：ヘッダ + Verdict + Findings table + Verified premises + Open questions。
+[`09-review.md`](09-review.md) §3 のスキーマに従う：ヘッダ + Verdict + Findings table + Verified premises + Open questions。
 
 集約レビュー (`*-review-passN.md`、letter 接尾辞なし) は letter 別レビューを統合し、design author が次 revise に使う final view。
 

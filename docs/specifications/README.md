@@ -5,7 +5,7 @@ TODO: refactor and classify documents
 
 ## Index
 
-### 0x — Repository-wide conventions
+### 0x — Repository-wide Rules
 
 | Spec | Status | Summary |
 |---|---|---|
@@ -14,7 +14,7 @@ TODO: refactor and classify documents
 | [`02-installed-programs.md`](02-installed-programs.md) | DRAFT | Normative contract for tool inventory. Pairs with [`02-installed-programs.md`](02-installed-programs.md). |
 | [`03-makefile.md`](03-makefile.md) | empty (stub) | Target naming + dependency contract for `Makefile`. |
 
-### 1x — Host / install prerequisites?
+### 1x — Common definition of the dotfiles 
 
 | Spec | Status | Summary |
 |---|---|---|

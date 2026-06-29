@@ -21,4 +21,4 @@ For details, see [`specifications/00-document-management.md`](specifications/00-
 
 ## Review Perspectives & Output Schema
 
-Refer to [`../AGENTS.md`](../AGENTS.md) §2–§3.
+Refer to [`specifications/09-review.md`](specifications/09-review.md) (pass/letter model, required letters, output schema, severity, status, aggregate review, and response obligations).
