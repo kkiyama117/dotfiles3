@@ -46,6 +46,7 @@ build: _require_username ## Build the image matching your host uid/gid
 	--build-arg HOST_GID=$(HOST_GID) \
 	--build-arg USERNAME=$(USERNAME) \
 	--build-context deps=$(CURDIR)/dependencies \
+	--build-context srcroot=$(CURDIR) \
 	-t $(IMAGE) \
 	$(BUILD_CTX)
 

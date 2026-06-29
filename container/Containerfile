@@ -106,12 +106,26 @@ RUN install -d -o ${HOST_UID} -g ${HOST_GID} -m 0755 \
 USER ${USERNAME}
 
 # ---------------------------------------------------------------------------
-# Layer 2: chezmoi apply our dotfiles
+# Stage 2: build-prepass
+#
+# Run `chezmoi apply` with `build_mode = true` against a scratch destination
+# so the resolved environment (CARGO_HOME, RUSTUP_HOME, MISE_DATA_DIR, PATH)
+# becomes sourceable in Stage 3 without leaking secrets. The scratch
+# destination is removed in Stage 4 before the final image layer.
 # ---------------------------------------------------------------------------
-# TODO: Run `pacman config` and install some required packages (like `base-devel`)
-#          (Only for first time. and then it's cached.
-#           it is used for installation of packages that requires some ENV value
-#           it should be overridden when `chezmoi apply` is run again
-#           in the container.)
+FROM base AS build-prepass
 
-FROM base AS no-config-base
+COPY --from=srcroot --chown=${HOST_UID}:${HOST_GID} . /tmp/chezmoi-src
+
+RUN mkdir -p /home/${USERNAME}/.config/chezmoi \
+ && cat > /home/${USERNAME}/.config/chezmoi/chezmoi.toml <<'TOML'
+[data]
+build_mode = true
+TOML
+
+RUN mkdir -p /tmp/build-home \
+ && chezmoi apply \
+      --source /tmp/chezmoi-src \
+      --destination /tmp/build-home \
+      --no-tty \
+      --force
