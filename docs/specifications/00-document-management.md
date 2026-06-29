@@ -39,7 +39,7 @@ docs/
 | `design` | `docs/specifications/implementation/` | `YYYY-MM-DD-<slug>-design.md` | 実装方針設計（DRAFT → Approved） |
 | `plan` | `docs/plans/` | `YYYY-MM-DD-<slug>-impl.md` | Approved design 後の mechanical checklist |
 | `review` | `docs/reviews/` | `YYYY-MM-DD-<slug>-review[-passN][-<letter>-<topic>][-prompt].md` | レビュー本体 / aggregate / prompt |
-| `reference` | `docs/references/` | 任意 (`<topic>.md` または `YYYY-MM-DD-<topic>.md`) | 外部 / ホスト状態の参照 |
+| `reference` | `docs/references/` | `<topic>.md` | 外部 / ホスト状態の参照 |
 | `spec` | `docs/specifications/` | `NN-<topic>.md` (規範系) または `<topic>.md` (機能系) | プロジェクト全体の規範 |
 
 ### 3.1 slug

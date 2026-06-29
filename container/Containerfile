@@ -1,0 +1,15 @@
+# Base image is `Manjaro Linux`
+
+# Layer 1: Base image, minimum installation only for chezmoi apply
+#          And install that must be used in our environment.
+FROM docker.io/manjarolinux/base:latest AS base
+
+LABEL org.opencontainers.image.title="dotfiles-manjaro"
+
+# TODO: Run `pacman config` and install some required packages (like `base-devel`)
+# Layer 2: chezmoi apply our dotfiles
+#          (Only for first time. and then it's cached.
+#           it is used for installation of packages that requires some ENV value
+#           it should be overridden when `chezmoi apply` is run again
+#           in the container.)
+FROM base AS no-config-base
