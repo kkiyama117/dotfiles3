@@ -41,7 +41,7 @@ ARG USERNAME # GIVEN BY `.env` (required; build fails if not set)
 COPY bind/layer_1_files/pacman_mirrorlist /etc/pacman.d/mirrorlist
 COPY --from=deps layer_1/pacman.txt /tmp/pacman_deps.txt
 RUN --mount=type=cache,target=/var/cache/pacman/pkg \
-    pacman -Sy --noconfirm --needed $(sed 's/#.*//' /tmp/pacman_deps.txt | xargs)
+    pacman -Syu --noconfirm --needed $(sed 's/#.*//' /tmp/pacman_deps.txt | xargs)
 
 # Layer 1-3: create the user and set up ownership.
 
@@ -129,3 +129,41 @@ RUN mkdir -p /tmp/build-home \
       --destination /tmp/build-home \
       --no-tty \
       --force
+
+# ---------------------------------------------------------------------------
+# Stage 3: toolchain
+#
+# Install rustup, mise, and cargo binaries with ENV inherited from the
+# build-prepass scratch render. Each RUN is a fresh shell, so each must
+# `source /tmp/build-home/.zshenv` to materialize CARGO_HOME / RUSTUP_HOME /
+# MISE_DATA_DIR. BuildKit cache mounts (uid/gid require Podman >= 4.0) keep
+# the cargo registry index / git checkouts across rebuilds without bloating
+# image layers.
+# ---------------------------------------------------------------------------
+FROM build-prepass AS toolchain
+
+RUN --mount=type=cache,target=/home/${USERNAME}/.cache/cargo-install,uid=${HOST_UID},gid=${HOST_GID} \
+    zsh -c 'set -eo pipefail; \
+      source /tmp/build-home/.zshenv; \
+      curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs \
+        | sh -s -- -y --no-modify-path --default-toolchain stable --profile minimal; \
+    '
+
+RUN zsh -c 'set -eo pipefail; \
+      source /tmp/build-home/.zshenv; \
+      curl https://mise.run | sh; \
+    '
+
+COPY --from=deps layer_3/cargo.txt /tmp/cargo_tools.txt
+
+RUN --mount=type=cache,target=/home/${USERNAME}/.local/share/cargo/registry,uid=${HOST_UID},gid=${HOST_GID} \
+    --mount=type=cache,target=/home/${USERNAME}/.local/share/cargo/git,uid=${HOST_UID},gid=${HOST_GID} \
+    zsh -c 'set -eo pipefail; \
+      source /tmp/build-home/.zshenv; \
+      pkgs=$(sed "s/#.*//" /tmp/cargo_tools.txt | xargs); \
+      if [ -n "$pkgs" ]; then \
+        cargo install --locked $pkgs; \
+      else \
+        echo "toolchain: cargo install list is empty -- skipping"; \
+      fi; \
+    '
