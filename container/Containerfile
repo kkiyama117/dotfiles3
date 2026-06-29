@@ -167,3 +167,22 @@ RUN --mount=type=cache,target=/home/${USERNAME}/.local/share/cargo/registry,uid=
         echo "toolchain: cargo install list is empty -- skipping"; \
       fi; \
     '
+
+# ---------------------------------------------------------------------------
+# Stage 4: runtime (final)
+#
+# Strip Stage 2/3 scratch artifacts (so they cannot ride in the final layer),
+# install the entrypoint that re-runs chezmoi apply at container start with
+# build_mode = false, and set USER/WORKDIR/ENTRYPOINT/CMD.
+# ---------------------------------------------------------------------------
+FROM toolchain AS runtime
+
+USER root
+RUN rm -rf /tmp/chezmoi-src /tmp/build-home /home/${USERNAME}/.config/chezmoi
+COPY --chown=root:root bind/layer_4_files/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod 0755 /usr/local/bin/entrypoint.sh
+
+USER ${USERNAME}
+WORKDIR /home/${USERNAME}
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["zsh"]
