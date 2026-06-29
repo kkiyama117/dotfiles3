@@ -79,7 +79,8 @@ RUN set -e; \
         useradd -m -u "${HOST_UID}" -g "${HOST_GID}" -s /usr/bin/zsh "${USERNAME}"; \
         ACTUAL_USER="${USERNAME}"; \
     fi; \
-    install -d -o "${HOST_UID}" -g "${HOST_GID}" -m 0755 "/home/${USERNAME}"; \
+    install -d -m 0755 "/home/${USERNAME}" \
+ && chown "${HOST_UID}:${HOST_GID}" "/home/${USERNAME}"; \
     echo "${ACTUAL_USER} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/dotfiles; \
     chmod 0440 /etc/sudoers.d/dotfiles
 
@@ -178,7 +179,14 @@ RUN --mount=type=cache,target=/home/${USERNAME}/.local/share/cargo/registry,uid=
 FROM toolchain AS runtime
 
 USER root
-RUN rm -rf /tmp/chezmoi-src /tmp/build-home /home/${USERNAME}/.config/chezmoi
+# Restore /home/${USERNAME} ownership: Stage 3 cache mounts (e.g. the
+# --mount=type=cache under /home/${USERNAME}/.cache) cause Podman to create
+# a missing parent as root, which re-roots /home/${USERNAME} itself. The
+# toolchain subdirs (.local/share/{cargo,rustup,mise}) keep their 1000:1000
+# owner, but the home dir must be re-chowned here so the runtime entrypoint
+# (running as ${USERNAME}) can write the chezmoi-rendered .zshenv into ~.
+RUN rm -rf /tmp/chezmoi-src /tmp/build-home /home/${USERNAME}/.config/chezmoi \
+ && chown ${HOST_UID}:${HOST_GID} /home/${USERNAME}
 COPY --chown=root:root bind/layer_4_files/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod 0755 /usr/local/bin/entrypoint.sh
 
