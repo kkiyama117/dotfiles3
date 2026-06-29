@@ -27,17 +27,22 @@ the map of which top-level path serves which concern.
 ├── dot_zshenv          # chezmoi-managed ~/.zshenv (chezmoi `dot_` prefix)
 ├── (Other dotfiles)    # chezmoi-managed ~/(other dotfiles)
 ├── .chezmoiignore      # chezmoi ignore rules
+├── .dockerignore       # excludes .git/docs/.env/home_dir from srcroot build context (Task 9)
 ├── .env                # gitignored, per-machine (USERNAME=...); see 22-...md
 ├── .env.example        # committed example of .env
 ├── .gitignore
 │
 ├── container/          # Podman build context (BUILD_CTX in Makefile)
-│   └── ... delegate it to `20-container-rules.md`
+│   └── bind/           # bind-mounted sources/scripts (full rules: `20-container-rules.md`)
+│       └── layer_4_files/
+│           └── entrypoint.sh  # runtime chezmoi-apply entrypoint (Stage 4; see 21-...md)
 │
 ├── dependencies/       # package SoT + generated layer manifests
 │   ├── packages.toml   # HAND-EDITED SoT; consumed by `make gen-deps`
-│   └── layer_1/
-│       └── pacman.txt  # GENERATED from packages.toml (do not hand-edit; I8)
+│   ├── layer_1/
+│   │   └── pacman.txt  # GENERATED from packages.toml (do not hand-edit; I8)
+│   └── layer_3/
+│       └── cargo.txt   # GENERATED (empty initial list; emitted by `make gen-deps`)
 │
 ├── programs/           # host-side tooling / codegen
 │   └── generate_deps/  # implementation of `make gen-deps` (see 08-automations.md)
