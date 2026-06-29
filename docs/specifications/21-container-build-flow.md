@@ -1,10 +1,8 @@
 # 21 — Container build flow
 
-> Spec status: **DRAFT**. Normative spec for the Containerfile stage / layer
+> Spec status: **active**. Normative spec for the Containerfile stage / layer
 > ordering. The implementation lives in
-> [`../../container/Containerfile`](../../container/Containerfile). This file
-> was resynced to the implementation on 2026-06-29; see
-> [`../issues/2026-06-29-spec21-sync-containerfile.md`](../issues/2026-06-29-spec21-sync-containerfile.md).
+> [`../../container/Containerfile`](../../container/Containerfile). 
 
 ## Stage (Layer) ordering
 
@@ -50,5 +48,5 @@ A new stage may land only when:
 
 ## Open questions
 
-- Q1: how are AUR packages installed without an interactive sudo password inside the build? **Partly resolved:** Layer 1-4 now provisions `/etc/sudoers.d/dotfiles` with `NOPASSWD: ALL` for the remapped user, so `paru` / `makepkg` can run non-interactively. The remaining open part is whether AUR builds happen in a build stage or at container start, and whether a pacman/paru cache is bind-mounted via `--mount=type=bind,from=...` to speed up rebuilds.
+- Q1: how are AUR packages installed without an interactive sudo password inside the build? **Partly resolved:** Layer 1-4 now provisions `/etc/sudoers.d/dotfiles` with `NOPASSWD: ALL` for the remapped user, so `paru` / `makepkg` can run non-interactively. The remaining open parts are (a) whether AUR builds happen in a build stage or at container start, and (b) whether the `paru`/AUR cache is also backed by a `--mount=type=cache` — the **pacman** cache already is (Layer 1-2), so only the AUR/`paru` cache is undecided.
 - Q2: does `chezmoi apply` live in the `no-config-base` build stage (apply once, bake into image) or in the container entrypoint (apply at every `up`)? This is the same question as Q1 in [`20-container-rules.md`](20-container-rules.md); resolving it unblocks the body of `no-config-base`.
