@@ -36,5 +36,5 @@ See [`21-container-build-flow.md`](21-container-build-flow.md) for stage invaria
 
 ## Out of scope
 
-- CI/CD pipelines (none yet — when added, document under a `04-ci.md`).
+- CI/CD pipelines (none yet).
 - Secret rotation flows.

@@ -25,17 +25,14 @@ the map of which top-level path serves which concern.
 ├── README.md           # repo readme (user entry point)
 ├── Makefile            # build/up/exec/down + codegen targets (see 03-makefile.md)
 ├── dot_zshenv          # chezmoi-managed ~/.zshenv (chezmoi `dot_` prefix)
+├── (Other dotfiles)    # chezmoi-managed ~/(other dotfiles)
 ├── .chezmoiignore      # chezmoi ignore rules
 ├── .env                # gitignored, per-machine (USERNAME=...); see 22-...md
 ├── .env.example        # committed example of .env
 ├── .gitignore
 │
 ├── container/          # Podman build context (BUILD_CTX in Makefile)
-│   ├── Containerfile   # multi-stage build (see 21-container-build-flow.md)
-│   ├── bind/
-│   │   └── home_dir/   # bind-mounted at /home/$USERNAME (HOME_DIR in Makefile)
-│   ├── layer_1_files/  # files copied into the `base` stage (e.g. pacman_mirrorlist)
-│   └── programs/       # per-program install scripts consumed by the container
+│   └── ... delegate it to `20-container-rules.md`
 │
 ├── dependencies/       # package SoT + generated layer manifests
 │   ├── packages.toml   # HAND-EDITED SoT; consumed by `make gen-deps`
