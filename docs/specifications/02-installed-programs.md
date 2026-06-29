@@ -1,11 +1,9 @@
 # 02 — Installed Programs
 
-> Spec status: **DRAFT**. This is the single SoT spec for the tool
+> Spec status: **active**. This is the single SoT spec for the tool
 > inventory — both the **contract** for how tools are declared and the
 > **list** itself (rendered into the AUTO-GEN block below by
-> `programs/generate_deps/main.py` via `make gen-deps`). The prior split into a separate
-> `02-installed-programs.md` functional doc was removed; everything lives
-> here now.
+> `programs/generate_deps/main.py` via `make gen-deps`).
 
 ## Source of truth
 
