@@ -1,6 +1,7 @@
 # `docs/`
 
-The layout, naming conventions, and lifecycle of this directory are defined in [`specifications/00-document-management.md`](specifications/00-document-management.md). For meta-rules targeting AI agents, refer to [`AGENTS.md`](../AGENTS.md) at the repository root.
+The layout, naming conventions, and lifecycle of this directory are defined in [`specifications/00-document-management.md`](specifications/00-document-management.md).
+And you also need to read or update specifications in [`specifications/`](specifications/)
 
 ## Subdirectories
 
