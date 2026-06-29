@@ -1,4 +1,4 @@
-# 01 — Automations
+# 08 — Automations
 
 > Spec status: **DRAFT**. Normative spec for the project's automation
 > pipelines. Concrete Make-target invocations are in [`03-makefile.md`](03-makefile.md);

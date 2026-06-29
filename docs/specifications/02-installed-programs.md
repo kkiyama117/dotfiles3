@@ -29,7 +29,7 @@ entries belong there only — never edit the AUTO-GEN block by hand.
 
 ## Regeneration
 
-Run `make gen-deps` (planned; tracked in [`01-automations.md`](01-automations.md))
+Run `make gen-deps` (planned; tracked in [`08-automations.md`](08-automations.md))
 to rewrite the AUTO-GEN block from `packages.toml`.
 
 <!-- BEGIN AUTO-GEN: installed-programs -->

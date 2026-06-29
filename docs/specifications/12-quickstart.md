@@ -40,7 +40,7 @@ chezmoi init --apply --source="$PWD"
 chezmoi init --apply <your_github_account>
 ```
 
-See [`01-automations.md`](01-automations.md) for downstream automation
+See [`08-automations.md`](08-automations.md) for downstream automation
 (dependency generation, deploy flow).
 
 ## Container
@@ -91,7 +91,7 @@ make down
   base + uid/gid remap. Until Layer 2 lands, `make up` gives you a container
   whose `/home/$USERNAME` is the host bind dir but with no dotfiles applied.
   See [`21-container-build-flow.md`](21-container-build-flow.md).
-- `make gen-deps` — see [`01-automations.md`](01-automations.md).
+- `make gen-deps` — see [`08-automations.md`](08-automations.md).
 - **rbw / Bitwarden secret bind at runtime** — `make up` currently only
   bind-mounts the home dir. The plan is to also bind the host `rbw`
   config/session so chezmoi templates that call `rbw` resolve at apply time

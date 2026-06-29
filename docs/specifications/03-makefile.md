@@ -19,7 +19,7 @@
 
 | Target | Class | Status | Acceptance criteria |
 |---|---|---|---|
-| `gen-deps` | codegen | planned (see [`01-automations.md`](01-automations.md)) | regenerates `dependencies/layer_<N>.txt` and the AUTO-GEN block in [`02-installed-programs.md`](02-installed-programs.md) from `dependencies/packages.toml`. Idempotent. |
+| `gen-deps` | codegen | planned (see [`08-automations.md`](08-automations.md)) | regenerates `dependencies/layer_<N>.txt` and the AUTO-GEN block in [`02-installed-programs.md`](02-installed-programs.md) from `dependencies/packages.toml`. Idempotent. |
 
 ## Contract
 
@@ -28,7 +28,7 @@
 - `make build` is the only target authorised to call `podman build` directly.
 - Targets that depend on `$(USERNAME)` MUST gate on the `_require_username` helper (or equivalent) so the failure mode is "`USERNAME is not set`" rather than an obscure podman error.
 - `down` MUST be idempotent — running it against an already-stopped or absent container MUST exit 0.
-- New targets require a `01-automations.md` entry or a `12-quickstart.md` reference; orphaned targets are forbidden.
+- New targets require a `08-automations.md` entry or a `12-quickstart.md` reference; orphaned targets are forbidden.
 
 ## Variables surfaced via `make` invocation
 

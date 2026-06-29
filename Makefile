@@ -1,5 +1,5 @@
 # Makefile for some tools and manage container.
-# For details, see about [Makefile](docs/specifications/01-automation.md) for automation,
+# For details, see about [Makefile](docs/specifications/08-automations.md) for automation,
 # and [rules to manage Container](docs/specifications/20-container-rules.md).
 # Pre _requirements should be [here](docs/specifications/22-container-build-pre-requirements.md).
 
