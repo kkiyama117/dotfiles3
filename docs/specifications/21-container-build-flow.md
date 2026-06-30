@@ -51,7 +51,11 @@ A new stage may land only when:
    at runtime the entrypoint re-applies chezmoi with `build_mode = false`,
    so `.zshenv` omits the block and `~/.config/zsh/.zshrc` re-establishes
    `CARGO_HOME` / `RUSTUP_HOME` / `MISE_DATA_DIR` + the toolchain PATH
-   entries for **interactive** shells. Verify via `podman exec` with an
+   entries for **interactive** shells. `.zshenv` sets
+   `ZDOTDIR=$XDG_CONFIG_HOME/zsh`, which is what makes zsh find
+   `~/.config/zsh/.zshrc` in the first place (zsh's default `.zshrc` lookup
+   is `$ZDOTDIR/.zshrc`, defaulting to `$HOME/.zshrc`; without `ZDOTDIR` the
+   XDG `.zshrc` would never be sourced). Verify via `podman exec` with an
    *interactive* zsh (`zsh -ic`): `.zshrc` is interactive-only, so
    `zsh -lc` (login, non-interactive) and `zsh -c` will NOT see
    `CARGO_HOME`. Do not use an ephemeral `podman run`, which neither runs
