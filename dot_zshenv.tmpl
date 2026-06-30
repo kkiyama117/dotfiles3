@@ -42,22 +42,36 @@
 }
 
 ################################################################################
-# Env values config
+# Basic Env values config
 ################################################################################
 : "Env config" && {
+  : "SHELL (ZSH)" && {
+    #export SHELL="${SHELL:-$(which zsh)}"
+    if SHELL=$(builtin command -v zsh); then
+      export SHELL
+    else
+      unset SHELL
+    fi
+  }
   : "TERM" && {
     ## TERM config
     export TERM="${TERM:-xterm-256color}"
   }
   : "LANG, LC_ALL, TZ" && {
-    export LANG=ja_JP.UTF-8
-    #export LC_ALL=ja_JP.UTF-8
+    export LANG="${LANG:-ja_JP.UTF-8}"
+    export LC_ALL="${LC_ALL:-ja_JP.UTF-8}"
     #export TZ=UTC
   }
   : "EDITOR, VISUAL, PAGER" && {
     ## EDITOR and pager config; require `neovim` and `less`
-    export EDITOR="${EDITOR:-nvim}"
-    export VISUAL="${VISUAL:-nvim}"
+    if builtin command -v nvim > /dev/null 2>&1; then
+      export EDITOR=${EDITOR:-nvim}
+    else
+      # TODO: elif vim not exist, use vi
+      export EDITOR=${EDITOR:-vim}
+    fi
+    export VISUAL=$EDITOR
+    export SYSTEMD_EDITOR=$EDITOR
     export PAGER="${PAGER:-less}"
   }
 }
@@ -77,20 +91,100 @@
 }
 
 ################################################################################
-# Toolchain HOMEs (XDG-compliant) — BUILD-TIME ONLY (build_mode = true).
-#
-# These are needed only during the container build (Stage 3 toolchain
-# installs source /tmp/build-home/.zshenv to materialize CARGO_HOME /
-# RUSTUP_HOME / MISE_DATA_DIR). At runtime (entrypoint, build_mode = false)
-# the toolchain HOMEs are re-defined in a separate, sourced config file
-# so the build-only assumptions (e.g. scratch /tmp/build-home) do not leak
-# into the live $HOME.
+# GPG and PGP
 ################################################################################
-{{ if .build_mode -}}
-: "Toolchain HOMEs" && {
-  export CARGO_HOME="${CARGO_HOME:-$XDG_DATA_HOME/cargo}"
-  export RUSTUP_HOME="${RUSTUP_HOME:-$XDG_DATA_HOME/rustup}"
-  export MISE_DATA_DIR="${MISE_DATA_DIR:-$XDG_DATA_HOME/mise}"
-  path=($CARGO_HOME/bin(N-/) $MISE_DATA_DIR/shims(N-/) $path)
+: "GPG" && {
+  export GNUPGHOME="$XDG_DATA_HOME"/gnupg
 }
-{{- end }}
+
+################################################################################
+# Minimum ZSH config
+################################################################################
+# Almost all ZSH config should be in dot_zshrc or mise config
+: "ZSH config in zshenv" && {
+  export ZDOTDIR="${ZDOTDIR:-$XDG_CONFIG_HOME/zsh}"
+  : "ZSH history" && {
+    if [[ ! -f $XDG_DATA_HOME/zsh/history ]]; then
+      mkdir -p $XDG_DATA_HOME/zsh
+      touch $XDG_DATA_HOME/zsh/history
+    fi
+    : "ZSH history config" && {
+      # https://qiita.com/sho-t/items/d553dd694900cae0966d
+      export HISTFILE=$XDG_DATA_HOME/zsh/history
+      export HISTSIZE=10000
+      export SAVEHIST=100000
+      setopt appendhistory
+      #setopt extend_history
+      setopt share_history
+      setopt inc_append_history
+      #setopt inc_append_history_time
+      setopt hist_allow_clobber
+      setopt hist_expand
+      setopt hist_fcntl_lock
+      setopt hist_ignore_all_dups
+      setopt hist_ignore_space
+      setopt hist_reduce_blanks
+      setopt hist_save_no_dups
+      setopt hist_no_store
+      setopt hist_verify
+      # Don't consider certain characters part of the word
+      WORDCHARS=${WORDCHARS//[\/&.;]/}
+    }
+  }
+}
+
+################################################################################
+# GENERAL programming language path (Rust and mise managed)
+################################################################################
+# program languages may be called from outside of interactive shell, so write path here
+: "GENERAL programming config" && {
+  : "Rust" && {
+    export RUSTUP_HOME="${RUSTUP_HOME:-$XDG_DATA_HOME/rustup}"
+    export CARGO_HOME="${CARGO_HOME:-$XDG_DATA_HOME/cargo}"
+    path=($CARGO_HOME/bin(N-/) $path)
+  }
+  : "Python" && {
+    # cargo-dist 系インストーラ (uv 等) が rc ファイルを書き換えるのを抑止
+    # https://opensource.axo.dev/cargo-dist/book/installers/shell.html
+    export INSTALLER_NO_MODIFY_PATH=1
+  }
+  # other programing language is managed by mise
+  : "mise" && {
+    export MISE_DATA_DIR="${MISE_DATA_DIR:-$XDG_DATA_HOME/mise}"
+    eval "$(mise activate zsh --shims)"
+    #path=($MISE_DATA_DIR/shims(N-/) $path)
+
+    # NPM ONLY
+    # TODO: manage inside mise
+    export NPM_CONFIG_USERCONFIG="${NPM_CONFIG_USERCONFIG:-"$XDG_CONFIG_HOME"/npm/npmrc}"
+  }
+}
+
+################################################################################
+# GENERAL program config and path
+################################################################################
+# configs that run outside of interactive shell
+: "OTHER PROGRAMS" && {
+  : "X11" && {
+    # LightDM cannot use XAUTHORITY
+    #export XAUTHORITY=$XDG_CONFIG_HOME/Xauthority
+    export XINITRC=$XDG_CONFIG_HOME/X11/xinitrc
+    #export XSERVERRC=$XDG_CONFIG_HOME/X11/xserverrc
+  }
+  : "CUDA" && {
+    export CUDA_CACHE_PATH="$XDG_CACHE_HOME"/nv
+  }
+}
+# TODO: manage all
+
+# GTK
+#export GTK2_RC_FILES="$XDG_CONFIG_HOME"/gtk-2.0/gtkrc
+# Wine
+#export WINEPREFIX="$XDG_DATA_HOME/wineprefixes/default"
+# W3M
+#export W3M_DIR="$XDG_DATA_HOME"/w3m
+#export RXVT_SOCKET="$XDG_RUNTIME_DIR"/urxvtd
+# moc
+#alias mocp='mocp -M "$XDG_CONFIG_HOME"/moc'
+# pastel <- not here
+#export PASTEL_COLOR_MODE="24bit"
