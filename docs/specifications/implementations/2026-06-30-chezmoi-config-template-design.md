@@ -1,6 +1,6 @@
 # Manage runtime chezmoi.toml via .chezmoi.toml.tmpl — Design
 
-**Status:** DRAFT
+**Status:** Approved
 **Date opened:** 2026-06-30
 **Issue:** [2026-06-30-chezmoi-config-template.md](../../issues/2026-06-30-chezmoi-config-template.md)
 **Author:** kiyama

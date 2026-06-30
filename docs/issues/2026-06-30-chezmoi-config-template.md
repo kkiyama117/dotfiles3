@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-30
 **Status:** open
-**Related:** [design](../specifications/implementations/2026-06-30-chezmoi-config-template-design.md), [plan](../plans/2026-06-30-chezmoi-config-template-impl.md) (TBD)
+**Related:** [design](../specifications/implementations/2026-06-30-chezmoi-config-template-design.md), [plan](../plans/2026-06-30-chezmoi-config-template-impl.md)
 
 ## Context
 
