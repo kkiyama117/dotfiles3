@@ -5,9 +5,11 @@
 # The container is started by `make up` with the repo root bind-mounted at
 # ~/.local/share/chezmoi. This script:
 #   1. Verifies the bind is in place (the source root has .git).
-#   2. Re-renders ~/.config/chezmoi/chezmoi.toml with build_mode = false
-#      (the build-prepass toml is stripped in the runtime cleanup,
-#      Layer 5-4, so this creates it fresh as ${USERNAME}).
+#   2. Renders ~/.config/chezmoi/chezmoi.toml from the source-root template
+#      (.chezmoi.toml.tmpl) via `chezmoi execute-template --init`
+#      (build_mode = false; BUILD_MODE unset at runtime). The build-prepass
+#      toml is stripped in the runtime cleanup (Layer 5-3), so this creates
+#      it fresh as ${USERNAME}.
 #   3. Authenticates Bitwarden when the bw_* podman secrets are mounted
 #      (login-if-needed + `bw unlock --passwordfile`), then runs
 #      `chezmoi apply --no-tty --force` so the real $HOME picks up the
@@ -26,10 +28,21 @@ if [[ ! -d "$CHEZMOI_SOURCE/.git" ]]; then
 fi
 
 mkdir -p "$(dirname "$RUNTIME_CONFIG")"
-cat > "$RUNTIME_CONFIG" <<'TOML'
-[data]
-build_mode = false
-TOML
+# Render the chezmoi config from the source-root template (.chezmoi.toml.tmpl)
+# via `chezmoi execute-template --init`. build_mode is driven by BUILD_MODE env
+# (unset here -> false, the runtime value). The config content lives in the
+# dotfiles, not hardcoded in this script. Fail loudly if the template is
+# missing (an older/incomplete source bind) — the entrypoint cannot produce a
+# valid config without it.
+CONFIG_TEMPLATE="${CHEZMOI_SOURCE}/.chezmoi.toml.tmpl"
+if [[ ! -f "$CONFIG_TEMPLATE" ]]; then
+  echo "entrypoint: $CONFIG_TEMPLATE is missing — cannot render chezmoi.toml." >&2
+  echo "entrypoint: did make up bind the repo root (with .chezmoi.toml.tmpl) into ~/.local/share/chezmoi?" >&2
+  exit 1
+fi
+chezmoi execute-template --init \
+  < "$CONFIG_TEMPLATE" \
+  > "$RUNTIME_CONFIG"
 
 # Bitwarden auto-auth (optional). When the three podman secrets are
 # mounted (make up mounts each only if it exists), log in with the API
