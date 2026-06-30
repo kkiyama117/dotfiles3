@@ -3,6 +3,7 @@
 > Spec status: **DRAFT**. Normative contract for `Makefile` target
 > naming and behaviour. The Makefile itself is the SoT for actual commands;
 > this spec governs **what targets are allowed and what they must guarantee**.
+It may be moved in `1x-` or `2x-` because it is not a rule of metadata or documents
 
 ## Current targets
 
@@ -11,9 +12,10 @@
 | `help`  | meta | print one-line summary of every target. Default target. |
 | `build` | container | build the container image for the current host uid/gid via rootless Podman. Requires `$(USERNAME)`. Tags the image as `$(IMAGE)`. |
 | `build_container` | container | alias of `build`. |
-| `up`    | container | start a detached container named `$(CONTAINER)` with `$(HOME_DIR)` bind-mounted at `/home/$(USERNAME)`. Uses `--userns=keep-id` per [`20-container-rules.md`](20-container-rules.md) I2. Requires `$(USERNAME)`. |
+| `up`    | container | start a detached container named `$(CONTAINER)`. Bind-mounts the repo root (chezmoi source) at `/home/$(USERNAME)/.local/share/chezmoi`, mounts the named toolchain volumes `dotfiles_cargo`/`dotfiles_rustup`/`dotfiles_mise` at the XDG paths (`$XDG_DATA_HOME/{cargo,rustup,mise}`), passes `BW_SESSION` through from the host shell, and uses `--userns=keep-id --replace` per [`20-container-rules.md`](20-container-rules.md) I2. The Stage 4 entrypoint runs `chezmoi apply --no-tty --force` at runtime, then `exec`s the passed command (`sleep infinity`). Requires `$(USERNAME)`. |
 | `exec`  | container | open an interactive shell inside `$(CONTAINER)`. |
 | `down`  | container | stop and remove `$(CONTAINER)`. Errors during stop/rm are ignored so the target is idempotent. |
+| `clean` | container | depends on `down`; removes the `dotfiles_cargo`/`dotfiles_rustup`/`dotfiles_mise` named volumes and the image. Errors are ignored so the target is idempotent. |
 
 ## Optional / planned targets
 
@@ -28,6 +30,7 @@
 - `make build` is the only target authorised to call `podman build` directly.
 - Targets that depend on `$(USERNAME)` MUST gate on the `_require_username` helper (or equivalent) so the failure mode is "`USERNAME is not set`" rather than an obscure podman error.
 - `down` MUST be idempotent — running it against an already-stopped or absent container MUST exit 0.
+- `up` passes `BW_SESSION` through from the host shell via `-e BW_SESSION=$$BW_SESSION` (no hardcode). The operator MUST `export BW_SESSION=...` in the shell that runs `make up` for the Stage 4 entrypoint's `chezmoi apply` to resolve `bitwarden*` templates; a missing `BW_SESSION` is non-fatal (apply still runs, secret-dependent entries simply do not resolve). See [`13-secret-management.md`](13-secret-management.md).
 - New targets require a `08-automations.md` entry or a `12-quickstart.md` reference; orphaned targets are forbidden.
 
 ## Variables surfaced via `make` invocation
@@ -37,9 +40,12 @@
 | `JOBS`      | int  | `1` | `--jobs` for `podman build` |
 | `HOST_UID`  | int  | `$(id -u)` | passed as `--build-arg` |
 | `HOST_GID`  | int  | `$(id -g)` | passed as `--build-arg` |
-| `USERNAME`  | str  | — (required; sourced from `.env`) | passed as `--build-arg`; also drives the `up` bind target `/home/$(USERNAME)`. See [`11-pre-required-env-values.md`](11-pre-required-env-values.md). |
+| `USERNAME`  | str  | — (required; sourced from `.env`) | passed as `--build-arg`; also drives the `up` bind mount target `/home/$(USERNAME)/.local/share/chezmoi` (chezmoi source) and the toolchain volume mount points `/home/$(USERNAME)/.local/share/{cargo,rustup,mise}`. See [`11-pre-required-env-values.md`](11-pre-required-env-values.md). |
 | `IMAGE`     | str  | `localhost/dotfiles-manjaro:latest` | image tag. Matches `LABEL org.opencontainers.image.title` in `Containerfile`. |
-| `CONTAINER` | str  | `dotfiles-manjaro` | container name used by `up`/`exec`/`down`. |
+| `CONTAINER` | str  | `dotfiles-manjaro` | container name used by `up`/`exec`/`down`/`clean`. |
+| `CARGO_VOLUME`  | str | `dotfiles_cargo`  | named volume mounted at `$XDG_DATA_HOME/cargo` by `up`; removed by `clean`. |
+| `RUSTUP_VOLUME` | str | `dotfiles_rustup` | named volume mounted at `$XDG_DATA_HOME/rustup` by `up`; removed by `clean`. |
+| `MISE_VOLUME`   | str | `dotfiles_mise`   | named volume mounted at `$XDG_DATA_HOME/mise` by `up`; removed by `clean`. |
 
 ## `.env` contract
 

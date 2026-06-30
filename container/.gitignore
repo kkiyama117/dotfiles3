@@ -1,4 +1,4 @@
 bind/**/*
 !bind/**/
-!bind/home_dir/.gitkeep
 !bind/layer_1_files/pacman_mirrorlist
+!bind/layer_4_files/entrypoint.sh

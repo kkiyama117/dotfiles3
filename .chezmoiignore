@@ -12,3 +12,11 @@ README.md
 
 # User generated files for container
 .env
+
+# Toolchain volume mountpoints — never managed by chezmoi
+.local/share/cargo
+.local/share/rustup
+.local/share/mise
+
+# Self bind-mount target (chezmoi source root) — chezmoi must not manage itself
+.local/share/chezmoi

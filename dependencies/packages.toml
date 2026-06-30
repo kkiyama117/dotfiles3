@@ -13,6 +13,9 @@
 # layer = 1
 # has_configs = false
 # description = "base meta-package: gcc, make, binutils, etc."
+#
+# Allowed `manager` values: pacman, paru, nix, uv, cargo, mise.
+# `cargo` entries land in layer 3 (Containerfile `toolchain` stage).
 
 schema = 1
 
@@ -79,3 +82,10 @@ manager = "pacman"
 layer = 1
 has_configs = false
 description = "user's login shell"
+
+# Layer 3: cargo-installed tools (Containerfile `toolchain` stage).
+# Add `[[tool]]` entries with `manager = "cargo"` and `layer = 3`.
+# Run `make gen-deps` to regenerate `dependencies/layer_3/cargo.txt`.
+# (Currently empty — infrastructure-only landing per design spec §10 item 1.
+# The empty cargo.txt is still generator-owned: see
+# EXPECTED_EMPTY_FILES in programs/generate_deps/main.py.)

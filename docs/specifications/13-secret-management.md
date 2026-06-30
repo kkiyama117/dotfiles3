@@ -66,18 +66,24 @@ Steps 2–3 are run manually in the shell (`bw login --apikey`, then
 assuming `BW_SESSION` is set (see
 [`08-automations.md`](08-automations.md)).
 
-## §5 Where secrets are applied: runtime, not build
+## §5 — Apply phases
 
-- `chezmoi apply` runs at **container start / interactive session**,
-  **never** during `make build`.
-- The built image (`no-config-base` stage) is **secret-free**: no
-  `BW_SESSION`, no rendered secret files baked into layers.
-- Rationale: baking rendered secrets into image layers leaks them to
-  anyone who can pull the image. Runtime application confines secrets to
-  the bind-mounted `$HOME` only.
-- This resolves [`20`](20-container-rules.md) Q1 (disposable vs
-  persistent → runtime apply) and the "where `chezmoi apply` runs" part
-  of [`21`](21-container-build-flow.md) Q1.
+Chezmoi apply runs in two phases:
+
+1. **Build-time pre-pass** (Containerfile Stage 2 `build-prepass`). Runs
+   against a scratch destination (`/tmp/build-home`) with `build_mode = true`
+   in the chezmoi data. Renders ENV-bearing dotfiles only; Bitwarden-bound
+   templates are guarded by the in-template `{{ if not .build_mode }}`
+   convention (I-S6) so the build never consults `bw`. The scratch
+   destination is deleted in Stage 4 before the final image layer
+   is finalized.
+
+2. **Runtime apply** (`container/bind/layer_4_files/entrypoint.sh`). Runs
+   against the real `$HOME` against the host-bind chezmoi source at
+   `~/.local/share/chezmoi`. Resolves Bitwarden templates when the
+   operator exported `BW_SESSION` before `make up`. The image layers stay
+   secret-free because `BW_SESSION` lives only in the running container's
+   process environment.
 
 ## §6 Invariants
 
@@ -91,16 +97,29 @@ assuming `BW_SESSION` is set (see
   [`20`](20-container-rules.md) I4: build-time = BuildKit
   `--mount=type=secret`; runtime = `BW_SESSION` in the interactive shell
   only.)
-- **I-S4:** `chezmoi apply` runs at runtime only. The built image
-  contains no rendered secret.
+- **I-S4:** Image layers contain no resolved secret. The build-time
+  pre-pass runs `chezmoi apply` only with `build_mode = true`, which
+  excludes every Bitwarden-bound template. The runtime apply renders
+  secrets only into the running container's `$HOME`, never back into
+  image layers.
 - **I-S5:** chezmoi templates consume secrets ONLY via the `bitwarden*`
   template functions. No `bw` subprocess calls from templates.
+- **I-S6:** Phase-conditional chezmoi content uses the **in-template guard**
+  convention — `{{ if .build_mode }} ... {{ end }}` for build-only content
+  and `{{ if not .build_mode }} ... {{ end }}` for runtime-only content —
+  not `.chezmoiignore` template rules. (Exact whitespace-trimming dash
+  placement is chosen per file so a guard never merges a trailing comment
+  line with the following code.) First non-secret use: the toolchain HOMEs
+  block, build-only in `.zshenv` and runtime-only in `~/.config/zsh/.zshrc`
+  (see [`21`](21-container-build-flow.md) acceptance #6). Bitwarden-bound
+  dotfiles, when introduced, follow the same `{{ if not .build_mode }}`
+  guard so the build-time pre-pass never consults `bw`.
 
 ## §7 Cross-references
 
 - [`11`](11-pre-required-env-values.md) — host pre-required envs (`BW_CLIENTID`, etc.)
 - [`20`](20-container-rules.md) I4 — build-time secret transport; runtime `BW_SESSION`
-- [`21`](21-container-build-flow.md) — Layer 2 `no-config-base` stays secret-free (no build-time apply)
+- [`21`](21-container-build-flow.md) — Stage 2 `build-prepass` stays secret-free (build-time apply is `build_mode = true` pre-pass; no secret baked into layers)
 - [`22`](22-container-build-pre-required-envs.md) — `BW_ID` build-time mechanism removed (runtime auth instead)
 - [`08`](08-automations.md) — `make apply` (planned) automation
 
@@ -111,3 +130,10 @@ assuming `BW_SESSION` is set (see
   survey is reconciled with the chezmoi source tree.
 - **Q2:** Whether `BW_SESSION` is persisted in a keyring (chezmoi
   `secret keyring`) or requires re-auth each session. Deferred.
+- **Q3: Resolved (I-S6).** Phase-conditional chezmoi content uses the
+  in-template `{{ if (not) .build_mode }}` guard convention, not
+  `.chezmoiignore` template rules. First use is the non-secret toolchain
+  HOMEs block (build-only `.zshenv` / runtime-only `~/.config/zsh/.zshrc`);
+  Bitwarden-bound dotfiles will follow the same `{{ if not .build_mode }}`
+  guard so the build-time pre-pass stays secret-free. See invariant I-S6
+  and [`21`](21-container-build-flow.md) acceptance #6.

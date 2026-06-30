@@ -47,8 +47,8 @@ See [`08-automations.md`](08-automations.md) for downstream automation
 ## Container
 
 The container path lets you try the setup without touching the host.
-It builds a Manjaro image and (once Layer 2 lands) applies dotfiles to a
-persistent home bind on first boot.
+It builds a Manjaro image and applies dotfiles at runtime via the Stage 4
+entrypoint (`chezmoi apply` against the host-bound source).
 
 Prerequisites: rootless Podman + BuildKit. See
 [`20-container-rules.md`](20-container-rules.md) and
@@ -64,7 +64,9 @@ make help                  # list available targets
 # Requires USERNAME set in .env.
 make build
 
-# start a detached container; binds container/bind/home_dir to /home/$USERNAME
+# start a detached container; binds the repo root at ~/.local/share/chezmoi
+# and mounts the dotfiles_cargo/dotfiles_rustup/dotfiles_mise named volumes.
+# Export BW_SESSION in this shell first so chezmoi apply resolves Bitwarden.
 make up
 
 # open an interactive shell (zsh) in the running container
@@ -87,19 +89,21 @@ make down
 
 ### What is not yet implemented (planned)
 
-- Layer 2 (`chezmoi apply` inside the build) — the current image is just the
-  base + uid/gid remap. Until Layer 2 lands, `make up` gives you a container
-  whose `/home/$USERNAME` is the host bind dir but with no dotfiles applied.
-  See [`21-container-build-flow.md`](21-container-build-flow.md).
 - `make gen-deps` — see [`08-automations.md`](08-automations.md).
-- **Bitwarden auth + `chezmoi apply` at runtime** — `make up` currently
-  only bind-mounts the home dir. The plan is to run `bw login --apikey` +
-  `bw unlock` (setting `BW_SESSION`) then `chezmoi apply` inside the
-  container at start, so chezmoi templates that call `bitwarden*` resolve
-  at apply time. The image stays secret-free. See
-  [`13-secret-management.md`](13-secret-management.md) and
-  [`11-pre-required-env-values.md`](11-pre-required-env-values.md).
-  Gated on Layer 2 / runtime-apply landing.
+
+### Runtime `chezmoi apply` (shipped)
+
+`make up` bind-mounts the repo root (chezmoi source) at
+`~/.local/share/chezmoi` and mounts the `dotfiles_cargo`/`dotfiles_rustup`/
+`dotfiles_mise` named volumes at the XDG paths. The container's Stage 4
+entrypoint re-renders `~/.config/chezmoi/chezmoi.toml` with
+`build_mode = false`, then runs `chezmoi apply --no-tty --force` so the
+real `$HOME` picks up the latest dotfiles. To let chezmoi templates that
+call `bitwarden*` resolve at apply time, export `BW_SESSION` in the host
+shell before `make up` (the Makefile passes it through via
+`-e BW_SESSION=$$BW_SESSION`); the image itself stays secret-free. See
+[`13-secret-management.md`](13-secret-management.md) and
+[`11-pre-required-env-values.md`](11-pre-required-env-values.md).
 
 ## Reference
 

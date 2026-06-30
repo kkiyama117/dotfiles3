@@ -41,7 +41,7 @@ ARG USERNAME # GIVEN BY `.env` (required; build fails if not set)
 COPY bind/layer_1_files/pacman_mirrorlist /etc/pacman.d/mirrorlist
 COPY --from=deps layer_1/pacman.txt /tmp/pacman_deps.txt
 RUN --mount=type=cache,target=/var/cache/pacman/pkg \
-    pacman -Sy --noconfirm --needed $(sed 's/#.*//' /tmp/pacman_deps.txt | xargs)
+    pacman -Syu --noconfirm --needed $(sed 's/#.*//' /tmp/pacman_deps.txt | xargs)
 
 # Layer 1-3: create the user and set up ownership.
 
@@ -79,7 +79,8 @@ RUN set -e; \
         useradd -m -u "${HOST_UID}" -g "${HOST_GID}" -s /usr/bin/zsh "${USERNAME}"; \
         ACTUAL_USER="${USERNAME}"; \
     fi; \
-    install -d -o "${HOST_UID}" -g "${HOST_GID}" -m 0755 "/home/${USERNAME}"; \
+    install -d -m 0755 "/home/${USERNAME}" \
+ && chown "${HOST_UID}:${HOST_GID}" "/home/${USERNAME}"; \
     echo "${ACTUAL_USER} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/dotfiles; \
     chmod 0440 /etc/sudoers.d/dotfiles
 
@@ -89,13 +90,119 @@ RUN set -e; \
 # is set only after it.
 USER ${USERNAME}
 
-# ---------------------------------------------------------------------------
-# Layer 2: chezmoi apply our dotfiles
-# ---------------------------------------------------------------------------
-# TODO: Run `pacman config` and install some required packages (like `base-devel`)
-#          (Only for first time. and then it's cached.
-#           it is used for installation of packages that requires some ENV value
-#           it should be overridden when `chezmoi apply` is run again
-#           in the container.)
+# Layer 1-5: XDG-compliant home subdirectories
+#
+# Owner-correct directories must exist so the four runtime mounts (one bind
+# for chezmoi source, three named volumes for cargo/rustup/mise) attach to
+# a properly-owned ~/.local/share/ parent. install -d as root, then return
+# to ${USERNAME} so subsequent stages stay non-root.
+USER root
+RUN install -d -o ${HOST_UID} -g ${HOST_GID} -m 0755 \
+    /home/${USERNAME}/.local \
+    /home/${USERNAME}/.local/share \
+    /home/${USERNAME}/.local/share/cargo \
+    /home/${USERNAME}/.local/share/rustup \
+    /home/${USERNAME}/.local/share/mise \
+    /home/${USERNAME}/.local/share/chezmoi
+USER ${USERNAME}
 
-FROM base AS no-config-base
+# ---------------------------------------------------------------------------
+# Stage 2: build-prepass
+#
+# Run `chezmoi apply` with `build_mode = true` against a scratch destination
+# so the resolved environment (CARGO_HOME, RUSTUP_HOME, MISE_DATA_DIR, PATH)
+# becomes sourceable in Stage 3 without leaking secrets. The scratch
+# destination is removed in Stage 4 before the final image layer.
+# ---------------------------------------------------------------------------
+# Layer 2-1: use Container imange of Layer 1
+FROM base AS build-prepass
+
+# Layer 2-2: Apply minimum dotfiles with chezmoi:
+COPY --from=srcroot --chown=${HOST_UID}:${HOST_GID} . /tmp/chezmoi-src
+
+# generate temporary chezmoi config
+RUN mkdir -p /home/${USERNAME}/.config/chezmoi \
+ && cat > /home/${USERNAME}/.config/chezmoi/chezmoi.toml <<'TOML'
+[data]
+build_mode = true
+TOML
+
+RUN mkdir -p /tmp/build-home \
+ && chezmoi apply \
+      --source /tmp/chezmoi-src \
+      --destination /tmp/build-home \
+      --no-tty \
+      --force
+
+# ---------------------------------------------------------------------------
+# Stage 3: toolchain
+#
+# Install rustup, mise, and cargo binaries with ENV inherited from the
+# build-prepass scratch render. Each RUN is a fresh shell, so each must
+# `source /tmp/build-home/.zshenv` to materialize CARGO_HOME / RUSTUP_HOME /
+# MISE_DATA_DIR. BuildKit cache mounts (uid/gid require Podman >= 4.0) keep
+# the cargo registry index / git checkouts across rebuilds without bloating
+# image layers.
+# ---------------------------------------------------------------------------
+# Layer 3-1: use Container imange of Layer 2
+FROM build-prepass AS toolchain
+
+# Layer 3-2: Install rustup with minimum zshenv
+RUN --mount=type=cache,target=/home/${USERNAME}/.cache/cargo-install,uid=${HOST_UID},gid=${HOST_GID} \
+    zsh -c 'set -eo pipefail; \
+      source /tmp/build-home/.zshenv; \
+      curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs \
+        | sh -s -- -y --no-modify-path --default-toolchain stable --profile minimal; \
+    '
+
+# Layer 3-3: Install mise with minimum zshenv
+RUN zsh -c 'set -eo pipefail; \
+      source /tmp/build-home/.zshenv; \
+      curl https://mise.run | sh; \
+    '
+
+# Layer 3-4: Install Rust-depend-programs with minimum zshenv
+# copy cargo tools list from `deps` folder.
+COPY --from=deps layer_3/cargo.txt /tmp/cargo_tools.txt
+
+# install Rust programs with zshenv and config of container cache
+RUN --mount=type=cache,target=/home/${USERNAME}/.local/share/cargo/registry,uid=${HOST_UID},gid=${HOST_GID} \
+    --mount=type=cache,target=/home/${USERNAME}/.local/share/cargo/git,uid=${HOST_UID},gid=${HOST_GID} \
+    zsh -c 'set -eo pipefail; \
+      source /tmp/build-home/.zshenv; \
+      pkgs=$(sed "s/#.*//" /tmp/cargo_tools.txt | xargs); \
+      if [ -n "$pkgs" ]; then \
+        cargo install --locked $pkgs; \
+      else \
+        echo "toolchain: cargo install list is empty -- skipping"; \
+      fi; \
+    '
+
+# ---------------------------------------------------------------------------
+# Stage 4: runtime (final)
+#
+# Strip Stage 2/3 scratch artifacts (so they cannot ride in the final layer),
+# install the entrypoint that re-runs chezmoi apply at container start with
+# build_mode = false, and set USER/WORKDIR/ENTRYPOINT/CMD.
+# ---------------------------------------------------------------------------
+# Layer 4-1: use Container imange of Layer 3
+FROM toolchain AS runtime
+
+# Layer 4-2: Change `/home/${USERNAME}` ownership to root
+# Restore /home/${USERNAME} ownership: Stage 3 cache mounts (e.g. the
+# --mount=type=cache under /home/${USERNAME}/.cache) cause Podman to create
+# a missing parent as root, which re-roots /home/${USERNAME} itself. The
+# toolchain subdirs (.local/share/{cargo,rustup,mise}) keep their 1000:1000
+# owner, but the home dir must be re-chowned here so the runtime entrypoint
+# (running as ${USERNAME}) can write the chezmoi-rendered .zshenv into ~.
+USER root
+RUN rm -rf /tmp/chezmoi-src /tmp/build-home /home/${USERNAME}/.config/chezmoi \
+ && chown ${HOST_UID}:${HOST_GID} /home/${USERNAME}
+COPY --chown=root:root bind/layer_4_files/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod 0755 /usr/local/bin/entrypoint.sh
+
+# Layer 4-3: Run the entrypoint of the container with some ENVs
+USER ${USERNAME}
+WORKDIR /home/${USERNAME}
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["zsh"]
