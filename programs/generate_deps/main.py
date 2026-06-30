@@ -39,10 +39,10 @@ ALL_MANAGERS = LIST_MANAGERS + DOC_ONLY_MANAGERS
 
 # (layer, manager) pairs that always have a generated install list file,
 # even when no entries exist. Required because the Containerfile COPYs
-# `dependencies/layer_3/cargo.txt` unconditionally; a missing file breaks
-# the build. Keeping the file generator-owned satisfies spec §9 criterion
-# #10 (never hand-edited).
-EXPECTED_EMPTY_FILES: tuple[tuple[int, str], ...] = ((3, "cargo"),)
+# `dependencies/layer_3/cargo.txt` and `dependencies/layer_4/paru.txt`
+# unconditionally; a missing file breaks the build. Keeping these files
+# generator-owned satisfies spec 02 §9 criterion #10 (never hand-edited).
+EXPECTED_EMPTY_FILES: tuple[tuple[int, str], ...] = ((3, "cargo"), (4, "paru"))
 
 MD_BEGIN = "<!-- BEGIN AUTO-GEN: installed-programs -->"
 MD_END = "<!-- END AUTO-GEN: installed-programs -->"
