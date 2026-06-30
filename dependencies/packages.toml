@@ -91,20 +91,20 @@ description = "user's login shell"
 # EXPECTED_EMPTY_FILES in programs/generate_deps/main.py.)
 
 # Layer 4: paru-installed tools (AUR); Containerfile `aur` stage.
-# paru itself is bootstrapped via makepkg in the `aur` stage, then used
-# to install the rest of this list. Add `[[tool]]` entries with
-# `manager = "paru"` and `layer = 4`. Run `make gen-deps` to regenerate
-# `dependencies/layer_4/paru.txt`.
-# (Infrastructure + one concrete AUR package (neovim-git) to exercise
-# the full clone/build path. The paru.txt is still generator-owned: see
-# EXPECTED_EMPTY_FILES in programs/generate_deps/main.py.)
+# paru itself is bootstrapped via makepkg in the `aur` stage, so it is
+# declared here with `manager = "custom"` (doc-only: it appears in the
+# spec 02 AUTO-GEN block and satisfies I5, but is NOT written to
+# `layer_4/paru.txt` -- re-submitting an already-bootstrapped AUR helper
+# as a `paru -S` target breaks paru's resolver). Every other AUR package
+# uses `manager = "paru"` and `layer = 4`; run `make gen-deps` to
+# regenerate `dependencies/layer_4/paru.txt`.
 
 [[tool]]
 name = "paru"
-manager = "paru"
+manager = "custom"
 layer = 4
 has_configs = false
-description = "AUR helper; bootstrapped via makepkg, then installs the rest of layer 4"
+description = "AUR helper; bootstrapped via makepkg in the aur stage (custom install path, not in paru.txt)"
 
 [[tool]]
 name = "neovim-git"

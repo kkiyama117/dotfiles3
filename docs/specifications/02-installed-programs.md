@@ -68,6 +68,6 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 
 | name | manager | configs | description |
 |---|---|---|---|
+| `paru` | custom | no | AUR helper; bootstrapped via makepkg in the aur stage (custom install path, not in paru.txt) |
 | `neovim-git` | paru | no | neovim built from upstream git master (AUR); first concrete AUR package |
-| `paru` | paru | no | AUR helper; bootstrapped via makepkg, then installs the rest of layer 4 |
 <!-- END AUTO-GEN: installed-programs -->
