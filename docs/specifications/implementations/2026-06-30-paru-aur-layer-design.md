@@ -1,6 +1,6 @@
 # `paru` (AUR) Install Layer — Design
 
-**Status:** DRAFT
+**Status:** Approved (implemented & verified; see [result-log](../../issues/2026-06-30-phase-paru-aur-layer.md))
 **Date opened:** 2026-06-30
 **Issue:** [`docs/issues/2026-06-30-paru-aur-layer.md`](../../issues/2026-06-30-paru-aur-layer.md)
 **Author:** kiyama
@@ -55,9 +55,17 @@ consumes it.
   `makepkg -si` from the AUR clone is the canonical method and reuses
   `base-devel` (already in Layer 1).
 - **A5 — Declare `paru` in `packages.toml` vs. treat it as build-only
-  tooling.** Chose to declare it (with `manager = "paru"`, `layer = 4`)
-  so invariant I5 ("all packages originate from `packages.toml`") holds
-  and the AUTO-GEN block in spec 02 records it.
+  tooling.** Chose to declare it, but with a **new `manager = "custom"`
+  (doc-only)** enum rather than `manager = "paru"`. Rationale: `paru`
+  must appear in `packages.toml` so invariant I5 ("all packages
+  originate from `packages.toml`") holds and the spec 02 AUTO-GEN block
+  records it, BUT it must NOT be a `paru -S` target — re-submitting an
+  already-bootstrapped AUR helper as a `paru -S` target breaks paru's
+  dependency resolver (observed during implementation). The `custom`
+  manager (like `mise`) is rendered in the doc block but excluded from
+  every `layer_<N>/<manager>.txt` install list, so the `aur`-stage
+  bootstrap (`makepkg -si`) is its sole install path. This drove a
+  generator extension (§7).
 
 ## §3 Architecture / Invariants
 
@@ -89,12 +97,20 @@ base (Layer 1) → build-prepass (Layer 2) → toolchain (Layer 3)
 - **I-AUR2:** Every AUR package installed in the image is listed in
   `dependencies/layer_4/paru.txt` (generated from `packages.toml`).
   Ad-hoc `paru -S` / `makepkg -si` for packages not in `packages.toml`
-  is forbidden (extends I5 to the `paru` manager).
+  is forbidden (extends I5 to the `paru` manager). `paru` itself is
+  declared `manager = "custom"` (doc-only): it appears in the spec 02
+  AUTO-GEN block but is NOT in `paru.txt`, so its sole install path is
+  the `aur`-stage `makepkg -si` bootstrap (re-submitting it as a
+  `paru -S` target breaks paru's resolver).
 - **I-AUR3:** The `paru` / AUR clone+build cache
   (`/home/${USERNAME}/.cache/paru`) and the pacman package cache
   (`/var/cache/pacman/pkg`) are backed by `--mount=type=cache` in every
-  `aur`-stage `RUN` that fetches or builds. The cache mounts are not
-  written to image layers (no bloat).
+  `aur`-stage `RUN` that fetches or builds. The cargo registry/git
+  caches are also mounted, because `paru` (and any Rust AUR package)
+  needs `$CARGO_HOME` writable to fetch crates and the toolchain stage
+  re-roots `/home/${USERNAME}` to root (the user cannot create the
+  default `~/.cargo`). The cache mounts are not written to image layers
+  (no bloat).
 - **I-AUR4:** The `aur` stage's bootstrap clone (`/tmp/paru-build`) is
   removed before the stage ends (either in the bootstrap `RUN` itself or
   in the runtime scratch-removal step) so it cannot ride into the final
@@ -114,10 +130,15 @@ spec 21 stage table + inputs column.
 ## §4 Scope / staging breakdown
 
 1. **Generator** — add `(4, "paru")` to `EXPECTED_EMPTY_FILES` so
-   `layer_4/paru.txt` is always emitted; add a unit test.
-2. **SoT** — add a `Layer 4` marker + the seed `paru` `[[tool]]` entry
-   to `dependencies/packages.toml`; run `make gen-deps` to emit
-   `dependencies/layer_4/paru.txt`.
+   `layer_4/paru.txt` is always emitted; add a unit test. Also add a
+   **`custom` doc-only manager** (like `mise`) so packages with a
+   bespoke install path can be declared in `packages.toml` (I5) without
+   being written to any install list. Add a unit test for `custom`.
+2. **SoT** — add a `Layer 4` marker + the seed entries to
+   `dependencies/packages.toml`: `paru` with `manager = "custom"`
+   (doc-only) and `neovim-git` with `manager = "paru"`; run
+   `make gen-deps` to emit `dependencies/layer_4/paru.txt` (neovim-git
+   only).
 3. **Containerfile** — add the `aur` stage (bootstrap + bulk install
    with cache mounts); renumber `runtime` to Layer 5 and rename
    `layer_4_files` → `layer_5_files`.
@@ -139,31 +160,40 @@ spec 21 stage table + inputs column.
 # be installed via pacman), then install the Layer 4 AUR package set from
 # dependencies/layer_4/paru.txt. Runs as non-root ${USERNAME}; root
 # escalation for pacman happens only via the Layer 1-4 NOPASSWD sudoers.
-# BuildKit cache mounts keep the AUR clone/build cache and the pacman
-# package cache across rebuilds without bloating image layers.
+# BuildKit cache mounts keep the AUR clone/build cache, the pacman package
+# cache, and the cargo registry/git caches across rebuilds without
+# bloating image layers.
 # ---------------------------------------------------------------------------
 FROM toolchain AS aur
 
 # Layer 4-1: bootstrap paru via makepkg (non-root).
 RUN --mount=type=cache,target=/var/cache/pacman/pkg \
     --mount=type=cache,target=/home/${USERNAME}/.cache/paru,uid=${HOST_UID},gid=${HOST_GID} \
-    set -e; \
-    sudo pacman -Sy --noconfirm; \
-    git clone https://aur.archlinux.org/paru.git /tmp/paru-build; \
-    cd /tmp/paru-build && makepkg -si --noconfirm --needed; \
-    rm -rf /tmp/paru-build
+    --mount=type=cache,target=/home/${USERNAME}/.local/share/cargo/registry,uid=${HOST_UID},gid=${HOST_GID} \
+    --mount=type=cache,target=/home/${USERNAME}/.local/share/cargo/git,uid=${HOST_UID},gid=${HOST_GID} \
+    zsh -c 'set -eo pipefail; \
+      source /tmp/build-home/.zshenv; \
+      sudo pacman -Sy --noconfirm; \
+      git clone https://aur.archlinux.org/paru.git /tmp/paru-build; \
+      cd /tmp/paru-build && makepkg -si --noconfirm --needed; \
+      rm -rf /tmp/paru-build; \
+    '
 
 # Layer 4-2: install the AUR package set from the generated list.
 COPY --from=deps layer_4/paru.txt /tmp/paru_deps.txt
 RUN --mount=type=cache,target=/var/cache/pacman/pkg \
     --mount=type=cache,target=/home/${USERNAME}/.cache/paru,uid=${HOST_UID},gid=${HOST_GID} \
-    set -e; \
-    pkgs=$(sed 's/#.*//' /tmp/paru_deps.txt | xargs); \
-    if [ -n "$pkgs" ]; then \
-      paru -S --noconfirm --needed $pkgs; \
-    else \
-      echo "aur: paru install list is empty -- skipping"; \
-    fi
+    --mount=type=cache,target=/home/${USERNAME}/.local/share/cargo/registry,uid=${HOST_UID},gid=${HOST_GID} \
+    --mount=type=cache,target=/home/${USERNAME}/.local/share/cargo/git,uid=${HOST_UID},gid=${HOST_GID} \
+    zsh -c 'set -eo pipefail; \
+      source /tmp/build-home/.zshenv; \
+      pkgs=$(sed "s/#.*//" /tmp/paru_deps.txt | xargs); \
+      if [ -n "$pkgs" ]; then \
+        paru -S --noconfirm --needed $pkgs; \
+      else \
+        echo "aur: paru install list is empty -- skipping"; \
+      fi; \
+    '
 ```
 
 Notes:
@@ -171,28 +201,44 @@ Notes:
 - `sudo pacman -Sy` refreshes the sync DB so `makepkg -si`'s dependency
   resolution via pacman succeeds; it does **not** `-u` (no full upgrade)
   — Layer 1-2 already ran `pacman -Syu`.
-- `makepkg -si --noconfirm --needed` installs `paru` + its repo deps
-  (all already satisfied by `base-devel` / Layer 1).
-- The bulk install reads the whole `paru.txt`, including the `paru` line
-  itself; `paru -S --needed paru` is a no-op once paru is bootstrapped,
-  which exercises the install-list path without rebuilding paru.
+- Both RUNs `source /tmp/build-home/.zshenv` (the build-prepass scratch
+  render, still present in the `aur` image — deleted only in Stage 5) so
+  `CARGO_HOME` / `RUSTUP_HOME` resolve to the XDG paths pre-created with
+  user ownership in Layer 1-5. This is required: the toolchain stage's
+  cache mounts re-root `/home/${USERNAME}` to root, so the user cannot
+  create the default `~/.cargo`; pointing cargo at the writable XDG
+  `~/.local/share/cargo` (via the sourced `.zshenv`) is what lets
+  `paru`'s Rust build fetch crates.
+- `makepkg -si --noconfirm --needed` installs `paru` + its repo deps.
+  The cargo registry/git cache mounts are mounted because `paru` is a
+  Rust package; they also serve any future Rust AUR package in Layer 4.
+- The bulk install reads `paru.txt`, which contains **only**
+  `manager = "paru"` entries (currently `neovim-git`). `paru` is
+  `manager = "custom"` (doc-only) and is therefore NOT in `paru.txt`, so
+  the bootstrap above is its sole install path and the bulk call never
+  re-submits it as a `paru -S` target (which would break paru's
+  resolver — observed during implementation).
 - `/tmp/paru-build` is removed at the end of Layer 4-1 (I-AUR4) so it
   never enters the layer.
 
-## §6 `packages.toml` seed entry
+## §6 `packages.toml` seed entries
 
 ```toml
 # Layer 4: paru-installed tools (AUR); Containerfile `aur` stage.
-# paru itself is bootstrapped via makepkg in the `aur` stage, then used
-# to install the rest of this list. Add `[[tool]]` entries with
-# `manager = "paru"` and `layer = 4`. Run `make gen-deps` to regenerate
-# `dependencies/layer_4/paru.txt`.
+# paru itself is bootstrapped via makepkg in the `aur` stage, so it is
+# declared here with `manager = "custom"` (doc-only: it appears in the
+# spec 02 AUTO-GEN block and satisfies I5, but is NOT written to
+# `layer_4/paru.txt` -- re-submitting an already-bootstrapped AUR helper
+# as a `paru -S` target breaks paru's resolver). Every other AUR package
+# uses `manager = "paru"` and `layer = 4`; run `make gen-deps` to
+# regenerate `dependencies/layer_4/paru.txt`.
+
 [[tool]]
 name = "paru"
-manager = "paru"
+manager = "custom"
 layer = 4
 has_configs = false
-description = "AUR helper; bootstrapped via makepkg, then installs the rest of layer 4"
+description = "AUR helper; bootstrapped via makepkg in the aur stage (custom install path, not in paru.txt)"
 
 [[tool]]
 name = "neovim-git"
@@ -202,13 +248,13 @@ has_configs = false
 description = "neovim built from upstream git master (AUR); first concrete AUR package"
 ```
 
-Initial list = `{ paru, neovim-git }`. `paru` is the bootstrap tool
-(declared so I5 holds); `neovim-git` is the first concrete AUR package
-and exercises the full clone/build/install path. `neovim-git` compiles
+`paru.txt` (generated) = `{ neovim-git }`. `paru` (custom) appears only
+in the doc block. `neovim-git` is the first concrete AUR package and
+exercises the full clone/build/install path. `neovim-git` compiles
 neovim from source, so its `aur`-stage build is slow (minutes); the
 `~/.cache/paru` cache mount makes repeat builds reuse the clone. Its
 makedepends (cmake/ninja/gettext/...) are pulled in automatically by
-`makepkg -si` as transient build deps — not declared in `packages.toml`
+`makepkg` as transient build deps — not declared in `packages.toml`
 because they are dependencies, not packages we explicitly install.
 
 ## §7 Generator change
@@ -216,13 +262,26 @@ because they are dependencies, not packages we explicitly install.
 In `programs/generate_deps/main.py`:
 
 ```python
+LIST_MANAGERS = ("pacman", "paru", "nix", "uv", "cargo")
+DOC_ONLY_MANAGERS = ("mise", "custom")
+ALL_MANAGERS = LIST_MANAGERS + DOC_ONLY_MANAGERS
+
 EXPECTED_EMPTY_FILES: tuple[tuple[int, str], ...] = ((3, "cargo"), (4, "paru"))
 ```
 
-Rationale: the Containerfile `COPY --from=deps layer_4/paru.txt` is
-unconditional, so the file must exist even with zero entries. Keeping it
-generator-owned satisfies spec 02 §9 criterion #10 (never hand-edited).
-No schema bump (additive).
+Rationale:
+- `(4, "paru")` in `EXPECTED_EMPTY_FILES`: the Containerfile
+  `COPY --from=deps layer_4/paru.txt` is unconditional, so the file must
+  exist even with zero `paru`-manager entries. Generator-owned → spec 02
+  §9 criterion #10 (never hand-edited).
+- `"custom"` added to `DOC_ONLY_MANAGERS` (like `mise`): a `custom`
+  entry is rendered in the AUTO-GEN doc block (so I5 holds and the
+  package is traceable) but produces NO `layer_<N>/custom.txt` and is
+  NOT merged into any other manager's list. This is the mechanism that
+  lets `paru` be declared in `packages.toml` without becoming a
+  `paru -S` target.
+
+No schema bump (both changes are additive; existing entries unaffected).
 
 ## §8 Spec edits
 
@@ -235,22 +294,26 @@ No schema bump (additive).
   with a pointer here.
 - **spec 20** — Open questions: mark Q2 Resolved. Build invariants: add
   I-AUR1..I-AUR4 (or fold into prose under a new "AUR / paru" note).
-- **spec 02** — `paru` is already in the allowed-managers contract and
-  manager-rules bullet; no contract change. The AUTO-GEN block
+- **spec 02** — add `custom` to the allowed-managers contract and a
+  `custom` manager-rules bullet (doc-only, bespoke install path). `paru`
+  was already in the contract / manager-rules. The AUTO-GEN block
   regenerates (via `make gen-deps`) to add a "Layer 4 — install list"
-  table once the `paru` entry lands.
+  table showing both `paru` (custom) and `neovim-git` (paru).
 - **spec 01** — tree: replace `container/bind/layer_4_files/` with
   `layer_5_files/entrypoint.sh`; add `dependencies/layer_4/paru.txt`.
 
 ## §9 Acceptance / verification
 
 - `make gen-deps` is idempotent and emits `dependencies/layer_4/paru.txt`
-  with the `paru` line (and the AUTO-GEN Layer 4 table in spec 02).
+  containing only the `paru`-manager entries (currently `neovim-git`);
+  the AUTO-GEN Layer 4 table in spec 02 shows `paru` (custom) +
+  `neovim-git` (paru).
 - `make build` succeeds end-to-end across the 5 stages.
 - In the running container (`make up` then `podman exec`):
-  `paru --version` prints a version string as `${USERNAME}`.
+  `paru --version` and `nvim --version` print version strings as
+  `${USERNAME}`.
 - `podman build --target aur` succeeds in isolation and the resulting
-  image has `paru` on PATH.
+  image has `paru` and `nvim` on PATH.
 - Re-running `make build` after a no-op change reuses the
   `~/.cache/paru` cache mount (second build's `aur` step is faster / a
   cache hit for the clone).
@@ -264,10 +327,10 @@ No schema bump (additive).
   already ran `pacman -Syu`, and a mid-build full upgrade risks
   destabilizing the toolchain stage's pinned binaries. Deferred to a
   follow-up if drift becomes a problem.
-- **Q2:** Should concrete AUR packages (the user's intended set) be
-  added in this change or a follow-up? Current design: follow-up, to
-  land infrastructure first (mirrors the cargo precedent). The user is
-  asked at plan handoff whether to seed a concrete list now.
+- **Q2:** Resolved. `neovim-git` was added in this change (the user
+  confirmed at plan handoff) as the first concrete AUR package, landing
+  alongside the infrastructure. Additional AUR packages are follow-up
+  commits to `packages.toml` with `manager = "paru"`, `layer = 4`.
 - **Q3:** GPG key import for AUR packages that sign sources. `paru`
   handles this interactively by default; with `--noconfirm` it may fail
   on signed sources whose key is not in the keyring. Deferred until the

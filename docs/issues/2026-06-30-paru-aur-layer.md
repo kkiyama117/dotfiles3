@@ -1,7 +1,7 @@
 # Add a `paru` (AUR) install layer to the container build
 
 **Date:** 2026-06-30
-**Status:** open
+**Status:** closed (see [result-log](2026-06-30-phase-paru-aur-layer.md))
 **Related:** [design](../specifications/implementations/2026-06-30-paru-aur-layer-design.md), [plan](../plans/2026-06-30-paru-aur-layer-impl.md), [spec 20](../specifications/20-container-rules.md), [spec 21](../specifications/21-container-build-flow.md), [spec 02](../specifications/02-installed-programs.md)
 
 ## Context

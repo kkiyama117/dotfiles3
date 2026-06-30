@@ -1,5 +1,7 @@
 # `paru` (AUR) Install Layer — Implementation Plan
 
+**Status:** executed (see [result-log](../issues/2026-06-30-phase-paru-aur-layer.md))
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add a dedicated `aur` stage (Layer 4) to the container build that bootstraps `paru` from the AUR via `makepkg` and installs a generated AUR package list from `dependencies/layer_4/paru.txt`, fed from `dependencies/packages.toml`; renumber the `runtime` stage to Layer 5; resolve spec 21 Q1 and spec 20 Q2.
@@ -19,7 +21,42 @@
 - **Podman ≥ 4.0** required for `uid=` / `gid=` on `--mount=type=cache` (already required by the toolchain stage).
 - **`USERNAME` defined in `.env`** at repo root (existing). `make build` / `make up` abort when unset.
 - **Numeric layer order == build-chain order** (spec 21 convention): inserting `aur` at Layer 4 forces `runtime` to Layer 5 and renames `container/bind/layer_4_files/` → `layer_5_files/` in the same change.
-- **Initial `paru.txt` = `{ paru, neovim-git }`** — `paru` (the bootstrap tool, I5) plus one concrete AUR package (`neovim-git`, a -git build of neovim from upstream master) to exercise the full AUR clone/build path end-to-end. Additional AUR packages are follow-up commits.
+- **Initial `paru.txt` = `{ neovim-git }`** — `paru` itself is declared `manager = "custom"` (doc-only: appears in the spec 02 AUTO-GEN block, satisfies I5, but is NOT written to `paru.txt`); it is bootstrapped via `makepkg` in the `aur` stage and must NOT be a `paru -S` target (re-submitting it breaks paru's resolver). `neovim-git` is the first concrete `manager = "paru"` AUR package. Additional AUR packages are follow-up commits.
+
+---
+
+## Deviation log (implementation)
+
+Executed inline 2026-06-30. Deviations from the original plan below,
+discovered while building — the authoritative final state is in the
+[design](../specifications/implementations/2026-06-30-paru-aur-layer-design.md)
+(Approved) and specs 20/21/02/01, which were updated to match.
+
+1. **`custom` doc-only manager added (new Task 1b).** The original plan
+   declared `paru` with `manager = "paru"` and assumed `paru -S --needed
+   paru` would be a harmless no-op. Empirically, re-submitting an
+   already-bootstrapped `paru` as a `paru -S` target breaks paru's
+   dependency resolver (`could not find all required packages: neovim-git
+   paru (target)`). Fix: added a `custom` manager (doc-only, like `mise`)
+   to `DOC_ONLY_MANAGERS`; `paru` is now `manager = "custom"`, so it is
+   in the spec 02 AUTO-GEN block (I5) but NOT in `paru.txt`. The
+   `aur`-stage `makepkg -si` bootstrap is its sole install path.
+   Commits: `a8e672c` (generator), `30bf95d` (packages.toml).
+2. **`aur` RUNs source `/tmp/build-home/.zshenv` + mount cargo caches.**
+   The original `aur` stage did not source `.zshenv`, so `CARGO_HOME`
+   defaulted to `~/.cargo`. The toolchain stage's cache mounts re-root
+   `/home/${USERNAME}` to root, so the user could not create `~/.cargo`
+   (`Permission denied (os error 13)` during paru's `prepare()`).
+   Fix: both `aur` RUNs `source /tmp/build-home/.zshenv` (so `CARGO_HOME`
+   points at the user-owned XDG `~/.local/share/cargo`) and mount the
+   cargo registry/git caches. Commit: `7395c7b`.
+3. **No filter-loop in the bulk install.** An intermediate fix filtered
+   already-installed packages via `pacman -Qi`; superseded by deviation #1
+   (paru is no longer in `paru.txt`), so the bulk RUN is the simple
+   `paru -S --noconfirm --needed $pkgs`.
+4. **`neovim-git` folded in.** The user confirmed `neovim-git` (not
+   stable `neovim`, which is a pacman-repo package and would belong in
+   Layer 1) as the first concrete AUR package — design §10 Q2 resolved.
 
 ---
 
@@ -27,9 +64,10 @@
 
 | Path | Action | Responsibility |
 |---|---|---|
-| `programs/generate_deps/main.py` | modify | Add `(4, "paru")` to `EXPECTED_EMPTY_FILES` so `layer_4/paru.txt` is always emitted |
+| `programs/generate_deps/main.py` | modify | Add `(4, "paru")` to `EXPECTED_EMPTY_FILES` so `layer_4/paru.txt` is always emitted; add `"custom"` to `DOC_ONLY_MANAGERS` (doc-only manager for bespoke-install packages like `paru`) |
 | `programs/generate_deps/tests/test_paru_layer.py` | create | Unit tests for the paru-layer extension |
-| `dependencies/packages.toml` | modify | Add `Layer 4` marker + seed `paru` `[[tool]]` entry |
+| `programs/generate_deps/tests/test_custom_manager.py` | create | Unit tests for the `custom` doc-only manager (declared in SoT, no install list) |
+| `dependencies/packages.toml` | modify | Add `Layer 4` marker + seed `paru` (`manager = "custom"`) and `neovim-git` (`manager = "paru"`) entries |
 | `dependencies/layer_4/paru.txt` | create (via `make gen-deps`) | Generator-emitted AUR install list |
 | `container/Containerfile` | modify | Add `aur` stage (Layer 4); renumber `runtime` to Layer 5; switch `FROM toolchain AS runtime` → `FROM aur AS runtime` |
 | `container/bind/layer_4_files/` → `container/bind/layer_5_files/` | rename | `entrypoint.sh` moves so the bind dir matches the new runtime layer number |
