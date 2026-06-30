@@ -76,11 +76,20 @@
 }
 
 ################################################################################
-# Toolchain HOMEs (XDG-compliant)
+# Toolchain HOMEs (XDG-compliant) — BUILD-TIME ONLY (build_mode = true).
+#
+# These are needed only during the container build (Stage 3 toolchain
+# installs source /tmp/build-home/.zshenv to materialize CARGO_HOME /
+# RUSTUP_HOME / MISE_DATA_DIR). At runtime (entrypoint, build_mode = false)
+# the toolchain HOMEs are re-defined in a separate, sourced config file
+# so the build-only assumptions (e.g. scratch /tmp/build-home) do not leak
+# into the live $HOME.
 ################################################################################
+{{ if .build_mode -}}
 : "Toolchain HOMEs" && {
   export CARGO_HOME="${CARGO_HOME:-$XDG_DATA_HOME/cargo}"
   export RUSTUP_HOME="${RUSTUP_HOME:-$XDG_DATA_HOME/rustup}"
   export MISE_DATA_DIR="${MISE_DATA_DIR:-$XDG_DATA_HOME/mise}"
   path=($CARGO_HOME/bin(N-/) $MISE_DATA_DIR/shims(N-/) $path)
 }
+{{- end }}

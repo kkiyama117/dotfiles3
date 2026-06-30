@@ -24,7 +24,10 @@ the map of which top-level path serves which concern.
 ├── AGENTS.md           # top-level agent protocol; refs specifications/
 ├── README.md           # repo readme (user entry point)
 ├── Makefile            # build/up/exec/down + codegen targets (see 03-makefile.md)
-├── dot_zshenv          # chezmoi-managed ~/.zshenv (chezmoi `dot_` prefix)
+├── dot_zshenv.tmpl     # chezmoi-managed ~/.zshenv (template; build_mode-gated toolchain block)
+├── dot_config/         # chezmoi-managed ~/.config/ (XDG configs)
+│   └── zsh/
+│       └── dot_zshrc.tmpl  # chezmoi-managed ~/.config/zsh/.zshrc (runtime toolchain block)
 ├── (Other dotfiles)    # chezmoi-managed ~/(other dotfiles)
 ├── .chezmoiignore      # chezmoi ignore rules
 ├── .dockerignore       # excludes .git/docs/.env/home_dir from srcroot build context (Task 9)
@@ -77,7 +80,8 @@ the map of which top-level path serves which concern.
 - Q1: where do chezmoi-managed program config files that are large or
   third-party (e.g. sheldon plugins, nix flakes) live — inline `dot_*` at the
   repo root, or a dedicated subdir sourced via chezmoi `externals`? Currently
-  only `dot_zshenv` exists at the root.
+  only `dot_zshenv.tmpl` exists at the root (plus `dot_config/zsh/dot_zshrc.tmpl`
+  under `dot_config/`).
 - Q2: should `programs/` (host codegen) and `container/programs/` (per-program
   container install scripts) be merged or kept separate? They serve different
   run contexts today.

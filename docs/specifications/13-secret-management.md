@@ -73,9 +73,9 @@ Chezmoi apply runs in two phases:
 1. **Build-time pre-pass** (Containerfile Stage 2 `build-prepass`). Runs
    against a scratch destination (`/tmp/build-home`) with `build_mode = true`
    in the chezmoi data. Renders ENV-bearing dotfiles only; Bitwarden-bound
-   templates are guarded by `{{- if not .build_mode -}}` (or excluded via
-   `.chezmoiignore` templates) so the build never consults `bw`. The
-   scratch destination is deleted in Stage 4 before the final image layer
+   templates are guarded by the in-template `{{ if not .build_mode }}`
+   convention (I-S6) so the build never consults `bw`. The scratch
+   destination is deleted in Stage 4 before the final image layer
    is finalized.
 
 2. **Runtime apply** (`container/bind/layer_4_files/entrypoint.sh`). Runs
@@ -104,6 +104,16 @@ Chezmoi apply runs in two phases:
   image layers.
 - **I-S5:** chezmoi templates consume secrets ONLY via the `bitwarden*`
   template functions. No `bw` subprocess calls from templates.
+- **I-S6:** Phase-conditional chezmoi content uses the **in-template guard**
+  convention — `{{ if .build_mode }} ... {{ end }}` for build-only content
+  and `{{ if not .build_mode }} ... {{ end }}` for runtime-only content —
+  not `.chezmoiignore` template rules. (Exact whitespace-trimming dash
+  placement is chosen per file so a guard never merges a trailing comment
+  line with the following code.) First non-secret use: the toolchain HOMEs
+  block, build-only in `.zshenv` and runtime-only in `~/.config/zsh/.zshrc`
+  (see [`21`](21-container-build-flow.md) acceptance #6). Bitwarden-bound
+  dotfiles, when introduced, follow the same `{{ if not .build_mode }}`
+  guard so the build-time pre-pass never consults `bw`.
 
 ## §7 Cross-references
 
@@ -120,8 +130,10 @@ Chezmoi apply runs in two phases:
   survey is reconciled with the chezmoi source tree.
 - **Q2:** Whether `BW_SESSION` is persisted in a keyring (chezmoi
   `secret keyring`) or requires re-auth each session. Deferred.
-- **Q3:** Build-mode template guard convention. Whether Bitwarden-bound
-  templates should be guarded with `{{- if not .build_mode -}}` inside
-  the template or excluded via `.chezmoiignore` template-based rules is
-  unresolved. Pick one before introducing the first Bitwarden-bound
-  dotfile. (Tracked: design doc §10 item 6.)
+- **Q3: Resolved (I-S6).** Phase-conditional chezmoi content uses the
+  in-template `{{ if (not) .build_mode }}` guard convention, not
+  `.chezmoiignore` template rules. First use is the non-secret toolchain
+  HOMEs block (build-only `.zshenv` / runtime-only `~/.config/zsh/.zshrc`);
+  Bitwarden-bound dotfiles will follow the same `{{ if not .build_mode }}`
+  guard so the build-time pre-pass stays secret-free. See invariant I-S6
+  and [`21`](21-container-build-flow.md) acceptance #6.

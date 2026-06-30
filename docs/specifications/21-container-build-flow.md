@@ -44,12 +44,18 @@ A new stage may land only when:
 4. invariants I6–I8 in [`20-container-rules.md`](20-container-rules.md) hold after the change
 5. The final image has no `/tmp/chezmoi-src`, `/tmp/build-home`, or
    `~/.config/chezmoi` directory (Stage 4 scratch removal asserted).
-6. After `make up`, `podman exec <container> zsh -lc 'echo $CARGO_HOME'`
-   outputs `~/.local/share/cargo` (XDG-compliant; the toolchain PATH/HOMEs
-   live in `.zshenv`, rendered by the entrypoint at runtime, so verify via
-   `podman exec` with a zsh login shell — not an ephemeral `podman run`
-   with `bash -lc`, which neither runs the entrypoint nor sources
-   `.zshenv`).
+6. After `make up`, `podman exec <container> zsh -ic 'echo $CARGO_HOME'`
+   outputs `~/.local/share/cargo` (XDG-compliant). The toolchain PATH/HOMEs
+   are now **split across phases**: `.zshenv` carries them only at build
+   time (`build_mode = true`, sourced by Stage 3 against `/tmp/build-home`);
+   at runtime the entrypoint re-applies chezmoi with `build_mode = false`,
+   so `.zshenv` omits the block and `~/.config/zsh/.zshrc` re-establishes
+   `CARGO_HOME` / `RUSTUP_HOME` / `MISE_DATA_DIR` + the toolchain PATH
+   entries for **interactive** shells. Verify via `podman exec` with an
+   *interactive* zsh (`zsh -ic`): `.zshrc` is interactive-only, so
+   `zsh -lc` (login, non-interactive) and `zsh -c` will NOT see
+   `CARGO_HOME`. Do not use an ephemeral `podman run`, which neither runs
+   the entrypoint nor sources the dotfiles.
 7. After `make up`, `~/.local/share/chezmoi/.git` is visible inside the
    container (host bind verified).
 8. `make down && make up` preserves toolchain binaries (named-volume
