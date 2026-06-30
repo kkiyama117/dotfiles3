@@ -120,10 +120,15 @@ FROM base AS build-prepass
 # Layer 2-2: Apply minimum dotfiles with chezmoi:
 COPY --from=srcroot --chown=${HOST_UID}:${HOST_GID} . /tmp/chezmoi-src
 
-# generate temporary chezmoi config
+# generate temporary chezmoi config from the source-root template
 RUN mkdir -p /home/${USERNAME}/.config/chezmoi
-# TODO: Check to make "Build-only" dotfiles can work
-COPY bind/layer_2_files/chezmoi.toml /home/${USERNAME}/.config/chezmoi/chezmoi.toml
+# Render the chezmoi config from .chezmoi.toml.tmpl with build_mode=true.
+# BUILD_MODE is inline (not ENV) so it never reaches image Env / podman
+# inspect. Runs as USER ${USERNAME} -> USERNAME-owned (the runtime
+# entrypoint can overwrite it, and Layer 5-3 strips it regardless).
+RUN BUILD_MODE=true chezmoi execute-template --init \
+      < /tmp/chezmoi-src/.chezmoi.toml.tmpl \
+      > /home/${USERNAME}/.config/chezmoi/chezmoi.toml
 
 RUN mkdir -p /tmp/build-home \
  && chezmoi apply \
@@ -270,10 +275,11 @@ FROM aur AS runtime
 #    what the runtime `chezmoi apply --force` produces; the runtime apply
 #    just overwrites it with the same content (idempotent). Only
 #    `~/.zshenv` is baked here — `~/.config/chezmoi/chezmoi.toml` is NOT
-#    baked: the build-prepass toml (`build_mode = true`, root-owned from
-#    the Stage 2 COPY) is stripped in Layer 5-3, and the runtime
-#    entrypoint re-creates it fresh as ${USERNAME} with
-#    `build_mode = false` before `chezmoi apply`.
+#    baked: the build-prepass toml (`build_mode = true`, rendered from
+#    `.chezmoi.toml.tmpl` by `chezmoi execute-template --init` with
+#    `BUILD_MODE=true`, USERNAME-owned) is stripped in Layer 5-3, and the
+#    runtime entrypoint re-renders it from the same `.chezmoi.toml.tmpl`
+#    (`BUILD_MODE` unset -> `false`) as ${USERNAME} before `chezmoi apply`.
 # -  Restore /home/${USERNAME} ownership: Stage 3 cache mounts (e.g. the
 #    --mount=type=cache under /home/${USERNAME}/.cache) cause Podman to
 #    create a missing parent as root, which re-roots /home/${USERNAME}
@@ -303,11 +309,14 @@ RUN set -eux; \
 # /home/${USERNAME} -m builder` moved out of the base image's `builder`
 # home. They are not chezmoi-managed, so `chezmoi apply` never removes
 # them; they would otherwise linger in `$HOME` forever.
-# Also strip the build-prepass `chezmoi.toml` (`build_mode = true`, root-
-# owned from the Stage 2 COPY) that rides the Stage chain into the
-# runtime image: the runtime entrypoint re-creates this file with
-# `build_mode = false` as ${USERNAME}, so the baked copy must be gone
-# (and root-owned, so the entrypoint could not overwrite it anyway).
+# Also strip the build-prepass `chezmoi.toml` (`build_mode = true`,
+# rendered from `.chezmoi.toml.tmpl` by `chezmoi execute-template --init`
+# with `BUILD_MODE=true`, USERNAME-owned) that rides the Stage chain into
+# the runtime image: the runtime entrypoint re-renders this file from the
+# same template (`BUILD_MODE` unset -> `false`) as ${USERNAME}, so the
+# baked copy is removed as a clean-slate invariant (it would be safe to
+# overwrite now that it is USERNAME-owned, but stripping guarantees no
+# stale carry-forward).
 RUN set -eux; \
     rm -rf /tmp/build-home; \
     rm -rf /tmp/chezmoi-src; \
