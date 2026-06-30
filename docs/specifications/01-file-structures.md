@@ -37,15 +37,17 @@ the map of which top-level path serves which concern.
 │
 ├── container/          # Podman build context (BUILD_CTX in Makefile)
 │   └── bind/           # bind-mounted sources/scripts (full rules: `20-container-rules.md`)
-│       └── layer_4_files/
-│           └── entrypoint.sh  # runtime chezmoi-apply entrypoint (Stage 4; see 21-...md)
+│       └── layer_5_files/
+│           └── entrypoint.sh  # runtime chezmoi-apply entrypoint (Stage 5; see 21-...md)
 │
 ├── dependencies/       # package SoT + generated layer manifests
 │   ├── packages.toml   # HAND-EDITED SoT; consumed by `make gen-deps`
 │   ├── layer_1/
 │   │   └── pacman.txt  # GENERATED from packages.toml (do not hand-edit; I8)
-│   └── layer_3/
-│       └── cargo.txt   # GENERATED (empty initial list; emitted by `make gen-deps`)
+│   ├── layer_3/
+│   │   └── cargo.txt   # GENERATED (empty initial list; emitted by `make gen-deps`)
+│   └── layer_4/
+│       └── paru.txt    # GENERATED AUR install list (`manager = "paru"` entries only; I8)
 │
 ├── programs/           # host-side tooling / codegen
 │   └── generate_deps/  # implementation of `make gen-deps` (see 08-automations.md)
