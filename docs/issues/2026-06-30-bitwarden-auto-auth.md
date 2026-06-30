@@ -1,7 +1,7 @@
 # Bitwarden auto-auth at container startup (podman secret)
 
 **Date:** 2026-06-30
-**Status:** open
+**Status:** closed (see [result-log](2026-06-30-phase-bitwarden-auto-auth.md))
 **Related:** [design](../specifications/implementations/2026-06-30-bitwarden-auto-auth-design.md), [plan](../plans/2026-06-30-bitwarden-auto-auth-impl.md)
 
 ## Context
