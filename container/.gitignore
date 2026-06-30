@@ -1,4 +1,4 @@
 bind/**/*
 !bind/**/
 !bind/layer_1_files/pacman_mirrorlist
-!bind/layer_4_files/entrypoint.sh
+!bind/layer_5_files/entrypoint.sh
