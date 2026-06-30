@@ -37,8 +37,12 @@ the map of which top-level path serves which concern.
 │
 ├── container/          # Podman build context (BUILD_CTX in Makefile)
 │   └── bind/           # bind-mounted sources/scripts (full rules: `20-container-rules.md`)
+│       ├── layer_1_files/
+│       │   └── pacman_mirrorlist  # Layer 1 pacman mirrorlist (Stage 1-2)
+│       ├── layer_2_files/
+│       │   └── chezmoi.toml       # build-prepass chezmoi config (`build_mode = true`; Stage 2 COPY)
 │       └── layer_5_files/
-│           └── entrypoint.sh  # runtime chezmoi-apply entrypoint (Stage 5; see 21-...md)
+│           └── entrypoint.sh  # runtime chezmoi-apply entrypoint (Stage 5-4; see 21-...md)
 │
 ├── dependencies/       # package SoT + generated layer manifests
 │   ├── packages.toml   # HAND-EDITED SoT; consumed by `make gen-deps`

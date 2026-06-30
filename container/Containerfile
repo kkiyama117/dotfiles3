@@ -121,11 +121,9 @@ FROM base AS build-prepass
 COPY --from=srcroot --chown=${HOST_UID}:${HOST_GID} . /tmp/chezmoi-src
 
 # generate temporary chezmoi config
-RUN mkdir -p /home/${USERNAME}/.config/chezmoi \
- && cat > /home/${USERNAME}/.config/chezmoi/chezmoi.toml <<'TOML'
-[data]
-build_mode = true
-TOML
+RUN mkdir -p /home/${USERNAME}/.config/chezmoi
+# TODO: Check to make "Build-only" dotfiles can work
+COPY bind/layer_2_files/chezmoi.toml /home/${USERNAME}/.config/chezmoi/chezmoi.toml
 
 RUN mkdir -p /tmp/build-home \
  && chezmoi apply \
@@ -248,11 +246,11 @@ RUN --mount=type=cache,target=/var/cache/pacman/pkg \
 # Layer 5-1: use Container image of Layer 4 (aur)
 FROM aur AS runtime
 
-# Layer 5-2: Bake minimum home + strip build scratch + fix /home ownership
+# Layer 5-2: Bake minimum home (.zshenv) + fix /home ownership
 #
-# Three things happen here, all as root:
+# Two things happen here, all as root:
 #
-# 1) Bake a MINIMUM HOME so the image boots into a wizard-free,
+# -  Bake a MINIMUM HOME so the image boots into a wizard-free,
 #    PATH/env-equipped, chezmoi-apply-ready shell INDEPENDENT of the
 #    runtime entrypoint (which re-runs `chezmoi apply` against the
 #    host bind). This covers two real failure modes:
@@ -263,22 +261,20 @@ FROM aur AS runtime
 #         baked, the module's "none of .zshenv/.zprofile/.zshrc/.zlogin
 #         exist" condition is never met, so the wizard never fires.
 #      b) The container being exec'd with the entrypoint bypassed (e.g.
-#         `podman run --entrypoint ...`). `~/.zshenv` + `~/.config/chezmoi/
-#         chezmoi.toml` make the shell usable and `chezmoi apply`-able.
+#         `podman run --entrypoint ...`). `~/.zshenv` makes the shell
+#         usable; `chezmoi apply` then needs the entrypoint (or a
+#         manually-created config) — the baked home no longer ships a
+#         `chezmoi.toml` (see Layer 5-3).
 #    `dot_zshenv.tmpl` has NO chezmoi template directives and NO
 #    `build_mode` branch, so the build-prepass render is byte-identical to
 #    what the runtime `chezmoi apply --force` produces; the runtime apply
-#    just overwrites it with the same content (idempotent). The runtime
-#    `chezmoi.toml` carries `build_mode = false` (the build-prepass toml
-#    was `build_mode = true`); the entrypoint rewrites this same file, so
-#    baking it is a fallback that makes the container apply-ready even
-#    before the entrypoint runs.
-# 2) Remove `/etc/skel` bash remnants (`.bashrc`, `.bash_profile`,
-#    `.bash_logout`, `.profile`) that Layer 1-3's `usermod -l ... -d
-#    /home/${USERNAME} -m builder` moved out of the base image's `builder`
-#    home. They are not chezmoi-managed, so `chezmoi apply` never removes
-#    them; they would otherwise linger in `$HOME` forever.
-# 3) Restore /home/${USERNAME} ownership: Stage 3 cache mounts (e.g. the
+#    just overwrites it with the same content (idempotent). Only
+#    `~/.zshenv` is baked here — `~/.config/chezmoi/chezmoi.toml` is NOT
+#    baked: the build-prepass toml (`build_mode = true`, root-owned from
+#    the Stage 2 COPY) is stripped in Layer 5-3, and the runtime
+#    entrypoint re-creates it fresh as ${USERNAME} with
+#    `build_mode = false` before `chezmoi apply`.
+# -  Restore /home/${USERNAME} ownership: Stage 3 cache mounts (e.g. the
 #    --mount=type=cache under /home/${USERNAME}/.cache) cause Podman to
 #    create a missing parent as root, which re-roots /home/${USERNAME}
 #    itself. The toolchain subdirs (.local/share/{cargo,rustup,mise}) keep
@@ -295,24 +291,35 @@ FROM aur AS runtime
 # MkdirAll($XDG_RUNTIME_DIR) (e.g. `chezmoi cd`) then find it present.
 USER root
 RUN set -eux; \
-    rm -rf /tmp/chezmoi-src; \
     install -d -o ${HOST_UID} -g ${HOST_GID} -m 0755 /home/${USERNAME}/.config/chezmoi; \
     cp /tmp/build-home/.zshenv /home/${USERNAME}/.zshenv; \
     chown ${HOST_UID}:${HOST_GID} /home/${USERNAME}/.zshenv; \
-    printf '[data]\nbuild_mode = false\n' \
-      > /home/${USERNAME}/.config/chezmoi/chezmoi.toml; \
-    chown ${HOST_UID}:${HOST_GID} /home/${USERNAME}/.config/chezmoi/chezmoi.toml; \
+    chown ${HOST_UID}:${HOST_GID} /home/${USERNAME}; \
+    install -d -o ${HOST_UID} -g ${HOST_GID} -m 0700 /run/user/${HOST_UID}
+
+# Layer 5-3: remove duplicated files and strip build artifacts
+# Remove `/etc/skel` bash remnants (`.bashrc`, `.bash_profile`,
+# `.bash_logout`, `.profile`) that Layer 1-3's `usermod -l ... -d
+# /home/${USERNAME} -m builder` moved out of the base image's `builder`
+# home. They are not chezmoi-managed, so `chezmoi apply` never removes
+# them; they would otherwise linger in `$HOME` forever.
+# Also strip the build-prepass `chezmoi.toml` (`build_mode = true`, root-
+# owned from the Stage 2 COPY) that rides the Stage chain into the
+# runtime image: the runtime entrypoint re-creates this file with
+# `build_mode = false` as ${USERNAME}, so the baked copy must be gone
+# (and root-owned, so the entrypoint could not overwrite it anyway).
+RUN set -eux; \
+    rm -rf /tmp/build-home; \
+    rm -rf /tmp/chezmoi-src; \
+    rm -f /home/${USERNAME}/.config/chezmoi/chezmoi.toml; \
     rm -f /home/${USERNAME}/.bashrc \
           /home/${USERNAME}/.bash_profile \
           /home/${USERNAME}/.bash_logout \
-          /home/${USERNAME}/.profile; \
-    rm -rf /tmp/build-home; \
-    chown ${HOST_UID}:${HOST_GID} /home/${USERNAME}; \
-    install -d -o ${HOST_UID} -g ${HOST_GID} -m 0700 /run/user/${HOST_UID}
+          /home/${USERNAME}/.profile;
+
+# Layer 5-4: Run the entrypoint of the container with some ENVs
 COPY --chown=root:root bind/layer_5_files/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod 0755 /usr/local/bin/entrypoint.sh
-
-# Layer 5-3: Run the entrypoint of the container with some ENVs
 USER ${USERNAME}
 WORKDIR /home/${USERNAME}
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

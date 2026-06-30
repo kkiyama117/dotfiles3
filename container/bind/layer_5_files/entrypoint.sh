@@ -6,7 +6,8 @@
 # ~/.local/share/chezmoi. This script:
 #   1. Verifies the bind is in place (the source root has .git).
 #   2. Re-renders ~/.config/chezmoi/chezmoi.toml with build_mode = false
-#      (the build-time toml was removed in Stage 4).
+#      (the build-prepass toml is stripped in the runtime cleanup,
+#      Layer 5-4, so this creates it fresh as ${USERNAME}).
 #   3. Authenticates Bitwarden when the bw_* podman secrets are mounted
 #      (login-if-needed + `bw unlock --passwordfile`), then runs
 #      `chezmoi apply --no-tty --force` so the real $HOME picks up the

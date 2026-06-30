@@ -19,13 +19,14 @@ stage; within a stage, numbered **sub-layers** (`Layer N-M`) group related
 | `base` | 1-3 | `groupmod` / `usermod` | Remap builder -> ${USERNAME} with host uid/gid; set zsh login. | build-args |
 | `base` | 1-4 | UID-collision fallback + sudoers + `USER ${USERNAME}` | Idempotent user provisioning; NOPASSWD sudoers; switch to non-root. | build-args |
 | `base` | 1-5 | `install -d` for `~/.local/share/{cargo,rustup,mise,chezmoi}` | Owner-correct mountpoints for runtime binds/volumes. | build-args |
-| `build-prepass` (`FROM base`) | 2 | `COPY --from=srcroot` + `chezmoi apply --destination /tmp/build-home` | Scratch render of ENV-bearing dotfiles with `build_mode = true`; secret-free. | `srcroot` named build-context |
+| `build-prepass` (`FROM base`) | 2 | `COPY --from=srcroot`; `COPY bind/layer_2_files/chezmoi.toml` -> `~/.config/chezmoi/chezmoi.toml` (`build_mode = true`); `chezmoi apply --destination /tmp/build-home` | Scratch render of ENV-bearing dotfiles with `build_mode = true`; secret-free. | `srcroot` named build-context, `bind/layer_2_files/chezmoi.toml` |
 | `toolchain` (`FROM build-prepass`) | 3 | `rustup-init`, mise installer, `cargo install`; cache mounts on `$CARGO_HOME/{registry,git}` | Install rustup/mise/cargo binaries under XDG-compliant paths. | `/tmp/build-home/.zshenv`, `dependencies/layer_3/cargo.txt` |
 | `aur` (`FROM toolchain`) | 4-1 | `git clone` paru PKGBUILD + `makepkg -si` (sources `/tmp/build-home/.zshenv`; cache mounts on `~/.cache/paru` + `/var/cache/pacman/pkg` + `$CARGO_HOME/{registry,git}`) | Bootstrap `paru` from the AUR as non-root `${USERNAME}`. | AUR `paru` PKGBUILD, Layer 1-4 sudoers |
 | `aur` (`FROM toolchain`) | 4-2 | `paru -S --noconfirm --needed` | Install the Layer 4 AUR package set from the generated list (`manager = "paru"` entries only). | `dependencies/layer_4/paru.txt` |
-| `runtime` (`FROM aur`) | 5-1 | bake minimum home (copy `/tmp/build-home/.zshenv` -> `~/.zshenv`; write `~/.config/chezmoi/chezmoi.toml` `build_mode = false`); remove `/etc/skel` bash remnants; `rm -rf` remaining scratch; `chown` home; `install -d /run/user/$UID` | Bake a wizard-free / PATH-equipped / apply-ready minimum `$HOME` so the image boots into a working shell independent of the runtime entrypoint (covers `make exec` racing the entrypoint apply, and entrypoint-bypassed `podman run`); strip Stage 2/3/4 scratch; bake XDG runtime dir. | `/tmp/build-home/.zshenv` (from Stage 2 render) |
-| `runtime` (`FROM aur`) | 5-2 | `COPY entrypoint.sh` | Install the runtime chezmoi-apply entrypoint (authenticates `bw` from the mounted `bw_*` podman secrets → `BW_SESSION` → `chezmoi apply`, then scrubs BW_* env before `exec`; see [`13-secret-management.md`](13-secret-management.md) §4). | `container/bind/layer_5_files/entrypoint.sh` |
-| `runtime` (`FROM aur`) | 5-3 | `USER`/`WORKDIR`/`ENTRYPOINT`/`CMD` | Final image: entrypoint re-applies chezmoi against the host bind. | - |
+| `runtime` (`FROM aur`) | 5-1 | `FROM aur AS runtime` | Runtime stage base (inherits the `aur` image). | - |
+| `runtime` (`FROM aur`) | 5-2 | bake minimum home: `cp /tmp/build-home/.zshenv` -> `~/.zshenv`; `install -d ~/.config/chezmoi`; `chown` home; `install -d /run/user/$UID` (as root) | Bake a wizard-free / PATH-equipped minimum `$HOME` so the image boots into a working shell independent of the runtime entrypoint (covers `make exec` racing the entrypoint apply, and entrypoint-bypassed `podman run`). Only `~/.zshenv` is baked — **no `chezmoi.toml` is baked** (the build-prepass toml is stripped in 5-3; the entrypoint creates it fresh). | `/tmp/build-home/.zshenv` (from Stage 2 render) |
+| `runtime` (`FROM aur`) | 5-3 | strip build artifacts + `/etc/skel` bash remnants: `rm -rf /tmp/build-home /tmp/chezmoi-src`; `rm -f ~/.config/chezmoi/chezmoi.toml` (the root-owned build-prepass toml that rode the Stage chain); `rm -f ~/.{bashrc,bash_profile,bash_logout,profile}` (as root) | Drop Stage 2/3/4 scratch so neither tree rides the final layer (acceptance #5); strip the carried-forward build-prepass `chezmoi.toml` so the entrypoint (as `${USERNAME}`) can create the runtime one; remove the non-chezmoi-managed bash remnants. | - |
+| `runtime` (`FROM aur`) | 5-4 | `COPY entrypoint.sh` + `chmod` + `USER`/`WORKDIR`/`ENTRYPOINT`/`CMD` | Install the runtime chezmoi-apply entrypoint (authenticates `bw` from the mounted `bw_*` podman secrets → `BW_SESSION` → `chezmoi apply`, then scrubs BW_* env before `exec`; see [`13-secret-management.md`](13-secret-management.md) §4) and set the final user/entrypoint. Final image: entrypoint re-applies chezmoi against the host bind. | `container/bind/layer_5_files/entrypoint.sh` |
 
 ### Notes on the current state
 
@@ -46,12 +47,16 @@ stage; within a stage, numbered **sub-layers** (`Layer N-M`) group related
   to fetch crates. The bootstrap clone (`/tmp/paru-build`) is removed
   before the stage ends (I-AUR4).
 - The build-prepass scratch (`/tmp/chezmoi-src`, `/tmp/build-home`) is
-  deleted in Stage 5 before the final image layer is finalized. The
-  build-time `~/.config/chezmoi/chezmoi.toml` (`build_mode = true`) is
-  replaced in Stage 5 with the runtime `~/.config/chezmoi/chezmoi.toml`
-  (`build_mode = false`) as part of baking the **minimum home** (see
-  acceptance #5a / invariant I10). The minimum `.zshenv` is copied out of
-  `/tmp/build-home` before that scratch tree is dropped.
+  deleted in Stage 5 (Layer 5-3) before the final image layer is
+  finalized. The build-prepass `~/.config/chezmoi/chezmoi.toml`
+  (`build_mode = true`, `COPY`'d from `bind/layer_2_files/chezmoi.toml`
+  as root) rides the Stage chain (`toolchain` -> `aur` -> `runtime`)
+  into the runtime image and is **stripped** in Layer 5-3 (not
+  replaced); the runtime `~/.config/chezmoi/chezmoi.toml`
+  (`build_mode = false`) is **created fresh by the entrypoint** as
+  `${USERNAME}` before `chezmoi apply` (see acceptance #5a / invariant
+  I10). The minimum `.zshenv` is copied out of `/tmp/build-home`
+  (Layer 5-2) before that scratch tree is dropped (Layer 5-3).
 
 ## Acceptance criteria
 
@@ -64,21 +69,26 @@ A new stage may land only when:
 5. The final image has no `/tmp/chezmoi-src` or `/tmp/build-home`
    directory (Stage 5 scratch removal asserted).
 5a. The final image bakes a **minimum `$HOME`** so it boots into a
-    wizard-free, PATH/env-equipped, `chezmoi apply`-ready shell
-    *independent of the runtime entrypoint*. Concretely the image
-    carries `~/.zshenv` (copied from the Stage 2 `/tmp/build-home` render;
-    `dot_zshenv.tmpl` has no template directives and no `build_mode`
-    branch, so this is byte-identical to the runtime `chezmoi apply
-    --force` output) and `~/.config/chezmoi/chezmoi.toml` with
-    `build_mode = false`. The runtime entrypoint still rewrites the
-    `chezmoi.toml` and re-applies chezmoi (idempotent overwrite). This
-    covers two failure modes: (a) `make exec` racing the entrypoint's
-    `chezmoi apply` (an exec'd `zsh` would otherwise see a `$HOME` with no
-    zsh startup file and trigger the `zsh/newuser` first-run wizard via
-    `/usr/share/zsh/scripts/newuser`; with `~/.zshenv` baked, the
-    module's "none of `.zshenv`/`.zprofile`/`.zshrc`/`.zlogin` exist"
-    condition is never met); (b) the container being exec'd with the
-    entrypoint bypassed (e.g. `podman run --entrypoint ...`).
+    wizard-free, PATH-equipped, *shell-usable* state independent of the
+    runtime entrypoint. Concretely the image carries `~/.zshenv` (copied
+    from the Stage 2 `/tmp/build-home` render; `dot_zshenv.tmpl` has no
+    template directives and no `build_mode` branch, so this is
+    byte-identical to the runtime `chezmoi apply --force` output). It
+    does **NOT** bake `~/.config/chezmoi/chezmoi.toml`: the build-prepass
+    toml (`build_mode = true`, root-owned) is stripped in Layer 5-3, and
+    the runtime entrypoint creates `~/.config/chezmoi/chezmoi.toml`
+    (`build_mode = false`) fresh as `${USERNAME}` before `chezmoi apply`.
+    So the baked shell is usable without the entrypoint, but
+    `chezmoi apply` requires the entrypoint (or a manually-created
+    config). This covers two failure modes: (a) `make exec` racing the
+    entrypoint's `chezmoi apply` (an exec'd `zsh` would otherwise see a
+    `$HOME` with no zsh startup file and trigger the `zsh/newuser`
+    first-run wizard via `/usr/share/zsh/scripts/newuser`; with
+    `~/.zshenv` baked, the module's "none of
+    `.zshenv`/`.zprofile`/`.zshrc`/`.zlogin` exist" condition is never
+    met); (b) the container being exec'd with the entrypoint bypassed
+    (e.g. `podman run --entrypoint ...`) — the shell is usable, just not
+    `chezmoi apply`-ready until the entrypoint (or a manual config) runs.
 5b. The final image has no `/etc/skel` bash remnants in `$HOME`
     (`.bashrc`, `.bash_profile`, `.bash_logout`, `.profile`); Stage 5
     removes the files that Layer 1-3's `usermod -l ... -d
