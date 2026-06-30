@@ -96,10 +96,25 @@ if [ -f /run/secrets/bw_password ]; then
   if ! bw login --check >/dev/null 2>&1; then
     bw login --apikey
   fi
-  export BW_SESSION="$(bw unlock --passwordfile /run/secrets/bw_password --raw)"
+  bw sync >/dev/null 2>&1 || true
+  for _ in 1 2 3; do
+    BW_SESSION="$(bw unlock --passwordfile /run/secrets/bw_password --raw 2>/dev/null || true)"
+    if [ -n "$BW_SESSION" ]; then break; fi
+    sleep 2
+  done
+  if [ -z "$BW_SESSION" ]; then
+    echo "entrypoint: bw unlock returned an empty session after retries." >&2
+    exit 1
+  fi
+  export BW_SESSION
 fi
 
 chezmoi apply --no-tty --force
+
+if [ -f /run/secrets/bw_password ]; then
+  unset BW_CLIENTID BW_CLIENTSECRET BW_SESSION
+fi
+
 exec "$@"
 ```
 
@@ -108,9 +123,16 @@ exec "$@"
 - The master password is read by `bw` directly from
   `/run/secrets/bw_password` via `--passwordfile`; it is never `cat`-ed
   into any shell variable or env.
-- `bw login --check` makes the login step idempotent (login state is
-  ephemeral in the container home, so a fresh container re-logs in; a
-  still-logged-in state is a no-op).
+- `bw login --check` makes the login step idempotent; `bw sync` refreshes
+  the local vault data before unlock.
+- `bw unlock --passwordfile --raw` is **retried** because it can
+  transiently return an empty session (vault data not yet local / server
+  not ready). An empty session after retries is a **loud failure**
+  (exit 1), not a silent degraded run.
+- The scrub before `exec` is **unconditional within the auth-ran path**
+  (gated on the secret file, not on `BW_SESSION` being non-empty), so a
+  transient empty session still gets the client pair scrubbed and no BW_*
+  rides into PID 1 (`/proc/1/environ`).
 - `BW_SESSION` exists only for the `chezmoi apply` call; after `exec
   "$@"` it is gone (Shape A — interactive `podman exec` shells do not
   inherit it; see §6 for the rationale).
@@ -131,10 +153,14 @@ exec "$@"
   are absent from `podman inspect`.
 - **I-BW4:** The entrypoint auth block is **optional and tolerant**: if
   `/run/secrets/bw_password` is absent, the block is skipped and
-  `chezmoi apply` still runs (preserves S4). If a `bitwarden*` template
-  is then evaluated (a BW-bound dotfile exists but no secret was
-  mounted), `chezmoi apply` fails loudly — the operator's signal to
-  mount the secrets.
+  `chezmoi apply` still runs (preserves S4). If the secret IS mounted
+  but `bw unlock` returns an empty session after retries, the entrypoint
+  **exits non-zero (loud failure)** rather than silently running with no
+  session. If a `bitwarden*` template is evaluated with no valid
+  `BW_SESSION` (a BW-bound dotfile exists but auth was skipped/failed),
+  `chezmoi apply` fails loudly — the operator's signal to mount/fix the
+  secrets. The scrub before `exec` is unconditional within the auth-ran
+  path, so no `BW_*` rides into PID 1 even on a transient empty session.
 - **I-BW5 (phase placement, restates spec 13 I-S6 normatively):** Every
   `bitwarden*` / `bitwardenFields` / `bitwardenAttachment` call MUST be
   wrapped in `{{ if not .build_mode }}…{{ end }}` (inline) so the build
@@ -184,13 +210,17 @@ The `build_mode` data flag is the single switch. For any dotfile, ask:
 ## §5 `entrypoint.sh` change (Layer 5)
 
 Insert the auth block between the existing `chezmoi.toml`
-(`build_mode = false`) render and `chezmoi apply`. The block is guarded
-by `[ -f /run/secrets/bw_password ]` so absence is a no-op (I-BW4). No
-change to the bind-check or `exec "$@"` tail. `set -euo pipefail`
-already at the top: `bw login --check` is allowed to fail (gated by
-`if`), and the `bw unlock` substitution must succeed or the script
-aborts — which is the desired "loud failure" if the password secret is
-present but wrong.
+(`build_mode = false`) render and `chezmoi apply`, and a scrub block
+between `chezmoi apply` and `exec "$@"`. Both blocks are guarded by
+`[ -f /run/secrets/bw_password ]` so absence is a no-op (I-BW4). No
+change to the bind-check or `exec "$@"` tail. Under `set -euo pipefail`:
+`bw login --check` is allowed to fail (gated by `if`); `bw sync` is
+best-effort (`|| true`); `bw unlock` is wrapped in `$(... || true)` so
+a non-zero unlock does not abort the retry loop; an **empty session
+after retries** triggers an explicit `exit 1` (loud failure — the
+password secret is present but unlock could not produce a session). The
+scrub is unconditional within the auth-ran path so no `BW_*` rides into
+PID 1 via `exec`. See §3 for the full code block.
 
 ## §6 `make up` change
 

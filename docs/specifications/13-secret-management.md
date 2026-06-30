@@ -72,14 +72,23 @@ is required.
 3. `bw login --check` gates `bw login --apikey` (idempotent: login
    state is ephemeral in the container home, so a fresh container
    re-logs in each `make up`; a still-logged-in state is a no-op).
-4. `BW_SESSION="$(bw unlock --passwordfile /run/secrets/bw_password
-   --raw)"` — the master password is read straight from the secret
-   file by `bw` and **never enters an environment variable** (I-BW2).
+   Then `bw sync` refreshes the local vault data.
+4. `bw unlock --passwordfile /run/secrets/bw_password --raw` is retried
+   (a few times) because it can **transiently return an empty session**
+   if the vault data is not yet local / the server is not ready. The
+   master password is read straight from the secret file by `bw` and
+   **never enters an environment variable** (I-BW2). If the session is
+   still empty after retries, the entrypoint **exits non-zero (loud
+   failure)** rather than silently running with no session (which would
+   leave `bitwarden*` templates unresolvable without warning).
 5. `chezmoi apply` runs with `BW_SESSION` in the entrypoint process, so
    `bitwarden*` templates resolve.
 6. Before `exec "$@"`, the entrypoint **scrubs** `BW_CLIENTID` /
-   `BW_CLIENTSECRET` / `BW_SESSION` from its environment (`unset`) so
-   they do not ride into PID 1 (e.g. `sleep infinity`) via
+   `BW_CLIENTSECRET` / `BW_SESSION` from its environment (`unset`),
+   **unconditionally within the auth-ran path** (gated on the secret
+   file, NOT on `BW_SESSION` being non-empty, so a transient empty
+   session still gets the client pair scrubbed). This prevents the
+   credentials from riding into PID 1 (e.g. `sleep infinity`) via
    `/proc/1/environ` for the container's lifetime. `BW_SESSION` was
    only needed for the apply (now done).
 
