@@ -248,22 +248,67 @@ RUN --mount=type=cache,target=/var/cache/pacman/pkg \
 # Layer 5-1: use Container image of Layer 4 (aur)
 FROM aur AS runtime
 
-# Layer 5-2: Change `/home/${USERNAME}` ownership to root
-# Restore /home/${USERNAME} ownership: Stage 3 cache mounts (e.g. the
-# --mount=type=cache under /home/${USERNAME}/.cache) cause Podman to create
-# a missing parent as root, which re-roots /home/${USERNAME} itself. The
-# toolchain subdirs (.local/share/{cargo,rustup,mise}) keep their 1000:1000
-# owner, but the home dir must be re-chowned here so the runtime entrypoint
-# (running as ${USERNAME}) can write the chezmoi-rendered .zshenv into ~.
+# Layer 5-2: Bake minimum home + strip build scratch + fix /home ownership
+#
+# Three things happen here, all as root:
+#
+# 1) Bake a MINIMUM HOME so the image boots into a wizard-free,
+#    PATH/env-equipped, chezmoi-apply-ready shell INDEPENDENT of the
+#    runtime entrypoint (which re-runs `chezmoi apply` against the
+#    host bind). This covers two real failure modes:
+#      a) `make exec` racing the entrypoint's `chezmoi apply` (the
+#         exec'd zsh would otherwise see a `$HOME` with NO zsh startup
+#         files -> `zsh/newuser` module sources `/usr/share/zsh/scripts/
+#         newuser` and the first-run wizard prompts). With `~/.zshenv`
+#         baked, the module's "none of .zshenv/.zprofile/.zshrc/.zlogin
+#         exist" condition is never met, so the wizard never fires.
+#      b) The container being exec'd with the entrypoint bypassed (e.g.
+#         `podman run --entrypoint ...`). `~/.zshenv` + `~/.config/chezmoi/
+#         chezmoi.toml` make the shell usable and `chezmoi apply`-able.
+#    `dot_zshenv.tmpl` has NO chezmoi template directives and NO
+#    `build_mode` branch, so the build-prepass render is byte-identical to
+#    what the runtime `chezmoi apply --force` produces; the runtime apply
+#    just overwrites it with the same content (idempotent). The runtime
+#    `chezmoi.toml` carries `build_mode = false` (the build-prepass toml
+#    was `build_mode = true`); the entrypoint rewrites this same file, so
+#    baking it is a fallback that makes the container apply-ready even
+#    before the entrypoint runs.
+# 2) Remove `/etc/skel` bash remnants (`.bashrc`, `.bash_profile`,
+#    `.bash_logout`, `.profile`) that Layer 1-3's `usermod -l ... -d
+#    /home/${USERNAME} -m builder` moved out of the base image's `builder`
+#    home. They are not chezmoi-managed, so `chezmoi apply` never removes
+#    them; they would otherwise linger in `$HOME` forever.
+# 3) Restore /home/${USERNAME} ownership: Stage 3 cache mounts (e.g. the
+#    --mount=type=cache under /home/${USERNAME}/.cache) cause Podman to
+#    create a missing parent as root, which re-roots /home/${USERNAME}
+#    itself. The toolchain subdirs (.local/share/{cargo,rustup,mise}) keep
+#    their 1000:1000 owner, but the home dir must be re-chowned here so the
+#    runtime entrypoint (running as ${USERNAME}) can write into ~.
+#
+# `/tmp/build-home` (the rest of the build-prepass render) is dropped after
+# the minimum `.zshenv` is copied out, and `/tmp/chezmoi-src` is dropped too,
+# so neither scratch tree rides in the final layer (spec 21 acceptance #5).
+# `/run/user/${HOST_UID}` is baked here so the shared .zshenv line
+# `export XDG_RUNTIME_DIR=/run/user/$UID` works identically on host
+# (pam_systemd creates it) and container (no pam_systemd; /run is rootfs,
+# not tmpfs, so the build-time dir persists at runtime). Tools that
+# MkdirAll($XDG_RUNTIME_DIR) (e.g. `chezmoi cd`) then find it present.
 USER root
-RUN rm -rf /tmp/chezmoi-src /tmp/build-home /home/${USERNAME}/.config/chezmoi \
- && chown ${HOST_UID}:${HOST_GID} /home/${USERNAME} \
- && install -d -o ${HOST_UID} -g ${HOST_GID} -m 0700 /run/user/${HOST_UID}
-# ^ /run/user/${HOST_UID} is baked here so the shared .zshenv line
-#   `export XDG_RUNTIME_DIR=/run/user/$UID` works identically on host
-#   (pam_systemd creates it) and container (no pam_systemd; /run is rootfs,
-#   not tmpfs, so the build-time dir persists at runtime). Tools that
-#   MkdirAll($XDG_RUNTIME_DIR) (e.g. `chezmoi cd`) then find it present.
+RUN set -eux; \
+    rm -rf /tmp/chezmoi-src; \
+    install -d -o ${HOST_UID} -g ${HOST_GID} -m 0755 /home/${USERNAME}/.config/chezmoi; \
+    cp /tmp/build-home/.zshenv /home/${USERNAME}/.zshenv; \
+    chown ${HOST_UID}:${HOST_GID} /home/${USERNAME}/.zshenv; \
+    printf '[data]\nbuild_mode = false\n' \
+      > /home/${USERNAME}/.config/chezmoi/chezmoi.toml; \
+    chown ${HOST_UID}:${HOST_GID} /home/${USERNAME}/.config/chezmoi/chezmoi.toml; \
+    rm -f /home/${USERNAME}/.bashrc \
+          /home/${USERNAME}/.bash_profile \
+          /home/${USERNAME}/.bash_logout \
+          /home/${USERNAME}/.profile; \
+    rm -rf /tmp/build-home; \
+    chown ${HOST_UID}:${HOST_GID} /home/${USERNAME}; \
+    install -d -o ${HOST_UID} -g ${HOST_GID} -m 0700 /run/user/${HOST_UID}
 COPY --chown=root:root bind/layer_5_files/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod 0755 /usr/local/bin/entrypoint.sh
 

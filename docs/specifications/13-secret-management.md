@@ -116,8 +116,9 @@ Chezmoi apply runs in two phases:
    in the chezmoi data. Renders ENV-bearing dotfiles only; Bitwarden-bound
    templates are guarded by the in-template `{{ if not .build_mode }}`
    convention (I-S6) so the build never consults `bw`. The scratch
-   destination is deleted in Stage 4 before the final image layer
-   is finalized.
+   destination is deleted in Stage 5 (after the minimum `.zshenv` is
+   copied out — see spec 20 I10 / spec 21 acceptance #5a) before the
+   final image layer is finalized.
 
 2. **Runtime apply** (`container/bind/layer_5_files/entrypoint.sh`). Runs
    against the real `$HOME` against the host-bind chezmoi source at

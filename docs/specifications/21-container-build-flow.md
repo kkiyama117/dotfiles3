@@ -23,7 +23,7 @@ stage; within a stage, numbered **sub-layers** (`Layer N-M`) group related
 | `toolchain` (`FROM build-prepass`) | 3 | `rustup-init`, mise installer, `cargo install`; cache mounts on `$CARGO_HOME/{registry,git}` | Install rustup/mise/cargo binaries under XDG-compliant paths. | `/tmp/build-home/.zshenv`, `dependencies/layer_3/cargo.txt` |
 | `aur` (`FROM toolchain`) | 4-1 | `git clone` paru PKGBUILD + `makepkg -si` (sources `/tmp/build-home/.zshenv`; cache mounts on `~/.cache/paru` + `/var/cache/pacman/pkg` + `$CARGO_HOME/{registry,git}`) | Bootstrap `paru` from the AUR as non-root `${USERNAME}`. | AUR `paru` PKGBUILD, Layer 1-4 sudoers |
 | `aur` (`FROM toolchain`) | 4-2 | `paru -S --noconfirm --needed` | Install the Layer 4 AUR package set from the generated list (`manager = "paru"` entries only). | `dependencies/layer_4/paru.txt` |
-| `runtime` (`FROM aur`) | 5-1 | `rm -rf` scratch; `chown` home; `install -d /run/user/$UID` | Strip Stage 2/3/4 scratch artifacts; bake XDG runtime dir. | - |
+| `runtime` (`FROM aur`) | 5-1 | bake minimum home (copy `/tmp/build-home/.zshenv` -> `~/.zshenv`; write `~/.config/chezmoi/chezmoi.toml` `build_mode = false`); remove `/etc/skel` bash remnants; `rm -rf` remaining scratch; `chown` home; `install -d /run/user/$UID` | Bake a wizard-free / PATH-equipped / apply-ready minimum `$HOME` so the image boots into a working shell independent of the runtime entrypoint (covers `make exec` racing the entrypoint apply, and entrypoint-bypassed `podman run`); strip Stage 2/3/4 scratch; bake XDG runtime dir. | `/tmp/build-home/.zshenv` (from Stage 2 render) |
 | `runtime` (`FROM aur`) | 5-2 | `COPY entrypoint.sh` | Install the runtime chezmoi-apply entrypoint (authenticates `bw` from the mounted `bw_*` podman secrets → `BW_SESSION` → `chezmoi apply`, then scrubs BW_* env before `exec`; see [`13-secret-management.md`](13-secret-management.md) §4). | `container/bind/layer_5_files/entrypoint.sh` |
 | `runtime` (`FROM aur`) | 5-3 | `USER`/`WORKDIR`/`ENTRYPOINT`/`CMD` | Final image: entrypoint re-applies chezmoi against the host bind. | - |
 
@@ -45,9 +45,13 @@ stage; within a stage, numbered **sub-layers** (`Layer N-M`) group related
   because `paru` (and any Rust AUR package) needs `$CARGO_HOME` writable
   to fetch crates. The bootstrap clone (`/tmp/paru-build`) is removed
   before the stage ends (I-AUR4).
-- The build-prepass scratch (`/tmp/chezmoi-src`, `/tmp/build-home`) and
-  the build-time `~/.config/chezmoi` are deleted in Stage 5 before the
-  final image layer is finalized.
+- The build-prepass scratch (`/tmp/chezmoi-src`, `/tmp/build-home`) is
+  deleted in Stage 5 before the final image layer is finalized. The
+  build-time `~/.config/chezmoi/chezmoi.toml` (`build_mode = true`) is
+  replaced in Stage 5 with the runtime `~/.config/chezmoi/chezmoi.toml`
+  (`build_mode = false`) as part of baking the **minimum home** (see
+  acceptance #5a / invariant I10). The minimum `.zshenv` is copied out of
+  `/tmp/build-home` before that scratch tree is dropped.
 
 ## Acceptance criteria
 
@@ -57,8 +61,29 @@ A new stage may land only when:
 2. its `dependencies/layer_<N>/<manager>.txt` is generated, not hand-written
 3. the corresponding [`02-installed-programs.md`](02-installed-programs.md) entries are reachable from `packages.toml`
 4. invariants I6–I8 in [`20-container-rules.md`](20-container-rules.md) hold after the change
-5. The final image has no `/tmp/chezmoi-src`, `/tmp/build-home`, or
-   `~/.config/chezmoi` directory (Stage 4 scratch removal asserted).
+5. The final image has no `/tmp/chezmoi-src` or `/tmp/build-home`
+   directory (Stage 5 scratch removal asserted).
+5a. The final image bakes a **minimum `$HOME`** so it boots into a
+    wizard-free, PATH/env-equipped, `chezmoi apply`-ready shell
+    *independent of the runtime entrypoint*. Concretely the image
+    carries `~/.zshenv` (copied from the Stage 2 `/tmp/build-home` render;
+    `dot_zshenv.tmpl` has no template directives and no `build_mode`
+    branch, so this is byte-identical to the runtime `chezmoi apply
+    --force` output) and `~/.config/chezmoi/chezmoi.toml` with
+    `build_mode = false`. The runtime entrypoint still rewrites the
+    `chezmoi.toml` and re-applies chezmoi (idempotent overwrite). This
+    covers two failure modes: (a) `make exec` racing the entrypoint's
+    `chezmoi apply` (an exec'd `zsh` would otherwise see a `$HOME` with no
+    zsh startup file and trigger the `zsh/newuser` first-run wizard via
+    `/usr/share/zsh/scripts/newuser`; with `~/.zshenv` baked, the
+    module's "none of `.zshenv`/`.zprofile`/`.zshrc`/`.zlogin` exist"
+    condition is never met); (b) the container being exec'd with the
+    entrypoint bypassed (e.g. `podman run --entrypoint ...`).
+5b. The final image has no `/etc/skel` bash remnants in `$HOME`
+    (`.bashrc`, `.bash_profile`, `.bash_logout`, `.profile`); Stage 5
+    removes the files that Layer 1-3's `usermod -l ... -d
+    /home/${USERNAME} -m builder` moved out of the base image's `builder`
+    home (chezmoi does not manage them, so `chezmoi apply` never would).
 6. After `make up`, `podman exec <container> zsh -ic 'echo $CARGO_HOME'`
    outputs `~/.local/share/cargo` (XDG-compliant). The toolchain PATH/HOMEs
    are now **split across phases**: `.zshenv` carries them only at build
@@ -75,6 +100,16 @@ A new stage may land only when:
    `zsh -lc` (login, non-interactive) and `zsh -c` will NOT see
    `CARGO_HOME`. Do not use an ephemeral `podman run`, which neither runs
    the entrypoint nor sources the dotfiles.
+   > **Known drift (out of scope of the minimum-home work):** criterion #6
+   > describes the *intended* phase split, but the current
+   > `dot_zshenv.tmpl` has **no `build_mode` branch and no chezmoi
+   > template directives at all** — it always sets `CARGO_HOME` /
+   > `RUSTUP_HOME` / `MISE_DATA_DIR` via `${VAR:-default}`. The outcome is
+   > functionally equivalent (the `${VAR:-}` defaults land on the same
+   > XDG paths), which is also why baking the Stage 2 render of `.zshenv`
+   > into the image (acceptance #5a) is safe — build-time and runtime
+   > renders are byte-identical. Re-introducing the `build_mode` branch
+   > to actually omit the block at runtime is tracked separately.
 7. After `make up`, `~/.local/share/chezmoi/.git` is visible inside the
    container (host bind verified).
 8. `make down && make up` preserves toolchain binaries (named-volume
