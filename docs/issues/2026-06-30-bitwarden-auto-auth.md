@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-30
 **Status:** open
-**Related:** [design](../specifications/implementation/2026-06-30-bitwarden-auto-auth-design.md), [plan](../plans/2026-06-30-bitwarden-auto-auth-impl.md) (pending)
+**Related:** [design](../specifications/implementations/2026-06-30-bitwarden-auto-auth-design.md), [plan](../plans/2026-06-30-bitwarden-auto-auth-impl.md)
 
 ## Context
 
