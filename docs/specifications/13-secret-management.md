@@ -116,8 +116,9 @@ Chezmoi apply runs in two phases:
    in the chezmoi data. Renders ENV-bearing dotfiles only; Bitwarden-bound
    templates are guarded by the in-template `{{ if not .build_mode }}`
    convention (I-S6) so the build never consults `bw`. The scratch
-   destination is deleted in Stage 4 before the final image layer
-   is finalized.
+   destination is deleted in Stage 5 (after the minimum `.zshenv` is
+   copied out — see spec 20 I10 / spec 21 acceptance #5a) before the
+   final image layer is finalized.
 
 2. **Runtime apply** (`container/bind/layer_5_files/entrypoint.sh`). Runs
    against the real `$HOME` against the host-bind chezmoi source at
@@ -131,9 +132,16 @@ Chezmoi apply runs in two phases:
 
 ## §5a Phase-placement convention (dotfiles ↔ build / runtime)
 
-The `build_mode` data flag (set in `chezmoi.toml` by the Containerfile
-Stage 2 / the runtime entrypoint) is the single switch. For any dotfile,
-ask: **does Stage 3 need to source this to get the toolchain ENV?**
+The `build_mode` data flag is the single switch. It is set in
+`~/.config/chezmoi/chezmoi.toml`, which is rendered from a single
+dotfiles-managed config template `.chezmoi.toml.tmpl` (chezmoi source
+root) by `chezmoi execute-template --init`: the Containerfile Stage 2
+build-prepass renders it with `BUILD_MODE=true` (inline in the `RUN`, not
+`ENV`), the runtime entrypoint renders it with `BUILD_MODE` unset
+(`false`). The template cannot read `[data]` it is generating, so
+`build_mode` is read from the `BUILD_MODE` env var
+(`{{ env "BUILD_MODE" | default "false" }}`). For any dotfile, ask:
+**does Stage 3 need to source this to get the toolchain ENV?**
 
 - **Yes → build-time block.** Wrap in `{{ if .build_mode }}…{{ end }}`
   (build-only); content MUST be secret-free (I-S4). Currently the

@@ -1,0 +1,9 @@
+{{- /* chezmoi config — rendered by `chezmoi execute-template --init`.
+   (It can evaluated in `chezmoi init` or other subcommands with `--init`.)
+   build_mode is driven by the BUILD_MODE env var so the same template
+   serves the build-prepass (BUILD_MODE=true) and the runtime entrypoint
+   (BUILD_MODE unset -> false). This is a chezmoi config template
+   (.chezmoi.$FORMAT.tmpl), executed prior to reading the source state,
+   so it cannot read [data] it is generating — hence the env var. */ -}}
+[data]
+build_mode = {{ if eq (env "BUILD_MODE" | default "false") "true" }}true{{ else }}false{{ end }}
