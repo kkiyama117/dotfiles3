@@ -45,18 +45,38 @@ if [ -f /run/secrets/bw_password ]; then
   if ! bw login --check >/dev/null 2>&1; then
     bw login --apikey
   fi
-  export BW_SESSION="$(bw unlock --passwordfile /run/secrets/bw_password --raw)"
+  bw sync >/dev/null 2>&1 || true
+  # `bw unlock --passwordfile --raw` can transiently return an empty
+  # session if the vault data is not yet local / the server is not ready.
+  # Retry a few times; if it stays empty, fail LOUDLY (exit) so the
+  # operator knows auth failed instead of silently running with no
+  # session (which would leave `bitwarden*` templates unresolvable).
+  for _ in 1 2 3; do
+    BW_SESSION="$(bw unlock --passwordfile /run/secrets/bw_password --raw 2>/dev/null || true)"
+    if [ -n "$BW_SESSION" ]; then
+      break
+    fi
+    sleep 2
+  done
+  if [ -z "$BW_SESSION" ]; then
+    echo "entrypoint: bw unlock returned an empty session after retries." >&2
+    echo "entrypoint: check the bw_password podman secret (master password) and network." >&2
+    exit 1
+  fi
+  export BW_SESSION
 fi
 
 chezmoi apply --no-tty --force
 
 # Scrub the Bitwarden credentials from this process's environment before
-# exec'ing CMD. BW_SESSION was only needed for `chezmoi apply` (done); the
-# client pair is no longer needed. This prevents the credentials from
-# riding into PID 1 (e.g. `sleep infinity`) via /proc/1/environ for the
-# container's lifetime. The master password was never in env (read via
-# --passwordfile); nothing to scrub for it.
-if [ -n "${BW_SESSION:-}" ]; then
+# exec'ing CMD — unconditionally within the auth-ran path (gated on the
+# secret file, NOT on BW_SESSION being non-empty, so a transient empty
+# session still gets the client pair scrubbed). BW_SESSION was only
+# needed for `chezmoi apply` (done); the client pair is no longer
+# needed. This prevents credentials from riding into PID 1 (e.g.
+# `sleep infinity`) via /proc/1/environ for the container's lifetime.
+# The master password was never in env (read via --passwordfile).
+if [ -f /run/secrets/bw_password ]; then
   unset BW_CLIENTID BW_CLIENTSECRET BW_SESSION
 fi
 
