@@ -56,6 +56,15 @@ Prerequisites: rootless Podman + BuildKit. See
 
 Quick start:
 
+You can use `podman secret create` to set up bitwarden account access.
+For detail, see [`13-secret-management.md`](13-secret-management.md).
+
+```sh
+    printf '%s' "$BW_CLIENTID"     | podman secret create bw_clientid -
+    printf '%s' "$BW_CLIENTSECRET"  | podman secret create bw_clientsecret -
+    printf '%s' "$BW_MASTERPASS"    | podman secret create bw_password -
+```
+
 ```sh
 # from the repository root
 make help                  # list available targets
