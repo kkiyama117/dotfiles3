@@ -19,6 +19,13 @@ CARGO_VOLUME  := dotfiles_cargo
 RUSTUP_VOLUME := dotfiles_rustup
 MISE_VOLUME   := dotfiles_mise
 
+# Bitwarden credentials as podman secrets. Each is mounted only if it
+# exists, so `make up` still starts when no secrets have been created
+# (entrypoint skips auth when /run/secrets/bw_password is absent). The
+# master password is read by `bw unlock --passwordfile` inside the
+# container and never placed in an environment variable.
+BW_SECRETS := $(foreach s,bw_clientid bw_clientsecret bw_password,$(shell podman secret exists $(s) 2>/dev/null && printf -- '--secret %s ' $(s)))
+
 # Build context (holds Containerfile + bind mount source)
 BUILD_CTX := $(CURDIR)/container
 
@@ -58,7 +65,7 @@ build: _require_username ## Build the image matching your host uid/gid
 up: _require_username ## Start a detached container with chezmoi bind + toolchain volumes
 	podman run -d --replace --name $(CONTAINER) \
 		--userns=keep-id \
-		-e BW_SESSION=$$BW_SESSION \
+		$(BW_SECRETS) \
 		-v $(CURDIR):/home/$(USERNAME)/.local/share/chezmoi \
 		-v $(CARGO_VOLUME):/home/$(USERNAME)/.local/share/cargo \
 		-v $(RUSTUP_VOLUME):/home/$(USERNAME)/.local/share/rustup \
