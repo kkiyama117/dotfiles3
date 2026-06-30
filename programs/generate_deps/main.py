@@ -33,8 +33,14 @@ DOC_PATH = REPO_ROOT / "docs" / "specifications" / "02-installed-programs.md"
 
 # Managers that install from a flat package list -> emit a .txt file.
 LIST_MANAGERS = ("pacman", "paru", "nix", "uv", "cargo")
-# mise is version-pinned (no flat list); it only appears in the doc.
-DOC_ONLY_MANAGERS = ("mise",)
+# Doc-only managers: declared in packages.toml (so they appear in the
+# spec 02 AUTO-GEN doc block and satisfy invariant I5) but NOT installed
+# from a generated `layer_<N>/<manager>.txt` list — they have a bespoke
+# install path in the Containerfile. `mise` is version-pinned (no flat
+# list); `custom` covers packages with a hand-written install step
+# (e.g. `paru`, bootstrapped via `makepkg`, which cannot also be a
+# `paru -S` target).
+DOC_ONLY_MANAGERS = ("mise", "custom")
 ALL_MANAGERS = LIST_MANAGERS + DOC_ONLY_MANAGERS
 
 # (layer, manager) pairs that always have a generated install list file,
