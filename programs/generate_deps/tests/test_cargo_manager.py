@@ -42,6 +42,7 @@ def test_render_packages_txt_emits_cargo_entries() -> None:
 
 def test_write_txt_files_creates_layer_3_cargo_txt(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(main, "DEPS_DIR", tmp_path)
+    monkeypatch.setattr(main, "EXPECTED_EMPTY_FILES", ((3, "cargo"),))
     by_layer = {
         3: [{"name": "ripgrep", "manager": "cargo", "layer": 3,
              "has_configs": False}],
