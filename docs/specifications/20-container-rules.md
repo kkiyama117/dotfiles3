@@ -20,7 +20,7 @@ labels directly.
 
 ### Secrets (build-time & runtime)
 
-- I4: The image is secret-free in both phases. The build-time `chezmoi apply` pre-pass (Containerfile Stage 2) uses `build_mode = true`, which guards every Bitwarden-bound template; the scratch destination is deleted in Stage 4. The runtime `chezmoi apply` (entrypoint) consumes `BW_SESSION` only into the running container's $HOME, never into image layers.
+- I4: The image is secret-free in both phases. The build-time `chezmoi apply` pre-pass (Containerfile Stage 2) uses `build_mode = true`, which guards every Bitwarden-bound template; the scratch destination is deleted in Stage 4. The runtime `chezmoi apply` (entrypoint) authenticates `bw` from **podman secrets** (`podman secret create` + `podman run --secret`) mounted as tmpfs `/run/secrets/*`; the master password is consumed via `bw unlock --passwordfile` and **never** placed in an environment variable, and the client pair / `BW_SESSION` are `export`-ed only inside the entrypoint process and **scrubbed before `exec`** — so no Bitwarden credential appears in `podman inspect` `Env`, in `/proc/*/environ` after exec, or in any image layer. See [`13-secret-management.md`](13-secret-management.md) §4 / §5a.
 
 ### Build (`Containerfile`)
 

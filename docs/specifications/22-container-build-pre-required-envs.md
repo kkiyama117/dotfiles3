@@ -24,16 +24,36 @@ file is gitignored, per-machine, and uses `KEY=VALUE` shell syntax.
 USERNAME=kiyama
 ```
 
-`.env` MUST NOT carry secrets — runtime secrets (`BW_CLIENTID`,
-`BW_CLIENTSECRET`, `BW_SESSION`) live in the interactive shell env only;
-see [`13-secret-management.md`](13-secret-management.md).
+`.env` MUST NOT carry secrets — runtime auth material is provided as
+**podman secrets** (`bw_clientid` / `bw_clientsecret` / `bw_password`),
+mounted by `make up` (each only if it exists) as tmpfs
+`/run/secrets/*`; the master password is consumed via
+`bw unlock --passwordfile` and never enters an env. See
+[`13-secret-management.md`](13-secret-management.md) §4. Build-time envs
+(`HOST_UID` / `HOST_GID` / `USERNAME` / `JOBS`) are unchanged and remain
+the only envs `make build` consumes.
+
+### Runtime podman secrets (optional)
+
+| Secret name | Required | Notes |
+|---|---|---|
+| `bw_clientid` | no (auth) | `BW_CLIENTID` source for `bw login --apikey` |
+| `bw_clientsecret` | no (auth) | `BW_CLIENTSECRET` source for `bw login --apikey` |
+| `bw_password` | no (auth) | master password, read via `bw unlock --passwordfile` |
+
+All three are optional: `make up` starts without them and the
+entrypoint skips `bw` auth (no-secret startup). Create them once on the
+host (`printf '%s' "$VAL" | podman secret create <name> -`); they
+persist in the podman store across restarts.
 
 ## Removed: `BW_ID` build-time mechanism
 
 The previous `BW_ID` build-time BuildKit-secret mechanism (mounting a
 Bitwarden item-ID file at `/run/secrets/bitwarden_id`) has been
-**removed**. `chezmoi apply` now runs at runtime with `BW_SESSION` set in
-the interactive shell; the image is secret-free. See
+**removed**. `chezmoi apply` now runs at runtime, authenticating `bw`
+from the mounted `bw_*` podman secrets and deriving `BW_SESSION` in the
+entrypoint process (then scrubbing it before `exec`); the image is
+secret-free. See
 [`13-secret-management.md`](13-secret-management.md) §5 and the Makefile
 (`BW_ID` / `BW_SECRET` skeleton deleted).
 
