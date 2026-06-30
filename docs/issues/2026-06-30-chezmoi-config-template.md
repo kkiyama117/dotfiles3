@@ -1,7 +1,7 @@
 # Manage runtime chezmoi.toml via dotfiles (.chezmoi.toml.tmpl)
 
 **Date:** 2026-06-30
-**Status:** open
+**Status:** closed (see [result-log](2026-06-30-phase-chezmoi-config-template.md))
 **Related:** [design](../specifications/implementations/2026-06-30-chezmoi-config-template-design.md), [plan](../plans/2026-06-30-chezmoi-config-template-impl.md)
 
 ## Context
