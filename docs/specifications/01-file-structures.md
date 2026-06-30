@@ -30,6 +30,7 @@ the map of which top-level path serves which concern.
 │       └── dot_zshrc.tmpl  # chezmoi-managed ~/.config/zsh/.zshrc (runtime toolchain block)
 ├── (Other dotfiles)    # chezmoi-managed ~/(other dotfiles)
 ├── .chezmoiignore      # chezmoi ignore rules
+├── .chezmoi.toml.tmpl  # chezmoi config template (build_mode via BUILD_MODE env; rendered by `chezmoi execute-template --init`)
 ├── .dockerignore       # excludes .git/docs/.env/home_dir from srcroot build context (Task 9)
 ├── .env                # gitignored, per-machine (USERNAME=...); see 22-...md
 ├── .env.example        # committed example of .env
@@ -39,8 +40,6 @@ the map of which top-level path serves which concern.
 │   └── bind/           # bind-mounted sources/scripts (full rules: `20-container-rules.md`)
 │       ├── layer_1_files/
 │       │   └── pacman_mirrorlist  # Layer 1 pacman mirrorlist (Stage 1-2)
-│       ├── layer_2_files/
-│       │   └── chezmoi.toml       # build-prepass chezmoi config (`build_mode = true`; Stage 2 COPY)
 │       └── layer_5_files/
 │           └── entrypoint.sh  # runtime chezmoi-apply entrypoint (Stage 5-4; see 21-...md)
 │

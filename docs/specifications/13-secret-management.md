@@ -132,12 +132,16 @@ Chezmoi apply runs in two phases:
 
 ## §5a Phase-placement convention (dotfiles ↔ build / runtime)
 
-The `build_mode` data flag (set in `chezmoi.toml`: the build-prepass
-`bind/layer_2_files/chezmoi.toml` is COPY'd by Containerfile Stage 2
-with `build_mode = true`; the runtime `~/.config/chezmoi/chezmoi.toml`
-is written by the entrypoint with `build_mode = false`) is the single
-switch. For any dotfile, ask: **does Stage 3 need to source this to get
-the toolchain ENV?**
+The `build_mode` data flag is the single switch. It is set in
+`~/.config/chezmoi/chezmoi.toml`, which is rendered from a single
+dotfiles-managed config template `.chezmoi.toml.tmpl` (chezmoi source
+root) by `chezmoi execute-template --init`: the Containerfile Stage 2
+build-prepass renders it with `BUILD_MODE=true` (inline in the `RUN`, not
+`ENV`), the runtime entrypoint renders it with `BUILD_MODE` unset
+(`false`). The template cannot read `[data]` it is generating, so
+`build_mode` is read from the `BUILD_MODE` env var
+(`{{ env "BUILD_MODE" | default "false" }}`). For any dotfile, ask:
+**does Stage 3 need to source this to get the toolchain ENV?**
 
 - **Yes → build-time block.** Wrap in `{{ if .build_mode }}…{{ end }}`
   (build-only); content MUST be secret-free (I-S4). Currently the

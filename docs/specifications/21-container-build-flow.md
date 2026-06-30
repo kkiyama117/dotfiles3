@@ -19,7 +19,7 @@ stage; within a stage, numbered **sub-layers** (`Layer N-M`) group related
 | `base` | 1-3 | `groupmod` / `usermod` | Remap builder -> ${USERNAME} with host uid/gid; set zsh login. | build-args |
 | `base` | 1-4 | UID-collision fallback + sudoers + `USER ${USERNAME}` | Idempotent user provisioning; NOPASSWD sudoers; switch to non-root. | build-args |
 | `base` | 1-5 | `install -d` for `~/.local/share/{cargo,rustup,mise,chezmoi}` | Owner-correct mountpoints for runtime binds/volumes. | build-args |
-| `build-prepass` (`FROM base`) | 2 | `COPY --from=srcroot`; `COPY bind/layer_2_files/chezmoi.toml` -> `~/.config/chezmoi/chezmoi.toml` (`build_mode = true`); `chezmoi apply --destination /tmp/build-home` | Scratch render of ENV-bearing dotfiles with `build_mode = true`; secret-free. | `srcroot` named build-context, `bind/layer_2_files/chezmoi.toml` |
+| `build-prepass` (`FROM base`) | 2 | `COPY --from=srcroot`; `BUILD_MODE=true chezmoi execute-template --init < /tmp/chezmoi-src/.chezmoi.toml.tmpl > ~/.config/chezmoi/chezmoi.toml` (`build_mode = true`); `chezmoi apply --destination /tmp/build-home` | Scratch render of ENV-bearing dotfiles with `build_mode = true`; secret-free. | `srcroot` named build-context, `.chezmoi.toml.tmpl` |
 | `toolchain` (`FROM build-prepass`) | 3 | `rustup-init`, mise installer, `cargo install`; cache mounts on `$CARGO_HOME/{registry,git}` | Install rustup/mise/cargo binaries under XDG-compliant paths. | `/tmp/build-home/.zshenv`, `dependencies/layer_3/cargo.txt` |
 | `aur` (`FROM toolchain`) | 4-1 | `git clone` paru PKGBUILD + `makepkg -si` (sources `/tmp/build-home/.zshenv`; cache mounts on `~/.cache/paru` + `/var/cache/pacman/pkg` + `$CARGO_HOME/{registry,git}`) | Bootstrap `paru` from the AUR as non-root `${USERNAME}`. | AUR `paru` PKGBUILD, Layer 1-4 sudoers |
 | `aur` (`FROM toolchain`) | 4-2 | `paru -S --noconfirm --needed` | Install the Layer 4 AUR package set from the generated list (`manager = "paru"` entries only). | `dependencies/layer_4/paru.txt` |
@@ -49,13 +49,14 @@ stage; within a stage, numbered **sub-layers** (`Layer N-M`) group related
 - The build-prepass scratch (`/tmp/chezmoi-src`, `/tmp/build-home`) is
   deleted in Stage 5 (Layer 5-3) before the final image layer is
   finalized. The build-prepass `~/.config/chezmoi/chezmoi.toml`
-  (`build_mode = true`, `COPY`'d from `bind/layer_2_files/chezmoi.toml`
-  as root) rides the Stage chain (`toolchain` -> `aur` -> `runtime`)
-  into the runtime image and is **stripped** in Layer 5-3 (not
-  replaced); the runtime `~/.config/chezmoi/chezmoi.toml`
-  (`build_mode = false`) is **created fresh by the entrypoint** as
-  `${USERNAME}` before `chezmoi apply` (see acceptance #5a / invariant
-  I10). The minimum `.zshenv` is copied out of `/tmp/build-home`
+  (`build_mode = true`, rendered from `.chezmoi.toml.tmpl` by
+  `chezmoi execute-template --init` with `BUILD_MODE=true`, USERNAME-owned)
+  rides the Stage chain (`toolchain` -> `aur` -> `runtime`) into the
+  runtime image and is **stripped** in Layer 5-3 (not replaced); the
+  runtime `~/.config/chezmoi/chezmoi.toml` (`build_mode = false`) is
+  **re-rendered from the same `.chezmoi.toml.tmpl` by the entrypoint**
+  (BUILD_MODE unset) as `${USERNAME}` before `chezmoi apply` (see
+  acceptance #5a / invariant I10). The minimum `.zshenv` is copied out of `/tmp/build-home`
   (Layer 5-2) before that scratch tree is dropped (Layer 5-3).
 
 ## Acceptance criteria
