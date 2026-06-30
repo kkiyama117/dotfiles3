@@ -197,7 +197,13 @@ FROM toolchain AS runtime
 # (running as ${USERNAME}) can write the chezmoi-rendered .zshenv into ~.
 USER root
 RUN rm -rf /tmp/chezmoi-src /tmp/build-home /home/${USERNAME}/.config/chezmoi \
- && chown ${HOST_UID}:${HOST_GID} /home/${USERNAME}
+ && chown ${HOST_UID}:${HOST_GID} /home/${USERNAME} \
+ && install -d -o ${HOST_UID} -g ${HOST_GID} -m 0700 /run/user/${HOST_UID}
+# ^ /run/user/${HOST_UID} is baked here so the shared .zshenv line
+#   `export XDG_RUNTIME_DIR=/run/user/$UID` works identically on host
+#   (pam_systemd creates it) and container (no pam_systemd; /run is rootfs,
+#   not tmpfs, so the build-time dir persists at runtime). Tools that
+#   MkdirAll($XDG_RUNTIME_DIR) (e.g. `chezmoi cd`) then find it present.
 COPY --chown=root:root bind/layer_4_files/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod 0755 /usr/local/bin/entrypoint.sh
 
