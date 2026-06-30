@@ -63,4 +63,11 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `openssh` | pacman | no |  |
 | `sudo` | pacman | no |  |
 | `zsh` | pacman | no | user's login shell |
+
+#### Layer 4 — install list
+
+| name | manager | configs | description |
+|---|---|---|---|
+| `neovim-git` | paru | no | neovim built from upstream git master (AUR); first concrete AUR package |
+| `paru` | paru | no | AUR helper; bootstrapped via makepkg, then installs the rest of layer 4 |
 <!-- END AUTO-GEN: installed-programs -->

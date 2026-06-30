@@ -89,3 +89,26 @@ description = "user's login shell"
 # (Currently empty — infrastructure-only landing per design spec §10 item 1.
 # The empty cargo.txt is still generator-owned: see
 # EXPECTED_EMPTY_FILES in programs/generate_deps/main.py.)
+
+# Layer 4: paru-installed tools (AUR); Containerfile `aur` stage.
+# paru itself is bootstrapped via makepkg in the `aur` stage, then used
+# to install the rest of this list. Add `[[tool]]` entries with
+# `manager = "paru"` and `layer = 4`. Run `make gen-deps` to regenerate
+# `dependencies/layer_4/paru.txt`.
+# (Infrastructure + one concrete AUR package (neovim-git) to exercise
+# the full clone/build path. The paru.txt is still generator-owned: see
+# EXPECTED_EMPTY_FILES in programs/generate_deps/main.py.)
+
+[[tool]]
+name = "paru"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "AUR helper; bootstrapped via makepkg, then installs the rest of layer 4"
+
+[[tool]]
+name = "neovim-git"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "neovim built from upstream git master (AUR); first concrete AUR package"
