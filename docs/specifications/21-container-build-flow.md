@@ -24,7 +24,7 @@ stage; within a stage, numbered **sub-layers** (`Layer N-M`) group related
 | `aur` (`FROM toolchain`) | 4-1 | `git clone` paru PKGBUILD + `makepkg -si` (sources `/tmp/build-home/.zshenv`; cache mounts on `~/.cache/paru` + `/var/cache/pacman/pkg` + `$CARGO_HOME/{registry,git}`) | Bootstrap `paru` from the AUR as non-root `${USERNAME}`. | AUR `paru` PKGBUILD, Layer 1-4 sudoers |
 | `aur` (`FROM toolchain`) | 4-2 | `paru -S --noconfirm --needed` | Install the Layer 4 AUR package set from the generated list (`manager = "paru"` entries only). | `dependencies/layer_4/paru.txt` |
 | `runtime` (`FROM aur`) | 5-1 | `rm -rf` scratch; `chown` home; `install -d /run/user/$UID` | Strip Stage 2/3/4 scratch artifacts; bake XDG runtime dir. | - |
-| `runtime` (`FROM aur`) | 5-2 | `COPY entrypoint.sh` | Install the runtime chezmoi-apply entrypoint. | `container/bind/layer_5_files/entrypoint.sh` |
+| `runtime` (`FROM aur`) | 5-2 | `COPY entrypoint.sh` | Install the runtime chezmoi-apply entrypoint (authenticates `bw` from the mounted `bw_*` podman secrets → `BW_SESSION` → `chezmoi apply`, then scrubs BW_* env before `exec`; see [`13-secret-management.md`](13-secret-management.md) §4). | `container/bind/layer_5_files/entrypoint.sh` |
 | `runtime` (`FROM aur`) | 5-3 | `USER`/`WORKDIR`/`ENTRYPOINT`/`CMD` | Final image: entrypoint re-applies chezmoi against the host bind. | - |
 
 ### Notes on the current state

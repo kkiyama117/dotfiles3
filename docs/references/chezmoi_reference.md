@@ -11,3 +11,8 @@ For details, see the [chezmoi documentation](https://www.chezmoi.io/docs/).
 | `chezmoi edit <path>` | Edit a managed file via its source representation. |
 | `chezmoi cd` | Open a shell in the source directory. |
 | `chezmoi update` | `git pull` the source and `chezmoi apply` in one step. |
+
+
+## chezmoi with bitwarden
+
+https://www.chezmoi.io/user-guide/password-managers/bitwarden/#bitwarden-cli

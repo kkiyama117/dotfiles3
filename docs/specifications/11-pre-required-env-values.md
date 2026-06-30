@@ -25,10 +25,13 @@
 
 - **Bitwarden account** — required as the only secret source. Before any
   chezmoi template that calls `bitwarden` functions will render, `bw`
-  must be authenticated (`bw login --apikey`) and unlocked (`bw unlock`)
-  with `BW_SESSION` set in the shell env. See
+  must be authenticated and unlocked. This is now **automatic at
+  container startup**: create the three podman secrets once on the host
+  (`bw_clientid`, `bw_clientsecret`, `bw_password`) and `make up`
+  authenticates via `bw login --apikey` + `bw unlock --passwordfile`.
+  No per-shell `export BW_SESSION` is needed. See
   [`13-secret-management.md`](13-secret-management.md) §4 for the full
-  auth flow.
+  auth flow and the one-time `podman secret create` setup.
 - The Bitwarden item IDs consumed by templates are listed in this file
   under [§ Bitwarden items](#bitwarden-items). Do not embed actual secret
   values in this repository; only item IDs are public.
@@ -52,9 +55,10 @@
 |---|---|---|---|
 | `XDG_CONFIG_HOME` | no | `~/.config` | chezmoi, Bitwarden CLI |
 | `XDG_STATE_HOME`  | no | `~/.local/state` | Bitwarden CLI session cache |
-| `BW_CLIENTID`     | yes (apply) | — | `bw login --apikey` (base key; Tier 1) |
-| `BW_CLIENTSECRET` | yes (apply) | — | `bw login --apikey` (base key; Tier 1) |
-| `BW_SESSION`      | yes (apply) | — | `bw get` from chezmoi templates |
+| `BW_CLIENTID`     | no (runtime, via `podman secret bw_clientid`) | — | `bw login --apikey`; read from `/run/secrets/bw_clientid` by the entrypoint (Tier 1) |
+| `BW_CLIENTSECRET` | no (runtime, via `podman secret bw_clientsecret`) | — | `bw login --apikey`; read from `/run/secrets/bw_clientsecret` by the entrypoint (Tier 1) |
+| `BW_PASSWORD`     | no (runtime, via `podman secret bw_password`)   | — | master password for `bw unlock --passwordfile`; never enters an env (Tier 1) |
+| `BW_SESSION`      | no (derived) | — | derived in the entrypoint via `bw unlock --passwordfile --raw`; consumed by `bitwarden*` templates during `chezmoi apply`; scrubbed before `exec` |
 
 > The `BW_*` variables are **runtime shell env only** — never in `.env`,
 > the repo, or the image. See [`13`](13-secret-management.md) §2 (two-tier)
