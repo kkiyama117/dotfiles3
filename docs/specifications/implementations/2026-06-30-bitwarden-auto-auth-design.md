@@ -1,10 +1,11 @@
 # Bitwarden auto-auth at container startup (podman secret) — Design
 
-**Status:** DRAFT
+**Status:** Approved
 **Date opened:** 2026-06-30
 **Issue:** [`docs/issues/2026-06-30-bitwarden-auto-auth.md`](../../issues/2026-06-30-bitwarden-auto-auth.md)
 **Author:** kiyama
-**Review required:** letter A + B + D (touches secret / auth — 09-review §2.2)
+**Review required:** letter A + B + D (touches secret / auth — 09-review §2.2) — self-reviewed in §10; user-approved 2026-06-30.
+**Decisions:** Q1 = out of scope (follow-up); Q2 = (b) Makefile-conditional `--secret` (preserves S4); Q3 = Shape A confirmed.
 
 ## §1 Context & success criteria
 
@@ -208,14 +209,31 @@ up: _require_username
 ```
 
 The `-e BW_SESSION=$$BW_SESSION` line is removed: `BW_SESSION` is now
-derived inside the entrypoint. `podman run --secret` tolerates a missing
-secret? No — `--secret` errors if the named secret does not exist. To
-preserve S4 ("works without secrets"), the Makefile must mount the
-secrets **only if they exist**, or the entrypoint must tolerate their
-absence. Resolution (chosen): the Makefile mounts the secrets
-unconditionally via `--secret`, and the operator who doesn't want auth
-creates placeholder secrets once (or we accept that `make up` requires
-the secrets to exist). See Q2 — this is the one open design point.
+derived inside the entrypoint. `podman run --secret <name>` errors if the
+named secret does not exist, which would break S4 ("works without
+secrets"). **Decision (Q2 = (b)):** the Makefile mounts each secret only
+when it exists, via a `podman secret exists` probe, so `make up` without
+the secrets still starts and the entrypoint skips auth (I-BW4):
+
+```make
+# Mount a podman secret only if it exists (preserves no-secret startup).
+secret-opt = $(shell podman secret exists $(1) && printf -- '--secret %s' $(1))
+
+up: _require_username
+	podman run -d --replace --name $(CONTAINER) \
+		--userns=keep-id \
+		$(call secret-opt,bw_clientid) \
+		$(call secret-opt,bw_clientsecret) \
+		$(call secret-opt,bw_password) \
+		-v $(CURDIR):/home/$(USERNAME)/.local/share/chezmoi \
+		-v $(CARGO_VOLUME):/home/$(USERNAME)/.local/share/cargo \
+		-v $(RUSTUP_VOLUME):/home/$(USERNAME)/.local/share/rustup \
+		-v $(MISE_VOLUME):/home/$(USERNAME)/.local/share/mise \
+		$(IMAGE) sleep infinity
+```
+
+If all three are absent the `--secret` lines expand to empty and the
+entrypoint's `[ -f /run/secrets/bw_password ]` guard is a no-op (S4).
 
 ## §7 Operator setup (one-time; documented in spec 11/13)
 
@@ -248,35 +266,26 @@ bw-secrets` helper is out of scope (follow-up).
 - **spec 21** — runtime stage entrypoint note: the auth block runs
   before `chezmoi apply`.
 
-## §9 Open questions
+## §9 Open questions (resolved at design approval, 2026-06-30)
 
-- **Q1:** Should this work also wire the actual `{{ if .build_mode }}`
-  guard into `.zshenv` (the structure the `.zshrc` header describes but
-  that is not yet implemented)? Current decision: **no** — out of scope;
-  the existing "`.zshenv` renders in both phases, XDG-relative paths
-  resolve in both" works and is a pre-existing TODO. Tracked as a
-  follow-up. (This work only adds the runtime auth + the
-  phase-placement *convention*; it does not refactor existing
-  templates.)
-- **Q2:** How should `make up` handle the no-secrets case (S4)?
-  `podman run --secret <name>` errors if the secret does not exist, so
-  unconditional mounting breaks the "works without Bitwarden" path.
-  Options:
-  - (a) Require the secrets to exist; drop S4 (simplest, but regresses
-    fresh-setup UX).
-  - (b) Makefile probes `podman secret exists` and appends `--secret`
-    flags only for existing secrets (preserves S4; small Makefile
-    complexity).
-  - (c) Document that the operator creates placeholder secrets once.
-  Recommended: **(b)** — preserve S4 with a tiny `$(shell podman secret
-  exists <name> && echo --secret <name>)` construct. To be confirmed at
-  spec review.
-- **Q3:** Interactive `BW_SESSION` in `podman exec` shells. Chosen
-  (Shape A): not provided; re-unlock on demand via `bw unlock
-  --passwordfile /run/secrets/bw_password --raw`. Confirm this is
-  acceptable (the user already endorsed A).
+- **Q1 — Resolved (out of scope):** This work does NOT wire the actual
+  `{{ if .build_mode }}` guard into `.zshenv` (the structure the
+  `.zshrc` header describes but that is not yet implemented). The
+  existing "`.zshenv` renders in both phases, XDG-relative paths resolve
+  in both" works and is a pre-existing TODO, tracked as a follow-up.
+  This work adds only the runtime auth + the phase-placement
+  *convention* (spec 13); it does not refactor existing templates.
+- **Q2 — Resolved ((b)):** `make up` mounts each secret only when it
+  exists (`$(call secret-opt,<name>)` via `podman secret exists`), so the
+  no-secrets path still starts and the entrypoint skips auth (I-BW4 /
+  S4 preserved). Acceptance criterion #5 (issue) is therefore unchanged.
+- **Q3 — Resolved (Shape A):** `BW_SESSION` is entrypoint-process-local
+  for the duration of `chezmoi apply`; it is NOT propagated to later
+  `podman exec` interactive shells. Interactive re-unlock, if needed, is
+  `bw unlock --passwordfile /run/secrets/bw_password --raw` (the secret
+  stays mounted for the container's lifetime). Endorsed by the user.
 
-## §10 Self-review (letters A / B / D, pending user approval)
+## §10 Self-review (letters A / B / D; user-approved 2026-06-30)
 
 - **A (architecture):** Stage 2 untouched; runtime change is additive
   and optional (I-BW4); the single switch is `build_mode`, already
@@ -292,4 +301,6 @@ bw-secrets` helper is out of scope (follow-up).
 - **D (consistency):** spec 13 §5 rewrite + I-S2/I-S3 update + new
   phase-placement section; specs 11/20/21/22 cross-references updated in
   the same change. Naming `bitwarden-auto-auth` flows issue → design →
-  plan → result-log (00-doc-mgmt §3.1).
+  plan → result-log (00-doc-mgmt §3.1). Q1/Q2/Q3 resolved at approval
+  (§9); Q2=(b) keeps S4 consistent with issue acceptance #5 (no issue
+  edit needed).
