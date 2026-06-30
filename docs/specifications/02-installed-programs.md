@@ -20,7 +20,7 @@ entries belong there only — never edit the AUTO-GEN block by hand.
 | Field | Required | Allowed values |
 |---|---|---|
 | `name`        | yes | string |
-| `manager`     | yes | `pacman` / `paru` / `nix` / `mise` / `uv` / `cargo` |
+| `manager`     | yes | `pacman` / `paru` / `nix` / `mise` / `uv` / `cargo` / `custom` |
 | `layer`       | yes | integer ≥ 1 (Containerfile layer index) |
 | `has_configs` | yes | bool — true if config is templated under chezmoi |
 | `description` | no  | string — used in the AUTO-GEN block |
@@ -36,6 +36,12 @@ entries belong there only — never edit the AUTO-GEN block by hand.
   `dependencies/layer_3/cargo.txt`. Belongs to layer 3 (Containerfile
   `toolchain` stage); the registry index and git checkouts are backed
   by BuildKit `--mount=type=cache` and never copied into image layers.
+- `custom`: doc-only. Declared in `packages.toml` (so it appears in the
+  AUTO-GEN block below and satisfies I5) but NOT written to any
+  `layer_<N>/<manager>.txt` install list. Use for packages with a
+  bespoke install path in the Containerfile that cannot go through a
+  generated list — e.g. `paru`, which is bootstrapped via `makepkg` and
+  therefore cannot also be a `paru -S` target.
 
 ## Regeneration
 
