@@ -1,10 +1,8 @@
 # ============================================================
 # Repository metadata and programs itself
 # ============================================================
-# Git-related files
-**/.worktrees
-## only allow global gitignore (and gitmodules)
-!.config/git/gitignore
+# Git worktrees (local isolated checkouts; never tracked)
+**/.worktrees/
 
 # ============================================================
 # User generated files for dotfiles
@@ -23,8 +21,3 @@
 .agents
 .claude
 .superpowers
-
-# ============================================================
-# Git worktrees (local isolated checkouts; never tracked)
-# ============================================================
-.worktrees/
