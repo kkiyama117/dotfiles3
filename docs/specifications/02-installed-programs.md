@@ -9,7 +9,7 @@
 
 - Hand-edited SoT for tool definitions: [`../../dependencies/packages.toml`](../../dependencies/packages.toml)
 - Generated artifacts (all derived from `packages.toml`):
-  - `../../dependencies/layer_<N>/<manager>.txt` — per-layer install lists for the Containerfile (layers >= 1; list managers `pacman`/`paru`/`nix`/`uv`/`cargo`)
+  - `../../dependencies/layer_<N>/<manager>.txt` — per-layer install lists for the Containerfile (layers >= 1; list managers `pacman`/`paru`/`nix`/`uv`/`cargo`/`mise`)
   - The AUTO-GEN block at the end of this document
 
 `packages.toml` schema is documented at the top of that file. New tool
@@ -29,7 +29,7 @@ entries belong there only — never edit the AUTO-GEN block by hand.
 
 - `pacman`: use to install packages to build container.
 - `paru`: install all packages from AUR package, that isn't included in `pacman` installed list.
-- `mise`: To install programming languages and tools excepts `Rust`.
+- `mise`: list-based manager for programming languages and tools except `Rust`. Emits `dependencies/layer_<N>/mise.txt` (one `<name>@latest` line per tool) and is installed in the `toolchain` stage (Layer 3-5). Bare `mise install <tool>` reads a `mise.toml` (not latest), so the generator appends `@latest`.
 - `nix`: Now we use `nix` only for apply `flake.nix`
 - `uv`: installed via `uv` (Python package manager)
 - `cargo`: installed via `cargo install --locked` from
@@ -72,6 +72,14 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `sheldon` | pacman | no | shell plugin/source manager |
 | `sudo` | pacman | no |  |
 | `zsh` | pacman | yes | user's login shell |
+
+#### Layer 3 — install list
+
+| name | manager | configs | description |
+|---|---|---|---|
+| `deno` | mise | no | Deno runtime (mise-managed, latest) |
+| `go` | mise | no | Go programming language (mise-managed, latest) |
+| `python` | mise | no | CPython (mise-managed, latest) |
 
 #### Layer 4 — install list
 

@@ -111,6 +111,32 @@ description = "user's login shell"
 # The empty cargo.txt is still generator-owned: see
 # EXPECTED_EMPTY_FILES in programs/generate_deps/main.py.)
 
+# Layer 3: mise-managed languages (Containerfile `toolchain` stage, Layer 3-5).
+# Add `[[tool]]` entries with `manager = "mise"` and `layer = 3`. The
+# generator renders each line as `<name>@latest` (bare `mise install
+# <tool>` reads a mise.toml, not latest). Run `make gen-deps` to
+# regenerate `dependencies/layer_3/mise.txt`.
+[[tool]]
+name = "go"
+manager = "mise"
+layer = 3
+has_configs = false
+description = "Go programming language (mise-managed, latest)"
+
+[[tool]]
+name = "python"
+manager = "mise"
+layer = 3
+has_configs = false
+description = "CPython (mise-managed, latest)"
+
+[[tool]]
+name = "deno"
+manager = "mise"
+layer = 3
+has_configs = false
+description = "Deno runtime (mise-managed, latest)"
+
 # Layer 4: paru-installed tools (AUR); Containerfile `aur` stage.
 # paru itself is bootstrapped via makepkg in the `aur` stage, so it is
 # declared here with `manager = "custom"` (doc-only: it appears in the
