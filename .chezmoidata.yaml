@@ -1,0 +1,5 @@
+# Example future per-host override:
+# identities:
+#   workstation:
+#     name: kkiyama117
+#     email: work@example.com

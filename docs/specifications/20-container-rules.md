@@ -22,6 +22,12 @@ labels directly.
 
 - I4: The image is secret-free in both phases. The build-time `chezmoi apply` pre-pass (Containerfile Stage 2) uses `build_mode = true`, which guards every Bitwarden-bound template; the scratch destination is deleted in Stage 5 (after the minimum `.zshenv` is copied out — see I10). The runtime `chezmoi apply` (entrypoint) authenticates `bw` from **podman secrets** (`podman secret create` + `podman run --secret`) mounted as tmpfs `/run/secrets/*`; the master password is consumed via `bw unlock --passwordfile` and **never** placed in an environment variable, and the client pair / `BW_SESSION` are `export`-ed only inside the entrypoint process and **scrubbed before `exec`** — so no Bitwarden credential appears in `podman inspect` `Env`, in `/proc/*/environ` after exec, or in any image layer. See [`13-secret-management.md`](13-secret-management.md) §4 / §5a.
 
+> NOTE: `libsecret` arrives in the image only as a hard dependency of
+> the `pinentry` package (library, not the `gnome-keyring` service). No
+> secret-store daemon is installed or started; the Bitwarden-only
+> secret model ([`13-secret-management.md`](13-secret-management.md)
+> §2 Tier 1) is preserved. See I-GPG1..I-GPG5 below.
+
 ### Build (`Containerfile`)
 
 - I5: **All packages must originate from `dependencies/packages.toml`.** Ad-hoc `pacman -S` / `paru -S` calls in the Containerfile are forbidden once `gen-deps` is wired.
@@ -31,6 +37,32 @@ labels directly.
 - I9: **`/run/user/${HOST_UID}` is baked at Stage 5 (Layer 5-2)** (root `install -d -m 0700 -o ${HOST_UID} -g ${HOST_GID}`). The container has no `pam_systemd` to create the XDG runtime dir, but `/run` is rootfs (not tmpfs) under `podman run --userns=keep-id`, so the build-time dir persists and is writable at runtime. This lets the shared `.zshenv` line `export XDG_RUNTIME_DIR=/run/user/$UID` work identically on host (systemd creates it) and container, so tools that `MkdirAll($XDG_RUNTIME_DIR)` (e.g. `chezmoi cd`) don't fail with `mkdir /run/user/<uid>: permission denied`.
 - I10: **The final image bakes a minimum `$HOME`** (`~/.zshenv` only — **NOT** `~/.config/chezmoi/chezmoi.toml`), copied in Stage 5 (Layer 5-2) from the Stage 2 `build-prepass` render before the scratch tree is dropped (Layer 5-3). The build-prepass `chezmoi.toml` (`build_mode = true`, rendered from `.chezmoi.toml.tmpl` by `chezmoi execute-template --init` with `BUILD_MODE=true`, USERNAME-owned) rides the Stage chain into the runtime image and is **stripped** in Layer 5-3; the runtime `~/.config/chezmoi/chezmoi.toml` (`build_mode = false`) is **re-rendered from the same `.chezmoi.toml.tmpl` by the entrypoint** (`BUILD_MODE` unset) as `${USERNAME}` before `chezmoi apply`. `BUILD_MODE` is inline in the Stage 2 `RUN` (not `ENV`), so it never appears in image `Env` / `podman inspect`. This makes the image boot into a **wizard-free, PATH-equipped, shell-usable state independent of the runtime entrypoint** (the shell is usable without the entrypoint, but `chezmoi apply` requires the entrypoint or a manually-created config) — covering (a) `make exec` racing the entrypoint's `chezmoi apply` (an exec'd interactive `zsh` would otherwise find no zsh startup file in `$HOME` and the `zsh/newuser` module would source `/usr/share/zsh/scripts/newuser`, launching the first-run `zsh-newuser-install` wizard; a single `~/.zshenv` suppresses it), and (b) the container being exec'd with the entrypoint bypassed (e.g. `podman run --entrypoint ...`). Safe because `dot_zshenv.tmpl` has no chezmoi template directives and no `build_mode` branch, so the Stage 2 render is byte-identical to the runtime `chezmoi apply --force` output (idempotent overwrite). See spec 21 acceptance #5a.
 - I11: **No `/etc/skel` bash remnants in `$HOME`** (`.bashrc`, `.bash_profile`, `.bash_logout`, `.profile`). Stage 5 removes the files that Layer 1-3's `usermod -l ... -d /home/${USERNAME} -m builder` moves out of the base image's `builder` home; these are not chezmoi-managed, so `chezmoi apply` would never remove them. See spec 21 acceptance #5b.
+- I-GPG1: The GPG keyring is persisted via the Podman named volume
+  `dotfiles_gnupg` mounted at `~/.local/share/gnupg` (= `GNUPGHOME`
+  from `dot_zshenv.tmpl`), the same pattern as `dotfiles_cargo` /
+  `dotfiles_rustup` / `dotfiles_mise`. The image carries no key
+  material (extends I4 / [`13-secret-management.md`](13-secret-management.md)
+  I-S4: the keyring lives only in the runtime volume).
+- I-GPG2: `~/.local/share/gnupg` is baked owner-correct at `0700` in
+  Containerfile Layer 1-6 (extension of the Layer 1-5 XDG-directory
+  provisioning). `0700` is mandatory for `GNUPGHOME` (gpg strict
+  permissions); the owner-correct provisioning prevents Podman from
+  root-creating an absent mountpoint (the `/home` re-own failure mode,
+  Layer 5-2).
+- I-GPG3: `gpg-agent` / `pinentry` are runtime, on-demand only. No
+  agent is baked into the image entrypoint; gpg auto-starts
+  `gpg-agent` on first use, which uses the default `/usr/bin/pinentry`
+  wrapper. No `gpg.conf` / `gpg-agent.conf` is chezmoi-managed in this
+  phase (gpg runs on defaults).
+- I-GPG4: No GPG key material is baked into any image layer. The
+  build-time pre-pass (Stage 2, `build_mode = true`) never touches
+  `gnupg` (the Layer 1-6 directory is empty at build time); the runtime
+  keyring lives only in the `dotfiles_gnupg` named volume, never in an
+  image layer or `podman inspect`.
+- I-GPG5: `.chezmoiignore` lists `.local/share/gnupg` so chezmoi never
+  manages the keyring (consistent with the `cargo` / `rustup` / `mise` /
+  `chezmoi` ignore entries).
+
 - I-AUR1: `paru` is bootstrapped exactly once, in the `aur` stage, via
   `makepkg -si` against the AUR `paru` PKGBUILD clone. No other stage
   runs `makepkg`.

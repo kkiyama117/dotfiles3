@@ -1,0 +1,34 @@
+# srcroot build-context exclusions (consumed by container/Containerfile
+# Stage 2 via `--build-context srcroot=$(CURDIR)` in the Makefile).
+# Excluding these keeps the chezmoi apply source tight and avoids
+# accidentally baking host-only files into image layers.
+
+# ============================================================
+# Repository metadata and programs to be excluded from container build
+# ============================================================
+docs
+
+# Git related files
+.git/
+.gitignore
+.gitmodules
+.worktrees/
+
+# ============================================================
+# Bind mounts in the container
+# ============================================================
+#container/bind/
+container/.gitignore
+
+# ============================================================
+# User generated files for dotfiles
+# ============================================================
+# .env is excluded not to be baked into the container image
+.env
+
+# ============================================================
+# AI-related files
+# ============================================================
+.agents
+.claude
+.superpowers

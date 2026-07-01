@@ -18,7 +18,8 @@ stage; within a stage, numbered **sub-layers** (`Layer N-M`) group related
 | `base` | 1-2 | mirrorlist + `pacman -Sy` | Install Layer 1 pacman set with BuildKit cache. | `bind/layer_1_files/pacman_mirrorlist`, `dependencies/layer_1/pacman.txt` |
 | `base` | 1-3 | `groupmod` / `usermod` | Remap builder -> ${USERNAME} with host uid/gid; set zsh login. | build-args |
 | `base` | 1-4 | UID-collision fallback + sudoers + `USER ${USERNAME}` | Idempotent user provisioning; NOPASSWD sudoers; switch to non-root. | build-args |
-| `base` | 1-5 | `install -d` for `~/.local/share/{cargo,rustup,mise,chezmoi}` | Owner-correct mountpoints for runtime binds/volumes. | build-args |
+| `base` | 1-5 | `install -d -m 0755` for `~/.local/share/{cargo,rustup,mise,chezmoi}` | Owner-correct mountpoints for runtime binds/volumes. | build-args |
+| `base` | 1-6 | `install -d -m 0700` for `~/.local/share/gnupg` | Owner-correct `0700` mountpoint for the `dotfiles_gnupg` named volume (`GNUPGHOME`); empty at build time (no key baked). | build-args |
 | `build-prepass` (`FROM base`) | 2 | `COPY --from=srcroot`; `BUILD_MODE=true chezmoi execute-template --init < /tmp/chezmoi-src/.chezmoi.toml.tmpl > ~/.config/chezmoi/chezmoi.toml` (`build_mode = true`); `chezmoi apply --destination /tmp/build-home` | Scratch render of ENV-bearing dotfiles with `build_mode = true`; secret-free. | `srcroot` named build-context, `.chezmoi.toml.tmpl` |
 | `toolchain` (`FROM build-prepass`) | 3 | `rustup-init`, mise installer, `cargo install`; cache mounts on `$CARGO_HOME/{registry,git}` | Install rustup/mise/cargo binaries under XDG-compliant paths. | `/tmp/build-home/.zshenv`, `dependencies/layer_3/cargo.txt` |
 | `aur` (`FROM toolchain`) | 4-1 | `git clone` paru PKGBUILD + `makepkg -si` (sources `/tmp/build-home/.zshenv`; cache mounts on `~/.cache/paru` + `/var/cache/pacman/pkg` + `$CARGO_HOME/{registry,git}`) | Bootstrap `paru` from the AUR as non-root `${USERNAME}`. | AUR `paru` PKGBUILD, Layer 1-4 sudoers |
@@ -32,9 +33,11 @@ stage; within a stage, numbered **sub-layers** (`Layer N-M`) group related
 
 - The image is fully implemented across 5 stages. `no-config-base`
   is retired.
-- `base` Layer 1-5 provisions XDG-compliant directories so the three
-  Podman named volumes (cargo / rustup / mise) and the host bind for
-  the chezmoi source root attach without overlay-hiding image content.
+- `base` Layer 1-5 provisions XDG-compliant directories so the four
+  Podman named volumes (cargo / rustup / mise / gnupg) and the host bind
+  for the chezmoi source root attach without overlay-hiding image
+  content; the gnupg mountpoint (`GNUPGHOME`) is provisioned at `0700`
+  in Layer 1-6.
 - The `aur` stage (Layer 4) bootstraps `paru` from the AUR via
   `makepkg -si` as non-root `${USERNAME}`, then installs the Layer 4
   AUR package set from `dependencies/layer_4/paru.txt`. `paru` itself is
@@ -135,6 +138,16 @@ A new stage may land only when:
     `/var/cache/pacman/pkg` and `/home/${USERNAME}/.cache/paru` (AUR +
     pacman cache reuse, resolving Q1); the bootstrap RUN also mounts the
     cargo registry/git caches (paru is a Rust package).
+12. After `make up`, `${USERNAME}` can run `gpg --version` and
+    `gpg-agent --version`; `echo $GNUPGHOME` resolves to
+    `~/.local/share/gnupg`; `stat -c '%a %U:%G'
+    ~/.local/share/gnupg` prints `700 <USERNAME>:<group>` (gpg strict
+    permissions satisfied; not root-owned). `make down && make up`
+    preserves a generated test key across restarts (the `dotfiles_gnupg`
+    named volume persists; analog of criterion #8 for the toolchain
+    volumes). No key material is baked into the image (the Layer 1-6
+    directory is empty in the built image). See
+    [`implementations/2026-07-01-gnupg-container-setup-design.md`](implementations/2026-07-01-gnupg-container-setup-design.md).
 
 ## Open questions
 
@@ -149,7 +162,12 @@ A new stage may land only when:
   `--mount=type=cache`; the cargo caches are also mounted for Rust AUR
   packages. See
   [`implementations/2026-06-30-paru-aur-layer-design.md`](implementations/2026-06-30-paru-aur-layer-design.md).
-- Q2: `.dockerignore` policy. The repo-root `.dockerignore` currently
-  excludes `.git`, `docs`, `.env`, and `container/bind/home_dir`.
-  Additional paths to exclude from the `srcroot` build context (large
-  untracked subtrees, editor swap files, etc.) need a convention.
+- Q2: `.containerignore` policy (renamed from `.dockerignore`). The
+  repo-root `.containerignore` is applied to the `srcroot` named build
+  context (`--build-context srcroot=$(CURDIR)` in the Makefile; verified
+  that Podman applies the ignore file to named contexts, not only the
+  main context). It currently excludes `docs`, `.git/`, `.gitignore`,
+  `.gitmodules`, `.worktrees/`, `container/.gitignore`, `.env`, and the
+  AI-tool dirs (`.agents`, `.claude`, `.superpowers`). Additional paths
+  to exclude from the `srcroot` build context (large untracked subtrees,
+  editor swap files, etc.) still need a convention.

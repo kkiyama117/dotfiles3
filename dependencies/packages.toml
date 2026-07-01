@@ -65,10 +65,24 @@ layer = 1
 has_configs = false
 
 [[tool]]
+name = "gnupg"
+manager = "pacman"
+layer = 1
+has_configs = false
+description = "GnuPG (`gpg` / `gpg-agent`); honors GNUPGHOME from .zshenv"
+
+[[tool]]
 name = "openssh"
 manager = "pacman"
 layer = 1
 has_configs = false
+
+[[tool]]
+name = "pinentry"
+manager = "pacman"
+layer = 1
+has_configs = false
+description = "pinentry frontends (tty/curses) + default wrapper; hard-deps libsecret (library only, no daemon)"
 
 [[tool]]
 name = "sheldon"

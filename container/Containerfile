@@ -92,10 +92,10 @@ USER ${USERNAME}
 
 # Layer 1-5: XDG-compliant home subdirectories
 #
-# Owner-correct directories must exist so the four runtime mounts (one bind
-# for chezmoi source, three named volumes for cargo/rustup/mise) attach to
-# a properly-owned ~/.local/share/ parent. install -d as root, then return
-# to ${USERNAME} so subsequent stages stay non-root.
+# Owner-correct directories must exist so the five runtime mounts (one bind
+# for chezmoi source, four named volumes for cargo/rustup/mise/gnupg)
+# attach to a properly-owned ~/.local/share/ parent. install -d as root,
+# then return to ${USERNAME} so subsequent stages stay non-root.
 USER root
 RUN install -d -o ${HOST_UID} -g ${HOST_GID} -m 0755 \
     /home/${USERNAME}/.local \
@@ -104,6 +104,19 @@ RUN install -d -o ${HOST_UID} -g ${HOST_GID} -m 0755 \
     /home/${USERNAME}/.local/share/rustup \
     /home/${USERNAME}/.local/share/mise \
     /home/${USERNAME}/.local/share/chezmoi
+
+# Layer 1-6: GNUPGHOME mountpoint (named volume dotfiles_gnupg).
+#
+# 0700 is mandatory for GNUPGHOME (gpg enforces strict permissions on its
+# home and refuses otherwise). Kept as a separate RUN from the 0755
+# toolchain dirs above so the mode is distinct and the intent is obvious.
+# Owner-correct so Podman does not root-create an absent mountpoint at
+# `make up` (the /home re-own failure mode, see Layer 5-2). The directory
+# is empty at build time; no key material is baked into the image
+# (spec 20 I4 / spec 13 I-S4 — the keyring lives only in the runtime
+# named volume).
+RUN install -d -o ${HOST_UID} -g ${HOST_GID} -m 0700 \
+    /home/${USERNAME}/.local/share/gnupg
 USER ${USERNAME}
 
 # ---------------------------------------------------------------------------
@@ -175,7 +188,7 @@ RUN --mount=type=cache,target=/home/${USERNAME}/.local/share/cargo/registry,uid=
       source /tmp/build-home/.zshenv; \
       pkgs=$(sed "s/#.*//" /tmp/cargo_tools.txt | xargs); \
       if [ -n "$pkgs" ]; then \
-        cargo install --locked $pkgs; \
+        cargo install --locked ${=pkgs}; \
       else \
         echo "toolchain: cargo install list is empty -- skipping"; \
       fi; \
@@ -224,8 +237,15 @@ RUN --mount=type=cache,target=/var/cache/pacman/pkg \
 # `paru -S`. The list contains only `manager = "paru"` entries; `paru`
 # itself is `manager = "custom"` (doc-only) and is NOT in this list, so
 # the bootstrap step above is the sole install path for `paru` and the
-# bulk call never re-submits it as a `paru -S` target (which would break
-# paru's resolver). `--needed` makes the remaining installs idempotent.
+# bulk call never re-submits it as a `paru -S` target. `--needed` makes
+# the remaining installs idempotent.
+#
+# `${=pkgs}` (not `$pkgs`): unlike sh/bash, zsh does not word-split a bare
+# unquoted parameter by default, so `paru -S --noconfirm --needed $pkgs`
+# passed the whole space-joined string ("neovim-git starship tmux") as one
+# malformed target instead of three, which paru reported as "could not
+# find all required packages" for all of them. `${=pkgs}` is zsh's
+# explicit split operator and restores the intended per-package args.
 COPY --from=deps layer_4/paru.txt /tmp/paru_deps.txt
 RUN --mount=type=cache,target=/var/cache/pacman/pkg \
     --mount=type=cache,target=/home/${USERNAME}/.cache/paru,uid=${HOST_UID},gid=${HOST_GID} \
@@ -235,7 +255,7 @@ RUN --mount=type=cache,target=/var/cache/pacman/pkg \
       source /tmp/build-home/.zshenv; \
       pkgs=$(sed "s/#.*//" /tmp/paru_deps.txt | xargs); \
       if [ -n "$pkgs" ]; then \
-        paru -S --noconfirm --needed $pkgs; \
+        paru -S --noconfirm --needed ${=pkgs}; \
       else \
         echo "aur: paru install list is empty -- skipping"; \
       fi; \

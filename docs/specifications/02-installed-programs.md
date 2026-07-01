@@ -63,12 +63,15 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 |---|---|---|---|
 | `base-devel` | pacman | no | base meta-package: gcc, make, binutils, etc. |
 | `bitwarden-cli` | pacman | no | Bitwarden CLI (`bw`); secret backend for chezmoi templates |
-| `chezmoi` | pacman | no | dotfiles manager |
+| `chezmoi` | pacman | yes | dotfiles manager |
 | `curl` | pacman | no |  |
 | `git` | pacman | no |  |
+| `gnupg` | pacman | no | GnuPG (`gpg` / `gpg-agent`); honors GNUPGHOME from .zshenv |
 | `openssh` | pacman | no |  |
+| `pinentry` | pacman | no | pinentry frontends (tty/curses) + default wrapper; hard-deps libsecret (library only, no daemon) |
+| `sheldon` | pacman | no | shell plugin/source manager |
 | `sudo` | pacman | no |  |
-| `zsh` | pacman | no | user's login shell |
+| `zsh` | pacman | yes | user's login shell |
 
 #### Layer 4 — install list
 
@@ -76,4 +79,6 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 |---|---|---|---|
 | `paru` | custom | no | AUR helper; bootstrapped via makepkg in the aur stage (custom install path, not in paru.txt) |
 | `neovim-git` | paru | no | neovim built from upstream git master (AUR); first concrete AUR package |
+| `starship` | paru | no | zsh prompt theme manager |
+| `tmux` | paru | no | tmux multiplexer |
 <!-- END AUTO-GEN: installed-programs -->

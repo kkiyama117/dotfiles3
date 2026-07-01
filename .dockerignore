@@ -1,9 +1,0 @@
-# srcroot build-context exclusions (consumed by container/Containerfile
-# Stage 2 via `--build-context srcroot=$(CURDIR)` in the Makefile).
-# Excluding these keeps the chezmoi apply source tight and avoids
-# accidentally baking host-only files into image layers.
-
-.git
-docs
-.env
-container/bind/home_dir
