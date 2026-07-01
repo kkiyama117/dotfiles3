@@ -175,7 +175,7 @@ RUN --mount=type=cache,target=/home/${USERNAME}/.local/share/cargo/registry,uid=
       source /tmp/build-home/.zshenv; \
       pkgs=$(sed "s/#.*//" /tmp/cargo_tools.txt | xargs); \
       if [ -n "$pkgs" ]; then \
-        cargo install --locked $pkgs; \
+        cargo install --locked ${=pkgs}; \
       else \
         echo "toolchain: cargo install list is empty -- skipping"; \
       fi; \
@@ -224,8 +224,15 @@ RUN --mount=type=cache,target=/var/cache/pacman/pkg \
 # `paru -S`. The list contains only `manager = "paru"` entries; `paru`
 # itself is `manager = "custom"` (doc-only) and is NOT in this list, so
 # the bootstrap step above is the sole install path for `paru` and the
-# bulk call never re-submits it as a `paru -S` target (which would break
-# paru's resolver). `--needed` makes the remaining installs idempotent.
+# bulk call never re-submits it as a `paru -S` target. `--needed` makes
+# the remaining installs idempotent.
+#
+# `${=pkgs}` (not `$pkgs`): unlike sh/bash, zsh does not word-split a bare
+# unquoted parameter by default, so `paru -S --noconfirm --needed $pkgs`
+# passed the whole space-joined string ("neovim-git starship tmux") as one
+# malformed target instead of three, which paru reported as "could not
+# find all required packages" for all of them. `${=pkgs}` is zsh's
+# explicit split operator and restores the intended per-package args.
 COPY --from=deps layer_4/paru.txt /tmp/paru_deps.txt
 RUN --mount=type=cache,target=/var/cache/pacman/pkg \
     --mount=type=cache,target=/home/${USERNAME}/.cache/paru,uid=${HOST_UID},gid=${HOST_GID} \
@@ -235,7 +242,7 @@ RUN --mount=type=cache,target=/var/cache/pacman/pkg \
       source /tmp/build-home/.zshenv; \
       pkgs=$(sed "s/#.*//" /tmp/paru_deps.txt | xargs); \
       if [ -n "$pkgs" ]; then \
-        paru -S --noconfirm --needed $pkgs; \
+        paru -S --noconfirm --needed ${=pkgs}; \
       else \
         echo "aur: paru install list is empty -- skipping"; \
       fi; \
