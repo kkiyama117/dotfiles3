@@ -65,10 +65,24 @@ layer = 1
 has_configs = false
 
 [[tool]]
+name = "gnupg"
+manager = "pacman"
+layer = 1
+has_configs = false
+description = "GnuPG (`gpg` / `gpg-agent`); honors GNUPGHOME from .zshenv"
+
+[[tool]]
 name = "openssh"
 manager = "pacman"
 layer = 1
 has_configs = false
+
+[[tool]]
+name = "pinentry"
+manager = "pacman"
+layer = 1
+has_configs = false
+description = "pinentry frontends (tty/curses) + default wrapper; hard-deps libsecret (library only, no daemon)"
 
 [[tool]]
 name = "sheldon"
@@ -89,20 +103,6 @@ manager = "pacman"
 layer = 1
 has_configs = true
 description = "user's login shell"
-
-[[tool]]
-name = "gnupg"
-manager = "pacman"
-layer = 1
-has_configs = false
-description = "GnuPG (`gpg` / `gpg-agent`); honors GNUPGHOME from .zshenv"
-
-[[tool]]
-name = "pinentry"
-manager = "pacman"
-layer = 1
-has_configs = false
-description = "pinentry frontends (tty/curses) + default wrapper; hard-deps libsecret (library only, no daemon)"
 
 # Layer 3: cargo-installed tools (Containerfile `toolchain` stage).
 # Add `[[tool]]` entries with `manager = "cargo"` and `layer = 3`.
