@@ -66,7 +66,9 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `chezmoi` | pacman | yes | dotfiles manager |
 | `curl` | pacman | no |  |
 | `git` | pacman | no |  |
+| `gnupg` | pacman | no | GnuPG (`gpg` / `gpg-agent`); honors GNUPGHOME from .zshenv |
 | `openssh` | pacman | no |  |
+| `pinentry` | pacman | no | pinentry frontends (tty/curses) + default wrapper; hard-deps libsecret (library only, no daemon) |
 | `sheldon` | pacman | no | shell plugin/source manager |
 | `sudo` | pacman | no |  |
 | `zsh` | pacman | yes | user's login shell |
