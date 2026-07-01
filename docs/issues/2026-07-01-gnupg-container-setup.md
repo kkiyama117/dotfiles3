@@ -1,8 +1,8 @@
 # Set up `gnupg` in the container (named volume at `GNUPGHOME`)
 
 **Date:** 2026-07-01
-**Status:** open (plumbing complete & verified; runtime smoke gate blocked — see [Status update](#status-update-2026-07-01) below)
-**Related:** [design](../specifications/implementations/2026-07-01-gnupg-container-setup-design.md), [plan](../plans/2026-07-01-gnupg-container-setup-impl.md), [deferred follow-up](2026-07-01-gnupg-bitwarden-import.md), [blocker: paru/AUR resolution regression](2026-07-01-paru-aur-resolution-regression.md), [spec 20](../specifications/20-container-rules.md), [spec 21](../specifications/21-container-build-flow.md), [spec 22](../specifications/22-container-build-pre-required-envs.md), [spec 02](../specifications/02-installed-programs.md)
+**Status:** closed (see [result-log](2026-07-01-phase-gnupg-container-setup.md))
+**Related:** [design](../specifications/implementations/2026-07-01-gnupg-container-setup-design.md), [plan](../plans/2026-07-01-gnupg-container-setup-impl.md), [result-log](2026-07-01-phase-gnupg-container-setup.md), [deferred follow-up](2026-07-01-gnupg-bitwarden-import.md), [blocker (resolved): paru/AUR resolution regression](2026-07-01-paru-aur-resolution-regression.md), [spec 20](../specifications/20-container-rules.md), [spec 21](../specifications/21-container-build-flow.md), [spec 22](../specifications/22-container-build-pre-required-envs.md), [spec 02](../specifications/02-installed-programs.md)
 
 ## Context
 
@@ -98,22 +98,24 @@ verified at the `toolchain` stage** (i.e. everything below the failing
 |---|---|---|
 | S1 gnupg+pinentry in packages.toml → layer_1/pacman.txt + spec 02 | DONE | `make gen-deps` idempotent; 11 packages; AUTO-GEN rows present; 15 generator tests pass |
 | S2 `~/.local/share/gnupg` 0700 owner-correct (Layer 1-6) | DONE | `podman run --target toolchain` → `stat` = `700 kiyama:kiyama` |
-| S3 named volume `dotfiles_gnupg` wired in Makefile | DONE (wiring) / BLOCKED (runtime) | `make -n up`/`make -n clean` include `dotfiles_gnupg`; runtime mount not yet exercised (needs `make up`) |
-| S4 `gpg --version` / `gpg-agent --version` / `$GNUPGHOME` | DONE | `gpg (GnuPG) 2.4.9`, `gpg-agent (GnuPG) 2.4.9` in `--target toolchain` image |
-| S5 `make down && make up` preserves a generated key | **BLOCKED** | needs `make up`, which needs a full build, which fails at `aur` |
-| S6 dir 0700 + `${USERNAME}`-owned at runtime | DONE (image) | verified at `toolchain` stage; runtime `make exec` check pending `make up` |
+| S3 named volume `dotfiles_gnupg` wired in Makefile | DONE | `make -n up`/`make -n clean` include `dotfiles_gnupg`; runtime mount exercised by `make up` (key written into the volume and persisted) |
+| S4 `gpg --version` / `gpg-agent --version` / `$GNUPGHOME` | DONE | `gpg (GnuPG) 2.4.9`, `gpg-agent (GnuPG) 2.4.9`; `GNUPGHOME=/home/kiyama/.local/share/gnupg` (after `make up`) |
+| S5 `make down && make up` preserves a generated key | DONE | generated `test@example.com` (`sec ed25519` + `ssb cv25519`); after `down && up`, `gpg --list-secret-keys` still lists it (named volume persisted) |
+| S6 dir 0700 + `${USERNAME}`-owned at runtime | DONE | `stat ~/.local/share/gnupg` → `700 kiyama:kiyama` at runtime (not root-owned; gpg strict perms satisfied) |
 | S7 `.chezmoiignore` lists `.local/share/gnupg` | DONE | `chezmoi managed -S /data/dotfiles3` → `NOT_MANAGED` (consistent with cargo/rustup/mise) |
 | S8 no key material baked into any image layer | DONE | `ls -A ~/.local/share/gnupg` in `--target toolchain` image is empty |
 | S9 no secret-store daemon | DONE | only `pinentry` (core) installed; `gnome-keyring` not pulled (it is not a hard dep of `pinentry`) |
 | S10 specs 01/02/20/21/22 updated | DONE | spec 20 I-GPG1..5 + libsecret NOTE; spec 21 Layer 1-6 row + acceptance #12; spec 22 volume note; spec 02 AUTO-GEN (gen-deps); spec 01 verified no-op |
 
-**Blocker:** `make build` fails at the `aur` stage (`paru -S` cannot
-resolve the AUR-only target `neovim-git`), a pre-existing regression
-exposed by the Layer 1 cache-bust — tracked in
-[`2026-07-01-paru-aur-resolution-regression.md`](2026-07-01-paru-aur-resolution-regression.md).
-This blocks S5 (and the runtime portion of S3/S6), i.e. the full `make up`
-smoke gate (plan Task 6). The issue stays **open** until that regression is
-resolved and the runtime smoke gate (plan Task 6) is executed and passes.
+**Blocker (resolved):** `make build` had failed at the `aur` stage
+(`paru -S` could not resolve the AUR-only target `neovim-git`) — a
+regression exposed by the Layer 1 cache-bust, tracked and fixed in
+[`2026-07-01-paru-aur-resolution-regression.md`](2026-07-01-paru-aur-resolution-regression.md)
+(root cause: zsh does not word-split a bare `$pkgs`; fixed in `develop`
+by the `${=pkgs}` operator, commit `a115677`). After rebasing
+`gnupg_container` onto `develop`, the full build passed and the runtime
+smoke gate (plan Task 6) completed with all criteria (S1–S10) green —
+see the [result-log](2026-07-01-phase-gnupg-container-setup.md).
 
 Commit trail (plumbing): `d55700c` (deps), `2fc3c80` (Containerfile Layer 1-6),
 `eb2e475` (Makefile volume), `e50bc21` (chezmoiignore), `c2c9b97` (specs).

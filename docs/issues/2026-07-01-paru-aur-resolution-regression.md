@@ -1,8 +1,8 @@
 # `paru -S` cannot resolve AUR targets in the build (regression)
 
 **Date:** 2026-07-01
-**Status:** open
-**Related:** [spec 20](../specifications/20-container-rules.md), [spec 21](../specifications/21-container-build-flow.md), [paru-aur-layer result-log](2026-06-30-phase-paru-aur-layer.md), [gnupg-container-setup (blocked by this)](2026-07-01-gnupg-container-setup.md)
+**Status:** closed (resolved in `develop` commit `a115677`; see [Resolution](#resolution-2026-07-01))
+**Related:** [spec 20](../specifications/20-container-rules.md), [spec 21](../specifications/21-container-build-flow.md), [paru-aur-layer result-log](2026-06-30-phase-paru-aur-layer.md), [gnupg-container-setup (unblocked)](2026-07-01-gnupg-container-setup.md), [gnupg result-log](2026-07-01-phase-gnupg-container-setup.md)
 
 ## Context
 
@@ -101,3 +101,30 @@ one.
   `LANG=C LC_ALL=C paru -S --print neovim-git starship tmux` to test the
   locale hypothesis; if it resolves, the fix is locale-scoping the build
   `RUN`s (and/or generating `ja_JP.UTF-8` in the base image).
+
+## Resolution (2026-07-01)
+
+**Root cause (not the locale hypothesis):** the build `RUN`s use
+`zsh -c '... paru -S --noconfirm --needed $pkgs ...'`. Unlike `sh`/`bash`, **zsh
+does not word-split a bare unquoted parameter by default**, so `$pkgs` (the
+space-joined package list `neovim-git starship tmux`) was passed to `paru -S`
+as **one malformed target** (literally `"neovim-git starship tmux"`), which
+paru reported as `could not find all required packages: neovim-git starship
+tmux (target)`. The AUR-RPC and pacman-DB diagnostics all passed because
+`paru -Si`/`pacman -Si` take single args and were unaffected.
+
+**Fix (merged in `develop`, commit `a115677` "word-split $pkgs in zsh -c
+RUN steps for paru/cargo installs"):** use zsh's explicit split operator
+`${=pkgs}` instead of `$pkgs` in both the Layer 4-2 `paru -S` and the
+Layer 3 `cargo install` RUNs.
+
+**Verification:** after rebasing `gnupg_container` onto `develop`, a full
+clean-slate `make build` succeeded through the `aur` stage (`starship`,
+`tmux`, and `neovim-git` all resolved and installed), and the gnupg
+runtime smoke gate completed green — see
+[`2026-07-01-phase-gnupg-container-setup.md`](2026-07-01-phase-gnupg-container-setup.md).
+All five acceptance criteria below are met (the locale hypothesis was a
+red herring; no locale change is required).
+
+This issue also retroactively re-confirms spec 21 acceptance #9/#10
+(`paru`/AUR packages installable from `layer_4/paru.txt`).
