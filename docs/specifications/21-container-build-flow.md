@@ -22,6 +22,7 @@ stage; within a stage, numbered **sub-layers** (`Layer N-M`) group related
 | `base` | 1-6 | `install -d -m 0700` for `~/.local/share/gnupg` | Owner-correct `0700` mountpoint for the `dotfiles_gnupg` named volume (`GNUPGHOME`); empty at build time (no key baked). | build-args |
 | `build-prepass` (`FROM base`) | 2 | `COPY --from=srcroot`; `BUILD_MODE=true chezmoi execute-template --init < /tmp/chezmoi-src/.chezmoi.toml.tmpl > ~/.config/chezmoi/chezmoi.toml` (`build_mode = true`); `chezmoi apply --destination /tmp/build-home` | Scratch render of ENV-bearing dotfiles with `build_mode = true`; secret-free. | `srcroot` named build-context, `.chezmoi.toml.tmpl` |
 | `toolchain` (`FROM build-prepass`) | 3 | `rustup-init`, mise installer, `cargo install`; cache mounts on `$CARGO_HOME/{registry,git}` | Install rustup/mise/cargo binaries under XDG-compliant paths. | `/tmp/build-home/.zshenv`, `dependencies/layer_3/cargo.txt` |
+| `toolchain` (`FROM build-prepass`) | 3-5 | `COPY --from=deps layer_3/mise.txt`; `mise install ${=pkgs}` + `mise use -g ${=pkgs}` with `~/.cache/mise` cache mount | Install the Layer 3 mise-managed language set (go/python/deno, `@latest`) from the generated list (`manager = "mise"` entries only) and set them as the global default (`mise use -g` writes `~/.config/mise/config.toml` so runtime shims resolve — `mise install` alone leaves shims erroring "No version is set"). Tools land in `~/.local/share/mise` (the `dotfiles_mise` named-volume mountpoint). | `/tmp/build-home/.zshenv`, `dependencies/layer_3/mise.txt` |
 | `aur` (`FROM toolchain`) | 4-1 | `git clone` paru PKGBUILD + `makepkg -si` (sources `/tmp/build-home/.zshenv`; cache mounts on `~/.cache/paru` + `/var/cache/pacman/pkg` + `$CARGO_HOME/{registry,git}`) | Bootstrap `paru` from the AUR as non-root `${USERNAME}`. | AUR `paru` PKGBUILD, Layer 1-4 sudoers |
 | `aur` (`FROM toolchain`) | 4-2 | `paru -S --noconfirm --needed` | Install the Layer 4 AUR package set from the generated list (`manager = "paru"` entries only). | `dependencies/layer_4/paru.txt` |
 | `runtime` (`FROM aur`) | 5-1 | `FROM aur AS runtime` | Runtime stage base (inherits the `aur` image). | - |
@@ -148,6 +149,7 @@ A new stage may land only when:
     volumes). No key material is baked into the image (the Layer 1-6
     directory is empty in the built image). See
     [`implementations/2026-07-01-gnupg-container-setup-design.md`](implementations/2026-07-01-gnupg-container-setup-design.md).
+13. After `make up`, `podman exec <container> zsh -ic 'go version; python --version; deno --version'` prints a version for each (mise shims active via `dot_zshenv.tmpl`); `make down && make up` preserves them (the `dotfiles_mise` named volume persists — analog of criterion #8 for cargo/rustup). An empty `layer_3/mise.txt` does not break the build (the `if [ -n "$pkgs" ]` guard + `(3, "mise")` in `EXPECTED_EMPTY_FILES`).
 
 ## Open questions
 

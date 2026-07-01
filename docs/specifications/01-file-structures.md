@@ -26,13 +26,15 @@ the map of which top-level path serves which concern.
 ├── Makefile            # build/up/exec/down + codegen targets (see 03-makefile.md)
 ├── dot_zshenv.tmpl     # chezmoi-managed ~/.zshenv (template; build_mode-gated toolchain block)
 ├── dot_config/         # chezmoi-managed ~/.config/ (XDG configs)
+│   ├── git/
+│   │   ├── config.tmpl  # chezmoi-managed ~/.config/git/config (identity from .chezmoidata; credential.helper host-only via `runtime`; GPG signing)
+│   │   └── ignore       # chezmoi-managed ~/.config/git/ignore (global gitignore; static, generic toptal patterns)
 │   └── zsh/
 │       └── dot_zshrc.tmpl  # chezmoi-managed ~/.config/zsh/.zshrc (runtime toolchain block)
 ├── (Other dotfiles)    # chezmoi-managed ~/(other dotfiles)
 ├── .chezmoiignore      # chezmoi ignore rules
 ├── .chezmoi.toml.tmpl  # chezmoi config template (build_mode via BUILD_MODE env; rendered by `chezmoi execute-template --init`)
-├── .chezmoidata.yaml   # chezmoi data (per-host override placeholders; see chezmoi docs)
-├── .chezmoidata/       # chezmoi data dir (kept under VCS; currently `.gitkeep` only)
+├── .chezmoidata/       # chezmoi data dir (kept under VCS): git_config.yaml — git identity_default (name/email/signingkey); see chezmoi docs
 ├── .chezmoiscripts/    # chezmoi run-once scripts dir (kept under VCS; currently `.gitkeep` only)
 ├── .containerignore    # srcroot build-context exclusions; applied to the `srcroot` named context in Makefile `build` (renamed from `.dockerignore`)
 ├── .env                # gitignored, per-machine (USERNAME=...); see 22-...md

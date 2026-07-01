@@ -65,6 +65,13 @@ layer = 1
 has_configs = false
 
 [[tool]]
+name = "git-delta"
+manager = "pacman"
+layer = 1
+has_configs = false
+description = "git-delta — syntax-highlighting pager for git diff/blame/log (core.pager/pager.* in ~/.config/git/config)"
+
+[[tool]]
 name = "gnupg"
 manager = "pacman"
 layer = 1
@@ -110,6 +117,32 @@ description = "user's login shell"
 # (Currently empty — infrastructure-only landing per design spec §10 item 1.
 # The empty cargo.txt is still generator-owned: see
 # EXPECTED_EMPTY_FILES in programs/generate_deps/main.py.)
+
+# Layer 3: mise-managed languages (Containerfile `toolchain` stage, Layer 3-5).
+# Add `[[tool]]` entries with `manager = "mise"` and `layer = 3`. The
+# generator renders each line as `<name>@latest` (bare `mise install
+# <tool>` reads a mise.toml, not latest). Run `make gen-deps` to
+# regenerate `dependencies/layer_3/mise.txt`.
+[[tool]]
+name = "go"
+manager = "mise"
+layer = 3
+has_configs = false
+description = "Go programming language (mise-managed, latest)"
+
+[[tool]]
+name = "python"
+manager = "mise"
+layer = 3
+has_configs = false
+description = "CPython (mise-managed, latest)"
+
+[[tool]]
+name = "deno"
+manager = "mise"
+layer = 3
+has_configs = false
+description = "Deno runtime (mise-managed, latest)"
 
 # Layer 4: paru-installed tools (AUR); Containerfile `aur` stage.
 # paru itself is bootstrapped via makepkg in the `aur` stage, so it is

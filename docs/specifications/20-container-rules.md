@@ -63,6 +63,42 @@ labels directly.
   manages the keyring (consistent with the `cargo` / `rustup` / `mise` /
   `chezmoi` ignore entries).
 
+- I-GIT1: `~/.config/git/config` is rendered by chezmoi from
+  `dot_config/git/config.tmpl`; `[user] name/email/signingkey` are injected
+  from `.chezmoidata/git_config.yaml` (`{{ .git.identity_default.* }}`).
+  The data file is the single source of identity; the template is the
+  single source of the config structure.
+- I-GIT2: `~/.config/git/ignore` is a static chezmoi-managed file
+  (`dot_config/git/ignore`, no template): a verbatim port of the host
+  global gitignore, which contains only generic toptal patterns (no
+  personal/secret entries — verified). Read by git via the XDG default
+  `core.excludesFile` (`$XDG_CONFIG_HOME/git/ignore`).
+- I-GIT3: `credential.helper = libsecret` is gated to host runtime only
+  by `{{ if and (not .build_mode) (eq .runtime "host") }}`. The container
+  has no keyring daemon (I-GPG9); writing the line there would be a broken
+  reference. The build-time pre-pass (`build_mode = true`) also omits it.
+- I-GIT4: `commit.gpgsign = true`, `gpg.format = openpgp`, and
+  `user.signingkey` render in all modes (build + host runtime + container
+  runtime). Signing is NOT gated by `runtime`: once the GPG key is
+  imported into the `dotfiles_gnupg` volume (deferred Bitwarden import),
+  the container signs automatically. Gating signing off in the container
+  would silently disable it even after the key arrives.
+- I-GIT5: No secret is baked into any image layer. `user.email` and
+  `user.signingkey` (a public GPG subkey ID) are acceptable plain text
+  (spec 13 §2 Tier 2) and are already public in the committed data file.
+  The GPG secret key is never baked (it lives only in the runtime
+  `dotfiles_gnupg` volume — I-GPG4). Extends I4 / spec 13 I-S4.
+- I-GIT6: `delta` is provided by the `git-delta` Arch `extra` package
+  (Layer 1, `packages.toml`), so `core.pager=delta` / `pager.*=delta` work
+  identically in host and container. No gating needed for delta.
+- I-GIT7: The `runtime` chezmoi data var (`host` | `container`, default
+  `host`) is driven by the `DOTFILES_RUNTIME` env var in
+  `.chezmoi.toml.tmpl`. Only `entrypoint.sh` sets it (to `container`); the
+  build prepass does not need to (`build_mode = true` already suppresses
+  the gated line). The host never sets it (defaults to `host`). This is the
+  repo's host/container signal — `build_mode` alone is build-time vs
+  runtime only (both host and container run with `build_mode = false`).
+
 - I-AUR1: `paru` is bootstrapped exactly once, in the `aur` stage, via
   `makepkg -si` against the AUR `paru` PKGBUILD clone. No other stage
   runs `makepkg`.
