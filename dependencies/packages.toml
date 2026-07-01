@@ -39,10 +39,18 @@ has_configs = false
 description = "base meta-package: gcc, make, binutils, etc."
 
 [[tool]]
-name = "sudo"
+name = "bitwarden-cli"
 manager = "pacman"
 layer = 1
 has_configs = false
+description = "Bitwarden CLI (`bw`); secret backend for chezmoi templates"
+
+[[tool]]
+name = "chezmoi"
+manager = "pacman"
+layer = 1
+has_configs = true
+description = "dotfiles manager"
 
 [[tool]]
 name = "curl"
@@ -57,30 +65,29 @@ layer = 1
 has_configs = false
 
 [[tool]]
-name = "chezmoi"
-manager = "pacman"
-layer = 1
-has_configs = false
-description = "dotfiles manager"
-
-[[tool]]
 name = "openssh"
 manager = "pacman"
 layer = 1
 has_configs = false
 
 [[tool]]
-name = "bitwarden-cli"
+name = "sheldon"
 manager = "pacman"
 layer = 1
 has_configs = false
-description = "Bitwarden CLI (`bw`); secret backend for chezmoi templates"
+description = "shell plugin/source manager"
+
+[[tool]]
+name = "sudo"
+manager = "pacman"
+layer = 1
+has_configs = false
 
 [[tool]]
 name = "zsh"
 manager = "pacman"
 layer = 1
-has_configs = false
+has_configs = true
 description = "user's login shell"
 
 # Layer 3: cargo-installed tools (Containerfile `toolchain` stage).
@@ -99,12 +106,28 @@ description = "user's login shell"
 # uses `manager = "paru"` and `layer = 4`; run `make gen-deps` to
 # regenerate `dependencies/layer_4/paru.txt`.
 
+# THIS IS Paru
 [[tool]]
 name = "paru"
 manager = "custom"
 layer = 4
 has_configs = false
 description = "AUR helper; bootstrapped via makepkg in the aur stage (custom install path, not in paru.txt)"
+
+# Layer 4: paru-installed tools (AUR); Containerfile `aur` stage.
+[[tool]]
+name = "starship"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "zsh prompt theme manager"
+
+[[tool]]
+name = "tmux"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "tmux multiplexer"
 
 [[tool]]
 name = "neovim-git"
