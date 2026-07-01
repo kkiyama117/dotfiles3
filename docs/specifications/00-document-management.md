@@ -36,7 +36,7 @@ docs/
 |------|------|------|------|
 | `issue` | `docs/issues/` | `YYYY-MM-DD-<slug>.md` | 課題提起 |
 | `result-log` | `docs/issues/` | `YYYY-MM-DD-<phase>-<topic>.md` | Phase 完了の証拠（no-PR 環境のため） |
-| `design` | `docs/specifications/implementation/` | `YYYY-MM-DD-<slug>-design.md` | 実装方針設計（DRAFT → Approved） |
+| `design` | `docs/specifications/implementations/` | `YYYY-MM-DD-<slug>-design.md` | 実装方針設計（DRAFT → Approved） |
 | `plan` | `docs/plans/` | `YYYY-MM-DD-<slug>-impl.md` | Approved design 後の mechanical checklist |
 | `review` | `docs/reviews/` | `YYYY-MM-DD-<slug>-review[-passN][-<letter>-<topic>][-prompt].md` | レビュー本体 / aggregate / prompt |
 | `reference` | `docs/references/` | `<topic>.md` | 外部 / ホスト状態の参照 |
@@ -48,7 +48,7 @@ docs/
 - 該当 issue の slug を継承する。同一 slug で `issue → design → plan → review → result-log` が grep で追える
 - 例:
   - `docs/issues/2026-06-27-container-two-stage.md`
-  - `docs/specifications/implementation/2026-06-27-container-two-stage-design.md`
+  - `docs/specifications/implementations/2026-06-27-container-two-stage-design.md`
   - `docs/reviews/2026-06-27-container-two-stage-review-pass2-B-security.md`
   - `docs/plans/2026-06-27-container-two-stage-impl.md`
   - `docs/issues/2026-06-28-phase7-smoke-matrix.md` (result-log)
@@ -124,7 +124,7 @@ issue (closed)
 <参考メモ>
 ```
 
-### 6.2 design (`specifications/implementation/*-design.md`)
+### 6.2 design (`specifications/implementations/*-design.md`)
 
 ```markdown
 # <Title> — Design
@@ -222,6 +222,6 @@ issue (closed)
 本仕様自身も spec のひとつ。改訂時は：
 
 1. 改訂理由を `docs/issues/` に issue として起こす
-2. 必要なら design (`docs/specifications/implementation/<slug>-doc-mgmt-rev-design.md`) を経る
+2. 必要なら design (`docs/specifications/implementations/<slug>-doc-mgmt-rev-design.md`) を経る
 3. 本ファイルを直接編集し、commit log に issue path を含める
 4. 影響を受ける既存テンプレ (`AGENTS.md` 等) を同 commit で同期する

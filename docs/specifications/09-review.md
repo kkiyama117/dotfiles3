@@ -144,6 +144,6 @@ Minimum contents:
 This file is itself one of the specs. To revise:
 
 1. File an issue in `docs/issues/` describing the reason
-2. For large changes, go through `docs/specifications/implementation/<slug>-review-rev-design.md`
+2. For large changes, go through `docs/specifications/implementations/<slug>-review-rev-design.md`
 3. Edit this file; include the issue path in the commit message
 4. Synchronize cross-referencing files (e.g. `AGENTS.md`, `00-document-management.md`) in the same commit
