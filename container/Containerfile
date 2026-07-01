@@ -92,10 +92,10 @@ USER ${USERNAME}
 
 # Layer 1-5: XDG-compliant home subdirectories
 #
-# Owner-correct directories must exist so the four runtime mounts (one bind
-# for chezmoi source, three named volumes for cargo/rustup/mise) attach to
-# a properly-owned ~/.local/share/ parent. install -d as root, then return
-# to ${USERNAME} so subsequent stages stay non-root.
+# Owner-correct directories must exist so the five runtime mounts (one bind
+# for chezmoi source, four named volumes for cargo/rustup/mise/gnupg)
+# attach to a properly-owned ~/.local/share/ parent. install -d as root,
+# then return to ${USERNAME} so subsequent stages stay non-root.
 USER root
 RUN install -d -o ${HOST_UID} -g ${HOST_GID} -m 0755 \
     /home/${USERNAME}/.local \
@@ -104,6 +104,19 @@ RUN install -d -o ${HOST_UID} -g ${HOST_GID} -m 0755 \
     /home/${USERNAME}/.local/share/rustup \
     /home/${USERNAME}/.local/share/mise \
     /home/${USERNAME}/.local/share/chezmoi
+
+# Layer 1-6: GNUPGHOME mountpoint (named volume dotfiles_gnupg).
+#
+# 0700 is mandatory for GNUPGHOME (gpg enforces strict permissions on its
+# home and refuses otherwise). Kept as a separate RUN from the 0755
+# toolchain dirs above so the mode is distinct and the intent is obvious.
+# Owner-correct so Podman does not root-create an absent mountpoint at
+# `make up` (the /home re-own failure mode, see Layer 5-2). The directory
+# is empty at build time; no key material is baked into the image
+# (spec 20 I4 / spec 13 I-S4 — the keyring lives only in the runtime
+# named volume).
+RUN install -d -o ${HOST_UID} -g ${HOST_GID} -m 0700 \
+    /home/${USERNAME}/.local/share/gnupg
 USER ${USERNAME}
 
 # ---------------------------------------------------------------------------
