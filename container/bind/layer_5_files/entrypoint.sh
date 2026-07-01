@@ -21,7 +21,7 @@ set -euo pipefail
 CHEZMOI_SOURCE="${HOME}/.local/share/chezmoi"
 RUNTIME_CONFIG="${HOME}/.config/chezmoi/chezmoi.toml"
 
-if [[ ! -d "$CHEZMOI_SOURCE/.git" ]]; then
+if [[ ! -e "$CHEZMOI_SOURCE/.git" ]]; then
   echo "entrypoint: $CHEZMOI_SOURCE is not a chezmoi source (no .git)." >&2
   echo "entrypoint: did make up bind the repo root into ~/.local/share/chezmoi?" >&2
   exit 1
