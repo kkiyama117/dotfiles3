@@ -210,6 +210,17 @@ RUN --mount=type=cache,target=/home/${USERNAME}/.local/share/cargo/registry,uid=
 # keeps mise's download cache across rebuilds without bloating image
 # layers (mirrors the cargo cache mounts in 3-4). `${=pkgs}` (zsh split)
 # restores per-package args.
+#
+# `mise use -g` after `mise install`: mise install alone does NOT set a
+# default version, so the shims would error "No version is set for shim:
+# <tool>" at runtime (verified: without it, `go`/`deno` fail; `python`
+# only resolves via a system fallback). `mise use -g ${=pkgs}` writes the
+# global default config (~/.config/mise/config.toml, `[tools] ... =
+# "latest"`) which rides the stage chain into the runtime image (Layer 5-3
+# strips chezmoi's toml + bash remnants, NOT ~/.config/mise) and lets the
+# shims resolve at runtime. This keeps the single SoT (packages.toml
+# drives the list; the config is a derived build artifact, not a parallel
+# hand-edited mise.toml).
 COPY --from=deps layer_3/mise.txt /tmp/mise_tools.txt
 RUN --mount=type=cache,target=/home/${USERNAME}/.cache/mise,uid=${HOST_UID},gid=${HOST_GID} \
     zsh -c 'set -eo pipefail; \
@@ -217,6 +228,7 @@ RUN --mount=type=cache,target=/home/${USERNAME}/.cache/mise,uid=${HOST_UID},gid=
       pkgs=$(sed "s/#.*//" /tmp/mise_tools.txt | xargs); \
       if [ -n "$pkgs" ]; then \
         mise install ${=pkgs}; \
+        mise use -g ${=pkgs}; \
       else \
         echo "toolchain: mise install list is empty -- skipping"; \
       fi; \

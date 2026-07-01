@@ -495,11 +495,21 @@ RUN --mount=type=cache,target=/home/${USERNAME}/.cache/mise,uid=${HOST_UID},gid=
       pkgs=$(sed "s/#.*//" /tmp/mise_tools.txt | xargs); \
       if [ -n "$pkgs" ]; then \
         mise install ${=pkgs}; \
+        mise use -g ${=pkgs}; \
       else \
         echo "toolchain: mise install list is empty -- skipping"; \
       fi; \
     '
 ```
+
+> **Fix (added during Phase 4 debugging):** `mise install` alone sets no
+default version, so runtime shims error "No version is set for shim: <tool>"
+(go/deno fail; python only resolves via a system fallback). The `mise use -g
+${=pkgs}` line writes the global default config (`~/.config/mise/config.toml`,
+`[tools] ... = "latest"`) which rides the stage chain into the runtime
+image and lets shims resolve. Verified empirically: after `mise use -g`, all
+three print versions (`go1.26.4`, `Python 3.14.6`, `deno 2.9.0`). The spec 21
+row and design §5.3 were updated to match.
 
 - [ ] **Step 2: Verify the Containerfile still parses (no build yet)**
 
@@ -511,7 +521,7 @@ Expected: the build reaches and completes the new Layer 3-5 `mise install` step 
 In `docs/specifications/21-container-build-flow.md`, find the `toolchain` rows in the stage table (Layer 3-1, 3-2, 3-3, 3-4). After the Layer 3-4 row, add:
 
 ```
-| `toolchain` (`FROM build-prepass`) | 3-5 | `COPY --from=deps layer_3/mise.txt`; `mise install ${=pkgs}` with `~/.cache/mise` cache mount | Install the Layer 3 mise-managed language set (go/python/deno, `@latest`) from the generated list (`manager = "mise"` entries only). Tools land in `~/.local/share/mise` (the `dotfiles_mise` named-volume mountpoint). | `/tmp/build-home/.zshenv`, `dependencies/layer_3/mise.txt` |
+| `toolchain` (`FROM build-prepass`) | 3-5 | `COPY --from=deps layer_3/mise.txt`; `mise install ${=pkgs}` + `mise use -g ${=pkgs}` with `~/.cache/mise` cache mount | Install the Layer 3 mise-managed language set (go/python/deno, `@latest`) from the generated list (`manager = "mise"` entries only) and set them as the global default (`mise use -g` writes `~/.config/mise/config.toml` so runtime shims resolve — `mise install` alone leaves shims erroring "No version is set"). Tools land in `~/.local/share/mise` (the `dotfiles_mise` named-volume mountpoint). | `/tmp/build-home/.zshenv`, `dependencies/layer_3/mise.txt` |
 ```
 
 - [ ] **Step 4: Update spec 21 — add an acceptance criterion**

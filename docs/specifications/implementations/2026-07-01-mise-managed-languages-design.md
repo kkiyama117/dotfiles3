@@ -105,6 +105,16 @@ install path.
   `--mount=type=cache,target=/home/${USERNAME}/.cache/mise` so
   mise's download cache survives across rebuilds without bloating
   image layers (mirrors the cargo cache mounts in Layer 3-4).
+- **I7 (global default for shims):** `mise install` alone sets no
+  default version, so runtime shims error "No version is set for
+  shim: <tool>". Layer 3-5 therefore runs `mise use -g ${=pkgs}`
+  after `mise install` to write the global default config
+  (`~/.config/mise/config.toml`, `[tools] ... = "latest"`). That
+  config is a **derived build artifact** (driven by `layer_3/mise.txt`,
+  itself derived from `packages.toml`) — NOT a parallel hand-edited
+  `mise.toml` — so the single SoT (I1) is preserved. It rides the
+  stage chain into the runtime image (Layer 5-3 strips chezmoi's toml
+  + bash remnants, NOT `~/.config/mise`). Verified empirically.
 
 ## §4 Scope / staging breakdown
 
@@ -199,11 +209,22 @@ RUN --mount=type=cache,target=/home/${USERNAME}/.cache/mise,uid=${HOST_UID},gid=
       pkgs=$(sed "s/#.*//" /tmp/mise_tools.txt | xargs); \
       if [ -n "$pkgs" ]; then \
         mise install ${=pkgs}; \
+        mise use -g ${=pkgs}; \
       else \
         echo "toolchain: mise install list is empty -- skipping"; \
       fi; \
     '
 ```
+
+`mise use -g` is required alongside `mise install`: `mise install` alone
+sets no default version, so the shims error "No version is set for
+shim: <tool>" at runtime (verified). `mise use -g ${=pkgs}` writes the
+global default config (`~/.config/mise/config.toml`, `[tools] ... =
+"latest"`), which rides the stage chain into the runtime image (Layer 5-3
+strips chezmoi's toml + bash remnants, NOT `~/.config/mise`) and lets the
+shims resolve at runtime. The config is a derived build artifact (driven
+by the same `layer_3/mise.txt`), not a parallel hand-edited `mise.toml`,
+so the single SoT (`packages.toml`) is preserved.
 
 ### 5.4 Tests
 
