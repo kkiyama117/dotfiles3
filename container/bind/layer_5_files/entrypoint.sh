@@ -40,6 +40,12 @@ if [[ ! -f "$CONFIG_TEMPLATE" ]]; then
   echo "entrypoint: did make up bind the repo root (with .chezmoi.toml.tmpl) into ~/.local/share/chezmoi?" >&2
   exit 1
 fi
+# Mark this chezmoi apply as running inside the container. build_mode is
+# already false here (BUILD_MODE unset at runtime); DOTFILES_RUNTIME
+# distinguishes container runtime from host runtime for settings that must
+# not appear in the container (e.g. credential.helper=libsecret — the
+# container has no keyring daemon; see dot_config/git/config.tmpl I-GIT3).
+export DOTFILES_RUNTIME=container
 chezmoi execute-template --init \
   < "$CONFIG_TEMPLATE" \
   > "$RUNTIME_CONFIG"

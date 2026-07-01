@@ -31,8 +31,6 @@ README.md
 **/.gitignore
 **/.gitmodules
 **/.worktrees
-## only allow global gitignore (and gitmodules)
-!.config/git/gitignore
 
 # ============================================================
 # Bind mounts in the container
