@@ -1,23 +1,60 @@
-# Repository metadata and programs
-# they are not needed in the target environment or avoid to duplicate
+# It's base is root directory that dotfiles are applied
+# for example: `~/.zshenv` -> `.zshenv`
+# And some files that exists in this repository must be
+# included in the ignore list to avoid conjection with
+# the actual dotfiles
+
+# ============================================================
+# Repository metadata and programs itself
+# ============================================================
 container
 dependencies
 docs
 programs
 .env.example
-.gitignore
 AGENTS.md
 Makefile
 README.md
 
-# User generated files for container
-.env
+# Container-related files
+.containerignore
 
-# Toolchain / keyring volume mountpoints — never managed by chezmoi
+# Chezmoi-related files
+## It may be exposed by default
+.chezmoiignore
+.chezmoidata.yaml
+
+# Git-related files
+**/.git/
+**/.git/**
+**/.gitignore
+**/.gitmodules
+**/.worktrees
+## only allow global gitignore (and gitmodules)
+!.config/git/gitignore
+
+# ============================================================
+# Bind mounts in the container
+# ============================================================
+
+# Toolchain / keyring volume mountpoints
+## never managed by chezmoi
 .local/share/cargo
 .local/share/rustup
 .local/share/mise
 .local/share/gnupg
 
-# Self bind-mount target (chezmoi source root) — chezmoi must not manage itself
+# Self bind-mount target (chezmoi source root)
 .local/share/chezmoi
+
+# ============================================================
+# User generated files for dotfiles
+# ============================================================
+.env
+
+# ============================================================
+# AI-related files
+# ============================================================
+.agents
+.claude
+.superpowers
