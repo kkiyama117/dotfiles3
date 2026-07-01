@@ -18,6 +18,7 @@ JOBS ?= 1
 CARGO_VOLUME  := dotfiles_cargo
 RUSTUP_VOLUME := dotfiles_rustup
 MISE_VOLUME   := dotfiles_mise
+GNUPG_VOLUME  := dotfiles_gnupg
 
 # Bitwarden credentials as podman secrets. Each is mounted only if it
 # exists, so `make up` still starts when no secrets have been created
@@ -69,6 +70,7 @@ up: _require_username ## Start a detached container with chezmoi bind + toolchai
 		-v $(CARGO_VOLUME):/home/$(USERNAME)/.local/share/cargo \
 		-v $(RUSTUP_VOLUME):/home/$(USERNAME)/.local/share/rustup \
 		-v $(MISE_VOLUME):/home/$(USERNAME)/.local/share/mise \
+		-v $(GNUPG_VOLUME):/home/$(USERNAME)/.local/share/gnupg \
 		$(IMAGE) sleep infinity
 
 exec: ## Open an interactive shell in the running container
@@ -79,7 +81,7 @@ down: ## Stop and remove the container
 	-podman rm $(CONTAINER)
 
 clean: down ## Full reset: stop container, remove image, and delete toolchain volumes
-	-podman volume rm $(CARGO_VOLUME) $(RUSTUP_VOLUME) $(MISE_VOLUME)
+	-podman volume rm $(CARGO_VOLUME) $(RUSTUP_VOLUME) $(MISE_VOLUME) $(GNUPG_VOLUME)
 	-podman rmi $(IMAGE)
 
 # META PROGRAMS
