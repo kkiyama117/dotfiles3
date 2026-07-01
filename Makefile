@@ -33,13 +33,12 @@ BUILD_CTX := $(CURDIR)/container
 IMAGE     := localhost/dotfiles-manjaro:latest
 CONTAINER := dotfiles-manjaro
 
-.PHONY: help build build_container up exec down clean _require_username gen-deps
+.PHONY: help build up exec down clean _require_username gen-deps
 
 help:
 	@echo "Usage: make [target]"
 	@echo "Targets:"
 	@echo "  build           Build the image matching your host uid/gid"
-	@echo "  build_container Build the container (alias of build)"
 	@echo "  up              Start a detached container with chezmoi bind + toolchain volumes (--userns=keep-id, --replace)"
 	@echo "  exec            Open an interactive shell in the running container"
 	@echo "  down            Stop and remove the container"
