@@ -23,6 +23,7 @@ README.md
 ## It may be exposed by default
 .chezmoiignore
 .chezmoidata.yaml
+.chezmoidata/*.yaml
 
 # Git-related files
 **/.git/

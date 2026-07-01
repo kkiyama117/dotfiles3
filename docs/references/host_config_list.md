@@ -289,7 +289,7 @@ source-tree 直下にはあるが `chezmoi managed` には出ない補助物：
 
 - `dot_config/direnv/direnvrc`
 - `dot_local/share/gnupg/gpg.conf.tmpl`
-- `.chezmoidata/rbw.yaml`, `.chezmoidata.yaml`
+- `.chezmoidata/*.yaml`, `.chezmoidata.yaml`
 - `.superpowers/sdd`, `containers/`, `templates/` 全般
 
 ---
@@ -411,4 +411,3 @@ GUI アプリのデータ／キャッシュ／OS 自動生成系：
   本セクション 19-A → 19-B → 19-C の順に手動仕分けすること。
 - 新リポジトリ取り込みは Phase 7+ を想定。Bitwarden テンプレ規約・コンテナ
   rehydrate と整合を取る。
-

@@ -1,0 +1,7 @@
+# TODO: make template and manage per-each user, when this repo is shared.
+git:
+    identity_default:
+        name: kkiyama117
+        email: k.kiyama117@gmail.com
+        signingkey: TODO
+    identities: {}
