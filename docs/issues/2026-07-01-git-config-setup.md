@@ -1,7 +1,7 @@
 # git config setup (chezmoi-managed `~/.config/git/{config,ignore}` + delta + GPG signing)
 
 **Date:** 2026-07-01
-**Status:** open
+**Status:** closed (see [result-log](2026-07-01-phase-git-config-setup.md))
 **Related:** [design](../specifications/implementations/2026-07-01-git-config-setup-design.md), [plan](../plans/2026-07-01-git-config-setup-impl.md), deferred [gnupg-bitwarden-import](2026-07-01-gnupg-bitwarden-import.md)
 
 ## Context
