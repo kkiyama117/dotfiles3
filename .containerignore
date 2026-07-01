@@ -18,7 +18,7 @@ docs
 # Bind mounts in the container
 # ============================================================
 #container/bind/
-containers/.gitignore
+container/.gitignore
 
 # ============================================================
 # User generated files for dotfiles

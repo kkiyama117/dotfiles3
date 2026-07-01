@@ -31,10 +31,14 @@ the map of which top-level path serves which concern.
 ├── (Other dotfiles)    # chezmoi-managed ~/(other dotfiles)
 ├── .chezmoiignore      # chezmoi ignore rules
 ├── .chezmoi.toml.tmpl  # chezmoi config template (build_mode via BUILD_MODE env; rendered by `chezmoi execute-template --init`)
-├── .dockerignore       # excludes .git/docs/.env/home_dir from srcroot build context (Task 9)
+├── .chezmoidata.yaml   # chezmoi data (per-host override placeholders; see chezmoi docs)
+├── .chezmoidata/       # chezmoi data dir (kept under VCS; currently `.gitkeep` only)
+├── .chezmoiscripts/    # chezmoi run-once scripts dir (kept under VCS; currently `.gitkeep` only)
+├── .containerignore    # srcroot build-context exclusions; applied to the `srcroot` named context in Makefile `build` (renamed from `.dockerignore`)
 ├── .env                # gitignored, per-machine (USERNAME=...); see 22-...md
 ├── .env.example        # committed example of .env
 ├── .gitignore
+├── .gitmodules         # empty; reserved for future git submodules
 │
 ├── container/          # Podman build context (BUILD_CTX in Makefile)
 │   └── bind/           # bind-mounted sources/scripts (full rules: `20-container-rules.md`)

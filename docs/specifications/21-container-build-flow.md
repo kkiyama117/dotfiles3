@@ -162,7 +162,12 @@ A new stage may land only when:
   `--mount=type=cache`; the cargo caches are also mounted for Rust AUR
   packages. See
   [`implementations/2026-06-30-paru-aur-layer-design.md`](implementations/2026-06-30-paru-aur-layer-design.md).
-- Q2: `.dockerignore` policy. The repo-root `.dockerignore` currently
-  excludes `.git`, `docs`, `.env`, and `container/bind/home_dir`.
-  Additional paths to exclude from the `srcroot` build context (large
-  untracked subtrees, editor swap files, etc.) need a convention.
+- Q2: `.containerignore` policy (renamed from `.dockerignore`). The
+  repo-root `.containerignore` is applied to the `srcroot` named build
+  context (`--build-context srcroot=$(CURDIR)` in the Makefile; verified
+  that Podman applies the ignore file to named contexts, not only the
+  main context). It currently excludes `docs`, `.git/`, `.gitignore`,
+  `.gitmodules`, `.worktrees/`, `container/.gitignore`, `.env`, and the
+  AI-tool dirs (`.agents`, `.claude`, `.superpowers`). Additional paths
+  to exclude from the `srcroot` build context (large untracked subtrees,
+  editor swap files, etc.) still need a convention.
