@@ -66,6 +66,7 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `chezmoi` | pacman | yes | dotfiles manager |
 | `curl` | pacman | no |  |
 | `git` | pacman | no |  |
+| `git-delta` | pacman | no | git-delta — syntax-highlighting pager for git diff/blame/log (core.pager/pager.* in ~/.config/git/config) |
 | `gnupg` | pacman | no | GnuPG (`gpg` / `gpg-agent`); honors GNUPGHOME from .zshenv |
 | `openssh` | pacman | no |  |
 | `pinentry` | pacman | no | pinentry frontends (tty/curses) + default wrapper; hard-deps libsecret (library only, no daemon) |

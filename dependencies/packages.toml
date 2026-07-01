@@ -65,6 +65,13 @@ layer = 1
 has_configs = false
 
 [[tool]]
+name = "git-delta"
+manager = "pacman"
+layer = 1
+has_configs = false
+description = "git-delta — syntax-highlighting pager for git diff/blame/log (core.pager/pager.* in ~/.config/git/config)"
+
+[[tool]]
 name = "gnupg"
 manager = "pacman"
 layer = 1
