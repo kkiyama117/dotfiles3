@@ -1,8 +1,8 @@
 # Install go / python / deno via mise in the container
 
 **Date:** 2026-07-01
-**Status:** open
-**Related:** [design](../specifications/implementations/2026-07-01-mise-managed-languages-design.md), [spec 02](../specifications/02-installed-programs.md), [spec 21](../specifications/21-container-build-flow.md)
+**Status:** closed (see [result-log](2026-07-01-phase-mise-managed-languages.md))
+**Related:** [design](../specifications/implementations/2026-07-01-mise-managed-languages-design.md), [plan](../plans/2026-07-01-mise-managed-languages-impl.md), [result-log](2026-07-01-phase-mise-managed-languages.md), [spec 02](../specifications/02-installed-programs.md), [spec 21](../specifications/21-container-build-flow.md)
 
 ## Context
 
