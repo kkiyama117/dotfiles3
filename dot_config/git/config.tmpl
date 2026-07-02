@@ -8,7 +8,6 @@
   name = {{ .git.identity_default.name }}
   email = {{ .git.identity_default.email }}
   signingkey = {{ .git.identity_default.signingkey }}
-
 [init]
   defaultBranch = main
 [commit]
@@ -27,13 +26,12 @@
   wt = worktree
   wtl = worktree list
   wta = worktree add -b
-
-{{ if and (not .build_mode) (eq .runtime "host") }}
+{{- if and (not .build_mode) (eq .runtime "host") }}
 ; cred — libsecret (host has a keyring daemon; the container does not, so
 ; this section is host-runtime only; see I-GIT3)
 [credential]
   helper = libsecret
-{{ end }}
+{{ end -}}
 ; pager
 [diff]
   colorMoved = default
