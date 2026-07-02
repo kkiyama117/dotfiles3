@@ -132,6 +132,7 @@ labels directly.
 |---|---|
 | Containerfile stage breakdown, layer ordering, acceptance criteria | [`21-container-build-flow.md`](21-container-build-flow.md) |
 | Build-time env vars (`HOST_UID`, `HOST_GID`, `JOBS`) | [`22-container-build-pre-required-envs.md`](22-container-build-pre-required-envs.md) |
+| GPG key runtime lifecycle (import flow, posture, persistence, gpgsign, future automation) | [`23-container-gnupg-management.md`](23-container-gnupg-management.md) |
 | Host pre-requirements (Bitwarden `bw`, chezmoi) | [`11-pre-required-env-values.md`](11-pre-required-env-values.md) |
 | Make target contract | [`03-makefile.md`](03-makefile.md) |
 | Chezmoi-in-container gotchas (safe.directory, UID remap) | [`../references/2026-06-25-chezmoi-in-containers.md`](../references/2026-06-25-chezmoi-in-containers.md) |
