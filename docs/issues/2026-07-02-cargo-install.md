@@ -64,7 +64,7 @@
 2. `topgrade` is declared in `dependencies/packages.toml` with
    `manager = "cargo"`, `layer = 3`, `has_configs = false`; `make
    gen-deps` emits it to `dependencies/layer_3/cargo.txt`. The
-   Containerfile installs it via **`cargo binstall -y`** (not
+   Containerfile installs it via **`cargo binstall --only-signed -y`** (not
    `cargo install --locked`), using the bootstrapped binstall. After
    `make up`, `podman exec dotfiles-manjaro zsh -ic 'which topgrade'`
    resolves (or `topgrade -V` succeeds).
@@ -87,13 +87,18 @@
    `3-2 rustup` → `3-3 mise binary` → `3-4 mise install languages`
    (moved up from 3-5) → `3-5 cargo-binstall bootstrap` (new) →
    `3-6 cargo tools via cargo binstall` (was 3-4, command switched from
-   `cargo install --locked` to `cargo binstall -y`, renumbered).
+   `cargo install --locked` to `cargo binstall --only-signed -y`, renumbered).
    An empty `layer_3/cargo.txt` still does not break the build (the
    `if [ -n "$pkgs" ]` guard + `(3, "cargo")` in `EXPECTED_EMPTY_FILES`
    preserved).
 6. `make down && make up` preserves cargo / rustup toolchain binaries
    (the `dotfiles_cargo` / `dotfiles_rustup` named volumes persist —
-   regression check of the existing behavior).
+   regression check of the existing behavior). **Rollout (E-F2):** because
+   `cargo-binstall` and `topgrade` are NEW entries in `$CARGO_HOME/bin`, an
+   existing `dotfiles_cargo` named volume will NOT pick them up on `make up`
+   (Podman does not re-populate a non-empty volume); run `make clean` (or
+   `podman volume rm dotfiles_cargo`) before the first `make up` after this
+   change.
 7. `programs/generate_deps/tests/` is green (existing
    `test_cargo_manager.py` + any new/updated tests for the layer-6
    runtime-manual heading and the layer-6 emission).
@@ -104,7 +109,8 @@
    [`02-installed-programs.md`](../specifications/02-installed-programs.md)
    (cargo manager rule + layer-6 note);
    [`20-container-rules.md`](../specifications/20-container-rules.md)
-   (a `I-CARGO` invariant if warranted, or cross-ref to spec 24);
+   (a general `I-INFRA1` installer-infra carve-out + `I-CARGO1` as its cargo
+   instance, or cross-ref to spec 24);
    [`21-container-build-flow.md`](../specifications/21-container-build-flow.md)
    (Stage 3 rows 3-4/3-5/3-6 + acceptance criteria for binstall/topgrade).
 9. No secret is baked into any image layer (extends I4 / spec 13 I-S4 —
