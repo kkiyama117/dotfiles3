@@ -1,7 +1,7 @@
 # Set up cargo install (cargo-binstall bootstrap + Rust packages rule)
 
 **Date:** 2026-07-02
-**Status:** open (design draft)
+**Status:** closed (see [result-log](2026-07-02-phase-cargo-install.md))
 **Related:** [design](../specifications/implementations/2026-07-02-cargo-install-design.md), [spec 02](../specifications/02-installed-programs.md), [spec 20](../specifications/20-container-rules.md), [spec 21](../specifications/21-container-build-flow.md), [current host cargo inventory](../references/current_cargo_installed.md), [mise-managed-languages sibling (closed)](2026-07-01-mise-managed-languages.md)
 
 ## Context
@@ -148,7 +148,15 @@
 
 ## Status update (2026-07-02)
 
-Design drafted at
-[`../specifications/implementations/2026-07-02-cargo-install-design.md`](../specifications/implementations/2026-07-02-cargo-install-design.md).
-Pending review pass (security/build letters per
-[`09-review.md`](../specifications/09-review.md)) before implementation.
+Complete. Implemented across 5 phases (generator / SoT / Containerfile /
+specs / build-verify); the consolidated implementation review (c65922c..10be9ee)
+was Approved (no Critical/Important), and the full `make build` + runtime smoke
++ persistence verification passed (see the
+[result-log](2026-07-02-phase-cargo-install.md)). `cargo-binstall 1.20.1` is
+bootstrapped (SHA256-gated), `topgrade 17.6.2` is installed via
+`cargo binstall --only-signed -y` (signed QuickInstall source), the 5
+runtime-manual tools are reference-only at `layer = 6`, and the GPG key in
+`dotfiles_gnupg` was preserved (targeted `podman volume rm dotfiles_cargo`,
+not `make clean`). Spec 24 is normative; spec 02/20/21 updated.
+
+Design doc: [`../specifications/implementations/2026-07-02-cargo-install-design.md`](../specifications/implementations/2026-07-02-cargo-install-design.md).
