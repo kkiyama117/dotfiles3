@@ -147,11 +147,11 @@ def render_doc_block(tools: list[dict]) -> str:
     ]
     for layer in sorted(by_layer):
         entries = sorted(by_layer[layer], key=lambda x: (x["manager"], x["name"]))
-        heading = (
-            f"#### Layer {layer} — already in the base image"
-            if layer == 0
-            else f"#### Layer {layer} — install list"
-        )
+        _LAYER_HEADINGS = {
+            0: "Layer 0 — already in the base image",
+            6: "Layer 6 — runtime-manual (not build-installed)",
+        }
+        heading = f"#### {_LAYER_HEADINGS.get(layer, f'Layer {layer} — install list')}"
         lines += [heading, ""]
         lines += [
             "| name | manager | configs | description |",
