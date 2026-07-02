@@ -211,7 +211,7 @@ ARG CARGO_BINSTALL_VERSION=1.20.1
 ARG CARGO_BINSTALL_SHA256=f12954bc382e1d0b2df3fbfb217a05d92c25570e4517841e0613499a24f4594e
 RUN zsh -c 'set -eo pipefail; \
       source /tmp/build-home/.zshenv; \
-      curl -L --proto =https --tlsv1.2 -sSf -o /tmp/binstall.tgz \
+      curl -L --proto "=https" --tlsv1.2 -sSf -o /tmp/binstall.tgz \
         https://github.com/cargo-bins/cargo-binstall/releases/download/v${CARGO_BINSTALL_VERSION}/cargo-binstall-x86_64-unknown-linux-musl.tgz; \
       printf "%s  /tmp/binstall.tgz\n" "${CARGO_BINSTALL_SHA256}" | sha256sum -c -; \
       [ "$(tar -tzf /tmp/binstall.tgz | wc -l)" -eq 1 ] && [ "$(tar -tzf /tmp/binstall.tgz)" = "cargo-binstall" ]; \
