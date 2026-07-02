@@ -6,16 +6,18 @@
 #   - docs/specifications/02-installed-programs.md (AUTO-GEN block)
 # Generator: programs/generate_deps/main.py
 #
-# Example of entry:
+# Entries should be sorted alphabetically by `name`.
+#
+# Example of entry (Toml):
 # [[tool]]
 # name = "base-devel"
+## Allowed `manager` values: pacman, paru, nix, uv, cargo, mise.
+## `cargo` entries land in layer 3 (Containerfile `toolchain` stage).
 # manager = "pacman"
 # layer = 1
 # has_configs = false
 # description = "base meta-package: gcc, make, binutils, etc."
 #
-# Allowed `manager` values: pacman, paru, nix, uv, cargo, mise.
-# `cargo` entries land in layer 3 (Containerfile `toolchain` stage).
 
 schema = 1
 
@@ -30,6 +32,7 @@ has_configs = true
 
 # Layer 1: Base image, minimum installation only for chezmoi apply
 #          And install that must be used in our environment.
+#          Aur Packages that don't need to container setup or configuration are installed by `paru` (Layer 4).
 
 [[tool]]
 name = "base-devel"
@@ -62,7 +65,8 @@ has_configs = false
 name = "git"
 manager = "pacman"
 layer = 1
-has_configs = false
+# `~/.config/git/config`
+has_configs = true
 
 [[tool]]
 name = "git-delta"
@@ -75,14 +79,16 @@ description = "git-delta — syntax-highlighting pager for git diff/blame/log (c
 name = "gnupg"
 manager = "pacman"
 layer = 1
-has_configs = false
+# `~/.local/share/gnupg`, Read `docs/specifications/23-container-gnupg-management.md`
+has_configs = true
 description = "GnuPG (`gpg` / `gpg-agent`); honors GNUPGHOME from .zshenv"
 
 [[tool]]
 name = "openssh"
 manager = "pacman"
 layer = 1
-has_configs = false
+# `~/.ssh`
+has_configs = true
 
 [[tool]]
 name = "pinentry"
@@ -108,6 +114,7 @@ has_configs = false
 name = "zsh"
 manager = "pacman"
 layer = 1
+# `~/.zshenv` and `~/.config/zsh` (ZDOTDIR)
 has_configs = true
 description = "user's login shell"
 
@@ -162,6 +169,37 @@ has_configs = false
 description = "AUR helper; bootstrapped via makepkg in the aur stage (custom install path, not in paru.txt)"
 
 # Layer 4: paru-installed tools (AUR); Containerfile `aur` stage.
+#
+# Almost all packages are installed via `paru -S` (pre-built binary).
+# because it's faster than nix building and doesn't require building from source if it has binaries.
+#
+# TODO: Write this `Rust packages rule` into docs
+# Rust packages rule:
+#   Packages that depends on Rust toolchain are divided into two groups:
+#   those that are built from source (using `cargo`) and those that are
+#   installed via pre-built binaries (using `cargo install`).
+#   Paru-installed packages should be:
+#   - package we can install via `paru -S`, especially not building
+#     - (that nearly equal it doesn't depend on pacman/paru's `rust` or `rustup` package)
+#   - package it doesn't need to access beta or latest version.
+#     - If we need beta or latest version, we install via `cargo install` to build from source.
+#   - package that need to access from `cargo` or `rustup`
+#     - (e.g. `cargo-outdated` or `cargo-zigbuild`)
+#   Other packages should be installed via `cargo` (and `cargo-binstall`).
+
+[[tool]]
+name = "pueue"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "task queue daemon"
+
+[[tool]]
+name = "rsync"
+manager = "pacman"
+layer = 1
+has_configs = false
+
 [[tool]]
 name = "starship"
 manager = "paru"
@@ -176,9 +214,37 @@ layer = 4
 has_configs = false
 description = "tmux multiplexer"
 
+
 [[tool]]
 name = "neovim-git"
 manager = "paru"
 layer = 4
 has_configs = false
 description = "neovim built from upstream git master (AUR); first concrete AUR package"
+
+[[tool]]
+name = "wired"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "notification daemon"
+
+# TODO: Plan, review, implement
+# Install `cargo-binstall`, and install other `cargo` packages via `cargo-binstall`.
+# Only `cargo-binstall` (or maybe `topgrade`) is installed in Containerfile and cached,
+# but about other packages, "installed after the container is built, by user manually" may be better,
+# as they may need to access beta or latest version, or build from source, that is too slow and done daily.
+
+#[[tool]]
+#name = "cargo-binstall"
+#manager = "cargo"
+#layer = ?
+#has_configs = false
+#description = "multi-package-manager"
+
+#[[tool]]
+#name = "topgrade"
+#manager = "cargo"
+#layer = ?
+#has_configs = false
+#description = "multi-package-manager"

@@ -65,11 +65,12 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `bitwarden-cli` | pacman | no | Bitwarden CLI (`bw`); secret backend for chezmoi templates |
 | `chezmoi` | pacman | yes | dotfiles manager |
 | `curl` | pacman | no |  |
-| `git` | pacman | no |  |
+| `git` | pacman | yes |  |
 | `git-delta` | pacman | no | git-delta — syntax-highlighting pager for git diff/blame/log (core.pager/pager.* in ~/.config/git/config) |
-| `gnupg` | pacman | no | GnuPG (`gpg` / `gpg-agent`); honors GNUPGHOME from .zshenv |
-| `openssh` | pacman | no |  |
+| `gnupg` | pacman | yes | GnuPG (`gpg` / `gpg-agent`); honors GNUPGHOME from .zshenv |
+| `openssh` | pacman | yes |  |
 | `pinentry` | pacman | no | pinentry frontends (tty/curses) + default wrapper; hard-deps libsecret (library only, no daemon) |
+| `rsync` | pacman | no |  |
 | `sheldon` | pacman | no | shell plugin/source manager |
 | `sudo` | pacman | no |  |
 | `zsh` | pacman | yes | user's login shell |
@@ -88,6 +89,8 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 |---|---|---|---|
 | `paru` | custom | no | AUR helper; bootstrapped via makepkg in the aur stage (custom install path, not in paru.txt) |
 | `neovim-git` | paru | no | neovim built from upstream git master (AUR); first concrete AUR package |
+| `pueue` | paru | no | task queue daemon |
 | `starship` | paru | no | zsh prompt theme manager |
 | `tmux` | paru | no | tmux multiplexer |
+| `wired` | paru | no | notification daemon |
 <!-- END AUTO-GEN: installed-programs -->
