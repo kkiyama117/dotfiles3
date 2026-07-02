@@ -118,14 +118,20 @@ layer = 1
 has_configs = true
 description = "user's login shell"
 
-# Layer 3: cargo-installed tools (Containerfile `toolchain` stage).
-# Add `[[tool]]` entries with `manager = "cargo"` and `layer = 3`.
-# Run `make gen-deps` to regenerate `dependencies/layer_3/cargo.txt`.
-# (Currently empty — infrastructure-only landing per design spec §10 item 1.
-# The empty cargo.txt is still generator-owned: see
-# EXPECTED_EMPTY_FILES in programs/generate_deps/main.py.)
+# Layer 3: cargo-installed tools (Containerfile `toolchain` stage, Layer 3-6).
+# Build-time cargo tools installed via `cargo binstall --only-signed -y` from
+# `dependencies/layer_3/cargo.txt`. Per spec 24, layer=3 entries MUST ship a
+# SIGNED prebuilt (cargo-binstall --only-signed compatible); unsigned-only /
+# source-only tools go to layer = 6 (runtime-manual). Run `make gen-deps` to
+# regenerate.
+[[tool]]
+name = "topgrade"
+manager = "cargo"
+layer = 3
+has_configs = false
+description = "multi-package-manager updater; build-time cargo tool (signed prebuilt via cargo-binstall --only-signed)"
 
-# Layer 3: mise-managed languages (Containerfile `toolchain` stage, Layer 3-5).
+# Layer 3: mise-managed languages (Containerfile `toolchain` stage, Layer 3-4).
 # Add `[[tool]]` entries with `manager = "mise"` and `layer = 3`. The
 # generator renders each line as `<name>@latest` (bare `mise install
 # <tool>` reads a mise.toml, not latest). Run `make gen-deps` to
@@ -173,19 +179,9 @@ description = "AUR helper; bootstrapped via makepkg in the aur stage (custom ins
 # Almost all packages are installed via `paru -S` (pre-built binary).
 # because it's faster than nix building and doesn't require building from source if it has binaries.
 #
-# TODO: Write this `Rust packages rule` into docs
-# Rust packages rule:
-#   Packages that depends on Rust toolchain are divided into two groups:
-#   those that are built from source (using `cargo`) and those that are
-#   installed via pre-built binaries (using `cargo install`).
-#   Paru-installed packages should be:
-#   - package we can install via `paru -S`, especially not building
-#     - (that nearly equal it doesn't depend on pacman/paru's `rust` or `rustup` package)
-#   - package it doesn't need to access beta or latest version.
-#     - If we need beta or latest version, we install via `cargo install` to build from source.
-#   - package that need to access from `cargo` or `rustup`
-#     - (e.g. `cargo-outdated` or `cargo-zigbuild`)
-#   Other packages should be installed via `cargo` (and `cargo-binstall`).
+# Rust packages rule — see docs/specifications/24-rust-packages-rule.md for the
+# normative paru / cargo-binstall / cargo-install selection criteria and the
+# build-time (layer=3) vs runtime-manual (layer=6) boundary.
 
 [[tool]]
 name = "pueue"
@@ -229,22 +225,43 @@ layer = 4
 has_configs = false
 description = "notification daemon"
 
-# TODO: Plan, review, implement
-# Install `cargo-binstall`, and install other `cargo` packages via `cargo-binstall`.
-# Only `cargo-binstall` (or maybe `topgrade`) is installed in Containerfile and cached,
-# but about other packages, "installed after the container is built, by user manually" may be better,
-# as they may need to access beta or latest version, or build from source, that is too slow and done daily.
+# Layer 6: runtime-manual cargo tools — declared for SoT but NOT build-installed.
+# `cargo-binstall` itself is INFRA (Containerfile bootstrap, not here — see spec 24
+# §4 / spec 20 I-CARGO1). The operator installs these at runtime via
+# `cargo binstall <pkg>` (or `cargo install --locked <pkg>` for source-only).
+# `make gen-deps` emits `layer_6/cargo.txt` as a reference list the Containerfile
+# never reads. See spec 24 (Rust packages rule).
+[[tool]]
+name = "cargo-edit"
+manager = "cargo"
+layer = 6
+has_configs = false
+description = "runtime-manual cargo tool; cargo-add/rm/set-version/upgrade"
 
-#[[tool]]
-#name = "cargo-binstall"
-#manager = "cargo"
-#layer = ?
-#has_configs = false
-#description = "multi-package-manager"
+[[tool]]
+name = "cargo-expand"
+manager = "cargo"
+layer = 6
+has_configs = false
+description = "runtime-manual cargo tool; pretty-print macro expansion"
 
-#[[tool]]
-#name = "topgrade"
-#manager = "cargo"
-#layer = ?
-#has_configs = false
-#description = "multi-package-manager"
+[[tool]]
+name = "cargo-outdated"
+manager = "cargo"
+layer = 6
+has_configs = false
+description = "runtime-manual cargo tool; detect outdated crate deps"
+
+[[tool]]
+name = "cargo-zigbuild"
+manager = "cargo"
+layer = 6
+has_configs = false
+description = "runtime-manual cargo tool; cross-compile via zig toolchain"
+
+[[tool]]
+name = "maturin"
+manager = "cargo"
+layer = 6
+has_configs = false
+description = "runtime-manual cargo tool; build & publish Rust-Python extensions"
