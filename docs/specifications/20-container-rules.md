@@ -116,6 +116,23 @@ labels directly.
   Rust package). The cache mounts are not written to image layers.
 - I-AUR4: The `aur` stage's bootstrap clone (`/tmp/paru-build`) is
   removed before the stage ends so it cannot ride into the final image.
+- I-INFRA1: **Toolchain installer binaries are infrastructure, not
+  `packages.toml` entries.** A tool whose sole purpose is to
+  install/manage other tools (an installer-of-installers) and which
+  ships an official prebuilt binary is curl-bootstrapped in the
+  Containerfile and is NOT declared in `packages.toml`. Instances:
+  `rustup` (Layer 3-2), `mise` (Layer 3-3), `cargo-binstall` (Layer 3-5).
+  This is the formal carve-out from I5 for installer infra (the
+  `paru` `manager = "custom"` doc-only mechanism is a separate,
+  package-specific carve-out via I-AUR2).
+- I-CARGO1: **`cargo-binstall` is the cargo instance of I-INFRA1.** It is
+  bootstrapped at Layer 3-5 from a version-pinned (v1.20.1) + SHA256-gated
+  (`f12954bc382e1d0b2df3fbfb217a05d92c25570e4517841e0613499a24f4594e`)
+  prebuilt musl tarball, extracted single-file to `$CARGO_HOME/bin`. Build-time
+  cargo tools (`layer = 3`) install via `cargo binstall --only-signed -y`
+  (signed prebuilt only — see [`24-rust-packages-rule.md`](24-rust-packages-rule.md)
+  §3). `cargo-binstall` has no persistent download cache (per-run tempdir in
+  `$CARGO_HOME`), so there is no BuildKit cache mount for binstall downloads.
 
 > NOTE on `git safe.directory`: an earlier draft mandated registering
 > `/var/lib/chezmoi-source` via `git config --global --add safe.directory`.
@@ -133,6 +150,7 @@ labels directly.
 | Containerfile stage breakdown, layer ordering, acceptance criteria | [`21-container-build-flow.md`](21-container-build-flow.md) |
 | Build-time env vars (`HOST_UID`, `HOST_GID`, `JOBS`) | [`22-container-build-pre-required-envs.md`](22-container-build-pre-required-envs.md) |
 | GPG key runtime lifecycle (import flow, posture, persistence, gpgsign, future automation) | [`23-container-gnupg-management.md`](23-container-gnupg-management.md) |
+| Rust packages rule (paru vs cargo-binstall vs cargo-install; layer 3 vs layer 6) | [`24-rust-packages-rule.md`](24-rust-packages-rule.md) |
 | Host pre-requirements (Bitwarden `bw`, chezmoi) | [`11-pre-required-env-values.md`](11-pre-required-env-values.md) |
 | Make target contract | [`03-makefile.md`](03-makefile.md) |
 | Chezmoi-in-container gotchas (safe.directory, UID remap) | [`../references/2026-06-25-chezmoi-in-containers.md`](../references/2026-06-25-chezmoi-in-containers.md) |

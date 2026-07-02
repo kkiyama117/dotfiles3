@@ -22,6 +22,7 @@ It may be moved in `1x-` or `2x-` because it is not a rule of metadata or docume
 | Target | Class | Status | Acceptance criteria |
 |---|---|---|---|
 | `gen-deps` | codegen | active (see [`08-automations.md`](08-automations.md)) | regenerates `dependencies/layer_<N>/<manager>.txt` and the AUTO-GEN block in [`02-installed-programs.md`](02-installed-programs.md) from `dependencies/packages.toml`. Idempotent. |
+| `test-deps` | codegen | active (see [`08-automations.md`](08-automations.md)) | runs `python3 -m pytest programs/generate_deps/tests/ -q`. Exit 0. Does not touch the network or the container. |
 
 ## Contract
 
