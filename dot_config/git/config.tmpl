@@ -1,7 +1,6 @@
 
 {{- /* Chezmoi config values */ -}}
 {{- $id := index .git.identities .chezmoi.hostname | default .git.identity_default -}}
-{{- $names := index .rbw.gpg_signing_keys.hosts .chezmoi.hostname | default .rbw.gpg_signing_keys.default -}}
 {{- $isUseLibsecret := and (not .build_mode) (eq .runtime "host") -}}
 {{- /* `$id` is injected from the chezmoidata. default is git.identity_default */ -}}
 {{- /* but it is overridden by .git.identities (default: empty) */ -}}
