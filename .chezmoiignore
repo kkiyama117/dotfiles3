@@ -43,6 +43,14 @@ README.md
 .local/share/mise
 .local/share/gnupg
 
+# SSH secret key material — volume-owned; conventional names only
+.ssh/id_*
+.ssh/*_ed25519
+.ssh/*_rsa
+.ssh/*_ecdsa
+.ssh/*_ed25519_sk
+.ssh/*_ecdsa_sk
+
 # Self bind-mount target (chezmoi source root)
 .local/share/chezmoi
 

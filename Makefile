@@ -19,6 +19,7 @@ CARGO_VOLUME  := dotfiles_cargo
 RUSTUP_VOLUME := dotfiles_rustup
 MISE_VOLUME   := dotfiles_mise
 GNUPG_VOLUME  := dotfiles_gnupg
+SSH_VOLUME    := dotfiles_ssh
 
 # Bitwarden credentials as podman secrets. Each is mounted only if it
 # exists, so `make up` still starts when no secrets have been created
@@ -40,10 +41,10 @@ help:
 	@echo "Usage: make [target]"
 	@echo "Targets:"
 	@echo "  build           Build the image matching your host uid/gid"
-	@echo "  up              Start a detached container with chezmoi bind + toolchain volumes (--userns=keep-id, --replace)"
+	@echo "  up              Start a detached container with chezmoi bind + named volumes (cargo, rustup, mise, gnupg, ssh) (--userns=keep-id, --replace)"
 	@echo "  exec            Open an interactive shell in the running container"
 	@echo "  down            Stop and remove the container"
-	@echo "  clean           Stop container, remove image, and delete toolchain volumes"
+	@echo "  clean           Stop container, remove image, and delete named volumes (cargo, rustup, mise, gnupg, ssh)"
 
 _require_username:
 	@if [ -z "$(USERNAME)" ]; then \
@@ -71,6 +72,7 @@ up: _require_username ## Start a detached container with chezmoi bind + toolchai
 		-v $(RUSTUP_VOLUME):/home/$(USERNAME)/.local/share/rustup \
 		-v $(MISE_VOLUME):/home/$(USERNAME)/.local/share/mise \
 		-v $(GNUPG_VOLUME):/home/$(USERNAME)/.local/share/gnupg \
+		-v $(SSH_VOLUME):/home/$(USERNAME)/.ssh \
 		$(IMAGE) sleep infinity
 
 exec: ## Open an interactive shell in the running container
@@ -81,7 +83,7 @@ down: ## Stop and remove the container
 	-podman rm $(CONTAINER)
 
 clean: down ## Full reset: stop container, remove image, and delete toolchain volumes
-	-podman volume rm $(CARGO_VOLUME) $(RUSTUP_VOLUME) $(MISE_VOLUME) $(GNUPG_VOLUME)
+	-podman volume rm $(CARGO_VOLUME) $(RUSTUP_VOLUME) $(MISE_VOLUME) $(GNUPG_VOLUME) $(SSH_VOLUME)
 	-podman rmi $(IMAGE)
 
 # META PROGRAMS
