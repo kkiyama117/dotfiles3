@@ -52,18 +52,19 @@ GPG-agent SSH wiring or chezmoi-managed Host config (deferred siblings).
    is **not** ignored (unlike `.local/share/gnupg`) so a future config issue can
    manage non-secret files under `.ssh/`.
 6. No SSH private key material is baked into any image layer (spec 20 I4 / spec
-   13 I-S4 hold); `ls -A ~/.ssh` in a `--target toolchain` (or runtime) image
-   inspect is empty before first volume seed.
+   13 I-S4 hold); image inspection uses an entrypoint override and confirms
+   `~/.ssh` is empty before first volume seed.
 7. Specs **20 / 21 / 22** record the new volume, Layer 1-7 directory, and
-   invariants `I-SSH1..I-SSH5` (draft below). Spec 02 verified (openssh entry
+   invariants `I-SSH1..I-SSH6` (draft below). Spec 02 verified (openssh entry
    already present; no generator change required).
 8. **Manual import path documented** (issue result-log or lightweight spec 25
    §manual — full spec 25 deferred to config issue): operator can seed the
    volume from the host via `podman cp` (mirror spec 23 §3 Approach B for GPG).
-   After import, `ssh-add -l` (or equivalent) lists the key and a smoke SSH
-   command to a known host succeeds when the operator supplies Host/config on
-   the command line or via a **volume-local** `~/.ssh/config` hand edit (not
-   chezmoi-managed in this issue).
+   After import, file presence and permissions are verified, and a smoke SSH
+   command using `ssh -i ~/.ssh/<key>` to a known host succeeds when the
+   operator supplies Host/config on the command line or via a **volume-local**
+   `~/.ssh/config` hand edit (not chezmoi-managed in this issue). No
+   `ssh-add` / agent requirement belongs to this plumbing issue.
 
 ### Draft invariants (to land in spec 20)
 
@@ -76,6 +77,8 @@ GPG-agent SSH wiring or chezmoi-managed Host config (deferred siblings).
   targeted `podman volume rm dotfiles_ssh` resets keys only (preserves
   `dotfiles_gnupg` — do **not** recommend `make clean` for SSH-only reset; cargo
   / GPG precedent).
+- **I-SSH6:** The plumbing phase does not wire `ssh-agent`, `SSH_AUTH_SOCK`, or
+  GPG-agent SSH support; those belong to the deferred config/GPG issue.
 
 ## Out of scope (explicit)
 
@@ -109,4 +112,8 @@ Design drafted at
 [`docs/specifications/implementations/2026-07-03-ssh-container-setup-design.md`](../specifications/implementations/2026-07-03-ssh-container-setup-design.md).
 Review pass-1 complete (aggregate:
 [`docs/reviews/2026-07-03-ssh-container-setup-review-pass1.md`](../reviews/2026-07-03-ssh-container-setup-review-pass1.md))
-— **Approved (ready for implementation plan)**. Implementation not started.
+— **Approved (ready for implementation plan)**.
+
+Implementation plan:
+[`docs/plans/2026-07-03-ssh-container-setup-impl.md`](../plans/2026-07-03-ssh-container-setup-impl.md).
+Implementation not started.

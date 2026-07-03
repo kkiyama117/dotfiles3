@@ -232,8 +232,8 @@ keys in the chezmoi source tree (spec 13 I-S3 / spec 23 I-GM2 analog).
 
 ### §5.6 Verification plan (implementation phase)
 
-- `make build` → `podman run --rm $(IMAGE) stat -c '%a' /home/$(USERNAME)/.ssh`
-  → `700` (before any `make up` volume seed).
+- `make build` → `podman run --rm --entrypoint bash $(IMAGE) -lc "stat -c '%a' /home/${USERNAME}/.ssh"`
+  → `700` (before any `make up` volume seed; entrypoint intentionally bypassed).
 - `make up` → `ssh -V`; `stat ~/.ssh` per S4.
 - Manual import (§6) → `ssh -i ~/.ssh/id_ed25519 -o BatchMode=yes …` smoke
   (no ssh-agent required — I-SSH6).

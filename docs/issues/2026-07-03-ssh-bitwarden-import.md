@@ -33,8 +33,10 @@ manual `podman cp`, while keeping the image secret-free.
    permissions (`0600` private / `0644` public).
 3. Keys are sourced via `bitwardenAttachment` (or documented alternative);
    nothing is written to image layers or chezmoi source plaintext.
-4. After `make up` on a fresh volume (with vault item configured), `ssh-add -l`
-   lists the imported key(s).
+4. After `make up` on a fresh volume (with vault item configured), imported key
+   files exist with correct permissions and an operator-provided smoke command
+   using `ssh -i ~/.ssh/<key>` can authenticate to a known host. `ssh-add` /
+   agent behavior is out of scope unless that issue explicitly adds an agent.
 5. Spec 13 / 20 cross-refs updated; parent issue result-log links here.
 
 ## Notes
