@@ -3,11 +3,11 @@
 # This file may contain Bitwarden item IDs / stable item names and attachment
 # names only. Never store private keys, public keys, passphrases, or exported
 # key bytes here.
-ssh_import_enabled: false
+ssh_import_enabled: true
 ssh_keys:
     # Fill `item` with a Bitwarden item ID or stable item name, then set
     # ssh_import_enabled to true to import this key into container ~/.ssh.
     - name: main
-      item: ""
+      item: "ssh_keys"
       private_attachment: main
       public_attachment: main.pub
