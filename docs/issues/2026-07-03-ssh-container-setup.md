@@ -46,11 +46,10 @@ GPG-agent SSH wiring or chezmoi-managed Host config (deferred siblings).
 4. `make down && make up` preserves key material written into the volume
    (named-volume persistence verified with a test key pair — spec 21 acceptance
    #8 analog).
-5. `.chezmoiignore` excludes **secret key material** under `.ssh/` (patterns
-   such as `.ssh/id_*`, `.ssh/*_ed25519`, `.ssh/*_rsa`, `.ssh/*_ecdsa`, and
-   sk variants). Chezmoi must not manage private keys. The entire `.ssh` tree
-   is **not** ignored (unlike `.local/share/gnupg`) so a future config issue can
-   manage non-secret files under `.ssh/`.
+5. `.chezmoiignore` excludes **everything under `~/.ssh/` except `~/.ssh/config`**
+   (`.ssh/*` then `!.ssh/config`). Chezmoi manages only the config file; all
+   other entries (keys, `known_hosts`, `config.d/*`) are volume-owned and
+   never touched by chezmoi (I-SSH4).
 6. No SSH private key material is baked into any image layer (spec 20 I4 / spec
    13 I-S4 hold); image inspection uses an entrypoint override and confirms
    `~/.ssh` is empty before first volume seed.
@@ -71,8 +70,9 @@ GPG-agent SSH wiring or chezmoi-managed Host config (deferred siblings).
 - **I-SSH1:** `dotfiles_ssh` named volume at `~/.ssh`; no host bind mount.
 - **I-SSH2:** Layer 1-7 pre-creates `0700` owner-correct mountpoint.
 - **I-SSH3:** No private key material in image layers.
-- **I-SSH4:** `.chezmoiignore` excludes secret key filename patterns under
-  `.ssh/`; chezmoi never manages private keys.
+- **I-SSH4:** `.chezmoiignore` excludes everything under `~/.ssh/` except
+  `~/.ssh/config` (`.ssh/*` + `!.ssh/config`); chezmoi manages only the config
+  file — keys, `known_hosts`, `config.d/*` are volume-owned.
 - **I-SSH5:** `make clean` removes `dotfiles_ssh`; rollout docs warn that
   targeted `podman volume rm dotfiles_ssh` resets keys only (preserves
   `dotfiles_gnupg` — do **not** recommend `make clean` for SSH-only reset; cargo

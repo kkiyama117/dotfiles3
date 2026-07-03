@@ -1,4 +1,4 @@
-# Set up SSH config in the container (chezmoi-managed fragments + optional GPG auth)
+# Set up SSH config in the container (chezmoi-managed ~/.ssh/config + optional GPG auth)
 
 **Date:** 2026-07-03
 **Status:** open (deferred — future work)
@@ -45,25 +45,25 @@ manifest (YAGNI — architect review 2026-07-03), while supporting:
 
 ## Design decisions (frozen for this issue)
 
-### Config layout — Include + fragment files (no YAML manifest)
+### Config layout — single managed file + volume-only Include (no YAML manifest)
 
 ```
 ~/.ssh/config                          # chezmoi: private_dot_ssh/config.tmpl
-  Include ~/.ssh/config.d/chezmoi/*.conf
   Include ~/.ssh/config.d/local/*      # volume-only; optional
 
-~/.ssh/config.d/chezmoi/               # chezmoi-managed fragments
-  github.com.conf.tmpl                 # commit = managed; delete = unmanaged
-  my-vps.conf                          # file-key Host (Tier 2)
-
-~/.ssh/config.d/local/                 # volume-only hand edits
-~/.ssh/id_*                            # volume-only secrets (chezmoiignore)
+~/.ssh/config.d/local/                 # volume-only hand edits (never chezmoi)
+~/.ssh/id_*                             # volume-only secrets (chezmoiignore)
 ```
 
-- **What is managed** = which fragment files are committed to git (same model as
-  any other dotfile). No `.chezmoidata/ssh_hosts.yaml`, no inventory YAML loop.
-- **Host/container divergence** = `{{ if eq .runtime "container" }}` inside a
-  fragment (same pattern as `dot_config/git/config.tmpl`).
+- **What is managed** = the operator edits `private_dot_ssh/config.tmpl`
+  directly, keeping only the Host blocks they want managed (the simplest
+  model — no `.chezmoidata/ssh_hosts.yaml`, no inventory YAML loop, no
+  `config.d/chezmoi/*.conf` fragment files). `config.d/*` is excluded by
+  I-SSH4, so only the single config file is chezmoi-managed.
+- **Host/container divergence** = `{{ if eq .runtime "container" }}` inside
+  `config.tmpl` (same pattern as `dot_config/git/config.tmpl`).
+- **Local-only Host blocks** = hand-edit `~/.ssh/config.d/local/*` (volume-only;
+  `Include`d from `config.tmpl`); never chezmoi-managed.
 - **Catalog** = extend `host_config_list.md` when porting Host blocks; no
   separate machine-readable inventory in Phase A.
 
@@ -87,24 +87,26 @@ manifest (YAGNI — architect review 2026-07-03), while supporting:
 
 ## Acceptance criteria (deferred — refine at pickup)
 
-1. `private_dot_ssh/config.tmpl` exists with `Include` lines for
-   `config.d/chezmoi/` and `config.d/local/`.
-2. At least one **Tier 1 (GPG)** fragment (e.g. `github.com.conf.tmpl`) is
-   committed; after `chezmoi apply`, `ssh -T git@github.com` succeeds using
+1. `private_dot_ssh/config.tmpl` exists (single managed file) with an
+   `Include ~/.ssh/config.d/local/*` line for volume-only hand edits.
+2. At least one **Tier 1 (GPG)** Host block (e.g. `github.com`) is present in
+   `config.tmpl`; after `chezmoi apply`, `ssh -T git@github.com` succeeds using
    the GPG `[A]` subkey (no file private key required for that Host).
-3. Fragment files the operator **does not** commit remain absent from the
-   container config (Include only pulls committed fragments).
+3. Host blocks the operator **does not** write into `config.tmpl` are absent
+   from the container config (only the committed `config.tmpl` content is
+   applied).
 4. `dot_local/share/gnupg/gpg-agent.conf.tmpl` adds `enable-ssh-support`
    (chezmoi-managed agent config; keyring stays volume-owned per spec 23).
 5. `dot_zshenv.tmpl` exports `SSH_AUTH_SOCK` to the gpg-agent SSH socket when
    GPG tier is enabled (or documents `IdentityAgent`-only approach if
    preferred at design time).
-6. `.chezmoiignore` excludes secret key material under `.ssh/` (`id_*`, `*_ed25519`,
-   etc.) but **does not** ignore the whole `.ssh` tree (config is chezmoi-managed).
-7. New normative spec **25 — Container SSH management** §4+ documents config layout,
-   auth tiers, rollout safety (`make clean` wipes `dotfiles_ssh` **and**
-   `dotfiles_gnupg`), and cross-refs spec 23 for GPG auth. (Plumbing baseline
-   spec 25 §1–3 is delivered by the sibling plumbing issue.)
+6. `.chezmoiignore` policy holds: `.ssh/*` excluded, `!.ssh/config` re-included
+   (only `~/.ssh/config` is chezmoi-managed — delivered by the sibling plumbing
+   issue, I-SSH4). No `config.d/chezmoi/` fragment files are introduced.
+7. New normative spec **25 — Container SSH management** §4+ documents config
+   layout (single-file model), auth tiers, rollout safety (`make clean` wipes
+   `dotfiles_ssh` **and** `dotfiles_gnupg`), and cross-refs spec 23 for GPG auth.
+   (Plumbing baseline spec 25 §1–3 is delivered by the sibling plumbing issue.)
 8. Specs 20 / 21 / 02 updated (I-SSH* invariants, Layer rows, `openssh`
    `has_configs` realized).
 

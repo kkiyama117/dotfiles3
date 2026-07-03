@@ -47,9 +47,9 @@ The plumbing issue delivered a working, persisted, **empty** SSH keyring:
 - `openssh` is already installed (Layer 1); the client runs on defaults —
   no chezmoi-managed `~/.ssh/config` is baked in this phase (I-SSH6).
 - No key material is baked into any image layer (I-SSH3);
-  `.chezmoiignore` excludes conventional secret key filename patterns
-  under `.ssh/` (I-SSH4), while the whole `.ssh` tree is **not** ignored
-  so a future config issue can chezmoi-manage non-secret files.
+  `.chezmoiignore` excludes everything under `~/.ssh/` except `~/.ssh/config`
+  (I-SSH4) — chezmoi manages only the config file; keys, `known_hosts`, and
+  `config.d/*` are volume-owned.
 - No `ssh-agent` / `SSH_AUTH_SOCK` wiring is present in this phase
   (I-SSH6); keys are used directly via `ssh -i` / `IdentityFile`.
 
@@ -112,10 +112,14 @@ Tracked in
 convention and a review pass (security touch: secrets + image — at least
 letters A/B/D per [`09-review.md`](09-review.md) §2.2).
 
-- **F1 — Chezmoi-managed `~/.ssh/config` / fragments.** Add
-  `dot_ssh/config.tmpl` (and/or `dot_ssh/config.d/*.tmpl` with `Include`
-  directives) gated by `{{ if not .build_mode }}`. This would realize the
-  `openssh` `has_configs = true` declaration in
+- **F1 — Chezmoi-managed `~/.ssh/config` (single file).** Add
+  `private_dot_ssh/config.tmpl` gated by `{{ if not .build_mode }}`. The
+  operator chooses which Host blocks to manage by editing this one file —
+  no `dot_ssh/config.d/*.tmpl` fragments (`config.d/*` is excluded by
+  I-SSH4). A volume-only `~/.ssh/config.d/local/*` may still be
+  `Include`d from `config.tmpl` for hand-edited / local-only Host blocks
+  (never chezmoi-managed). This realizes the `openssh`
+  `has_configs = true` declaration in
   [`02-installed-programs.md`](02-installed-programs.md) and is the
   natural home for `Host *`, `IdentityFile`, `AddKeysToAgent`, etc.
 - **F2 — GPG-agent SSH auth.** Wire `SSH_AUTH_SOCK` to the gpg-agent

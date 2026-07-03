@@ -14,9 +14,10 @@ volume `dotfiles_ssh` mounted at `~/.ssh`. The Containerfile `base` stage bakes
 the `~/.ssh` mountpoint owner-correct at `0700` (Layer 1-7, mirroring the GPG
 Layer 1-6 block), so Podman does not root-create an absent mountpoint at
 `make up`. The Makefile wires `SSH_VOLUME := dotfiles_ssh` into `up` (mount)
-and `clean` (remove). `.chezmoiignore` excludes OpenSSH conventional secret-key
-filename patterns only (so a future chezmoi-managed `~/.ssh/config` is not
-blocked). No SSH private key is baked into any image layer (I-SSH3); the
+and `clean` (remove). `.chezmoiignore` excludes everything under `~/.ssh/`
+except `~/.ssh/config` (`.ssh/*` + `!.ssh/config`) — chezmoi manages only
+the config file; keys, `known_hosts`, `config.d/*` are volume-owned (I-SSH4).
+No SSH private key is baked into any image layer (I-SSH3); the
 keyring lives only in the runtime named volume. No `ssh-agent` /
 `SSH_AUTH_SOCK` wiring is added this phase (I-SSH6 — deferred to the config
 issue). Spec 25 (Container SSH key management) is created with §1-3 normative
@@ -40,7 +41,7 @@ Specs 03/20/21/22 are synced. `openssh` was already installed (Layer 1 pacman);
 | I-SSH1 | `dotfiles_ssh` named volume mounted at `~/.ssh` by `up` (no bind mount) | `Makefile:22,75` | PASS |
 | I-SSH2 | Layer 1-7 pre-creates `~/.ssh` at `0700` owner-correct (`-o ${HOST_UID} -g ${HOST_GID}`) | `Containerfile:121-127`; image inspect `700 kiyama:kiyama` | PASS |
 | I-SSH3 | No SSH private key baked into any image layer | image inspect `ls -A ~/.ssh | wc -l` → `0` (empty at build time) | PASS |
-| I-SSH4 | `.chezmoiignore` excludes secret-key patterns only | `.chezmoiignore:47-52` (id_*, *_ed25519, *_rsa, *_ecdsa, *_ed25519_sk, *_ecdsa_sk); `~/.ssh/config` and `~/.ssh/config.d/` NOT ignored | PASS |
+| I-SSH4 | `.chezmoiignore` excludes everything under `~/.ssh/` except `~/.ssh/config` (`.ssh/*` + `!.ssh/config`); keys / `known_hosts` / `config.d/*` volume-owned, never chezmoi-managed | `.chezmoiignore:46-50`; only `config` re-included | PASS |
 | I-SSH5 | `make clean` removes `dotfiles_ssh` (backup warning documented in spec 25) | `Makefile:86`; spec 25 §2 notes the wipe | PASS |
 | I-SSH6 | No `ssh-agent` / `SSH_AUTH_SOCK` wiring this phase | no entrypoint/zshenv change; entrypoint.sh untouched | PASS |
 
@@ -119,6 +120,17 @@ the new SSH volume plumbing.
    (the GPG key), `dotfiles_cargo`, `dotfiles_mise`, and `dotfiles_rustup`.
    Targeted `podman volume rm dotfiles_ssh` is the safe reset path (spec 21
    #21, spec 25 §2).
+5. **PR review 1 tightened the `.chezmoiignore` policy.** The initial
+   implementation excluded only OpenSSH conventional secret-key filename
+   patterns (`id_*`, `*_ed25519`, …). PR review 1 revised this to a stricter
+   single-managed-file policy: exclude everything under `~/.ssh/` except
+   `~/.ssh/config` (`.ssh/*` + `!.ssh/config`). The Phase 3 build / smoke /
+   persistence evidence above remains valid because no `dot_ssh/config.tmpl`
+   source exists yet in either policy, so the runtime behavior (empty volume,
+   no key baked, keys persist) is identical; only the declarative chezmoiignore
+   scope changed. The I-SSH4 evidence row and summary were updated to the final
+   policy; spec 20 I-SSH4, spec 25 §2/F1, and the deferred config issue were
+   updated to the single-file model (no `config.d/chezmoi/*.conf` fragments).
 
 ## Secrecy invariants (unchanged)
 

@@ -78,13 +78,13 @@ labels directly.
   `~/.ssh` (the Layer 1-7 directory is empty at build time); runtime keys
   live only in the `dotfiles_ssh` named volume, never in an image layer or
   `podman inspect`.
-- I-SSH4: `.chezmoiignore` excludes **OpenSSH conventional secret key
-  filename patterns** under `.ssh/` (`id_*`, `*_ed25519`, `*_rsa`,
-  `*_ecdsa`, `*_ed25519_sk`, `*_ecdsa_sk`). Chezmoi must not manage keys
-  matching those patterns. **Non-conventional names** and the entire `.ssh`
-  directory are **not** ignored, so a future issue can chezmoi-manage
-  non-secret config under `.ssh/` (I-GPG5 ignores the whole keyring tree
-  instead).
+- I-SSH4: `.chezmoiignore` excludes **everything under `~/.ssh/` except
+  `~/.ssh/config`** (`.ssh/*` then `!.ssh/config`). Chezmoi manages only
+  `~/.ssh/config`; all other entries (private/public keys, `known_hosts`,
+  `config.d/*`) are volume-owned and never touched by chezmoi. This is a
+  stricter, single-managed-file policy than the earlier conventional-key-name
+  pattern list (I-GPG5 ignores the whole GPG keyring tree; SSH inverts it —
+  ignore the tree, re-include the one non-secret config file).
 - I-SSH5: `make clean` removes `dotfiles_ssh` alongside the other named
   volumes. Targeted reset and rollout safety live in spec 21 acceptance
   #21.
