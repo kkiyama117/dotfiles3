@@ -1,7 +1,7 @@
 # Set up SSH file keys in the container (named volume at `~/.ssh`)
 
 **Date:** 2026-07-03
-**Status:** open
+**Status:** closed (see [result-log](2026-07-03-phase-ssh-container-setup.md))
 **Related:** [deferred: chezmoi SSH config + GPG auth](2026-07-03-ssh-container-config-setup.md), [deferred: Bitwarden key import](2026-07-03-ssh-bitwarden-import.md), [GPG plumbing (closed)](2026-07-01-gnupg-container-setup.md), [GPG manual import (closed)](2026-07-02-gnupg-host-key-import.md), [spec 20](../specifications/20-container-rules.md), [spec 21](../specifications/21-container-build-flow.md), [spec 22](../specifications/22-container-build-pre-required-envs.md), [spec 02](../specifications/02-installed-programs.md), [host config inventory §13](../references/host_config_list.md)
 
 ## Context
@@ -101,6 +101,18 @@ GPG-agent SSH wiring or chezmoi-managed Host config (deferred siblings).
   `podman volume rm dotfiles_ssh` (NOT `make clean`, which also wipes GPG).
 - **Verification sketch:** generate or copy a test ed25519 key into the volume;
   `make down && make up`; confirm `stat` perms and key still present.
+
+## Status update (2026-07-03 — complete)
+
+Complete. Plumbing + spec sync implemented (2 commits 9b9362a / 9f3d2f8) +
+task-review Minor 1-2 fix (e0d38e5); implementation task review Approved (no
+Critical/Important). Phase 3 build green: `make build` (Layer 1-7 new); image
+inspect `~/.ssh` = `0700 kiyama:kiyama`, empty; `ssh -V` = `OpenSSH_10.3p1`;
+manual `podman cp` import + `make down && make up` persistence verified (test
+ed25519 key survives, same fingerprint); GPG key in `dotfiles_gnupg`
+preserved (no regression). Spec 25 §1-3 normative; §4+ deferred to config
+issue. See the
+[result-log](2026-07-03-phase-ssh-container-setup.md).
 
 ## Status update (2026-07-03)
 
