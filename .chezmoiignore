@@ -43,6 +43,12 @@ README.md
 .local/share/mise
 .local/share/gnupg
 
+# SSH: chezmoi manages ONLY ~/.ssh/config. Everything else under ~/.ssh/
+# (private/public keys, known_hosts, config.d/*) is volume-owned and must
+# never be touched by chezmoi. Exclude the whole tree, then re-include config.
+.ssh/*
+!.ssh/config
+
 # Self bind-mount target (chezmoi source root)
 .local/share/chezmoi
 

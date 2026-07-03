@@ -92,10 +92,10 @@ USER ${USERNAME}
 
 # Layer 1-5: XDG-compliant home subdirectories
 #
-# Owner-correct directories must exist so the five runtime mounts (one bind
-# for chezmoi source, four named volumes for cargo/rustup/mise/gnupg)
-# attach to a properly-owned ~/.local/share/ parent. install -d as root,
-# then return to ${USERNAME} so subsequent stages stay non-root.
+# Owner-correct directories must exist so the six runtime mounts (one bind
+# for chezmoi source, five named volumes for cargo/rustup/mise/gnupg/ssh)
+# attach to a properly-owned parent. install -d as root, then return to
+# ${USERNAME} so subsequent stages stay non-root.
 USER root
 RUN install -d -o ${HOST_UID} -g ${HOST_GID} -m 0755 \
     /home/${USERNAME}/.local \
@@ -117,6 +117,15 @@ RUN install -d -o ${HOST_UID} -g ${HOST_GID} -m 0755 \
 # named volume).
 RUN install -d -o ${HOST_UID} -g ${HOST_GID} -m 0700 \
     /home/${USERNAME}/.local/share/gnupg
+
+# Layer 1-7: ~/.ssh mountpoint (named volume dotfiles_ssh).
+#
+# 0700 is OpenSSH's expected mode for the directory. Kept as a separate RUN
+# from the 0755 toolchain dirs and the gnupg dir so the mode is distinct.
+# Owner-correct so Podman does not root-create an absent mountpoint at
+# `make up`. Empty at build time; no key material baked (I-SSH3).
+RUN install -d -o ${HOST_UID} -g ${HOST_GID} -m 0700 \
+    /home/${USERNAME}/.ssh
 USER ${USERNAME}
 
 # ---------------------------------------------------------------------------

@@ -63,6 +63,41 @@ labels directly.
   manages the keyring (consistent with the `cargo` / `rustup` / `mise` /
   `chezmoi` ignore entries).
 
+- I-SSH1: The SSH client keyring is persisted via the Podman named volume
+  `dotfiles_ssh` mounted at `~/.ssh`, the same pattern as `dotfiles_gnupg`
+  (different path, same mechanics). The image carries no key material
+  (extends I4 / [`13-secret-management.md`](13-secret-management.md)
+  I-S4: keys live only in the runtime volume). No host `~/.ssh` bind mount.
+- I-SSH2: `~/.ssh` is baked owner-correct at `0700` in Containerfile
+  Layer 1-7 (extension of the Layer 1 XDG-directory provisioning,
+  parallel to Layer 1-6 for gnupg). Owner-correct provisioning prevents
+  Podman from root-creating an absent mountpoint (the `/home` re-own
+  failure mode, Layer 5-2).
+- I-SSH3: No SSH private key material is baked into any image layer. The
+  build-time pre-pass (Stage 2, `build_mode = true`) never touches
+  `~/.ssh` (the Layer 1-7 directory is empty at build time); runtime keys
+  live only in the `dotfiles_ssh` named volume, never in an image layer or
+  `podman inspect`.
+- I-SSH4: `.chezmoiignore` excludes **everything under `~/.ssh/` except
+  `~/.ssh/config`** (`.ssh/*` then `!.ssh/config`). Chezmoi manages only
+  `~/.ssh/config`; all other entries (private/public keys, `known_hosts`,
+  `config.d/*`) are volume-owned and never touched by chezmoi. This is a
+  stricter, single-managed-file policy than the earlier conventional-key-name
+  pattern list (I-GPG5 ignores the whole GPG keyring tree; SSH inverts it —
+  ignore the tree, re-include the one non-secret config file).
+- I-SSH5: `make clean` removes `dotfiles_ssh` alongside the other named
+  volumes. Targeted reset and rollout safety live in spec 21 acceptance
+  #21.
+- I-SSH6: Plumbing phase wires **no** `ssh-agent` in the entrypoint or
+  `dot_zshenv.tmpl`. File keys are used directly via `IdentityFile` /
+  `ssh -i`. Agent wiring (`SSH_AUTH_SOCK`, gpg-agent SSH socket) is
+  deferred to the config issue.
+
+> NOTE: `openssh` is already declared in `dependencies/packages.toml`
+> (`layer = 1`, `has_configs = true`). The `has_configs` flag is
+> structurally accurate, but config sources are unrealized until the
+> deferred config issue populates spec 25 §4+.
+
 - I-GIT1: `~/.config/git/config` is rendered by chezmoi from
   `dot_config/git/config.tmpl`; `[user] name/email/signingkey` are injected
   from `.chezmoidata/git_config.yaml` (`{{ .git.identity_default.* }}`).
@@ -151,6 +186,7 @@ labels directly.
 | Build-time env vars (`HOST_UID`, `HOST_GID`, `JOBS`) | [`22-container-build-pre-required-envs.md`](22-container-build-pre-required-envs.md) |
 | GPG key runtime lifecycle (import flow, posture, persistence, gpgsign, future automation) | [`23-container-gnupg-management.md`](23-container-gnupg-management.md) |
 | Rust packages rule (paru vs cargo-binstall vs cargo-install; layer 3 vs layer 6) | [`24-rust-packages-rule.md`](24-rust-packages-rule.md) |
+| Container SSH management (named volume, manual import, persistence, future config/automation) | [`25-container-ssh-management.md`](25-container-ssh-management.md) |
 | Host pre-requirements (Bitwarden `bw`, chezmoi) | [`11-pre-required-env-values.md`](11-pre-required-env-values.md) |
 | Make target contract | [`03-makefile.md`](03-makefile.md) |
 | Chezmoi-in-container gotchas (safe.directory, UID remap) | [`../references/2026-06-25-chezmoi-in-containers.md`](../references/2026-06-25-chezmoi-in-containers.md) |
