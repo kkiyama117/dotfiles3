@@ -34,7 +34,7 @@ BUILD_CTX := $(CURDIR)/container
 IMAGE     := localhost/dotfiles-manjaro:latest
 CONTAINER := dotfiles-manjaro
 
-.PHONY: help build up exec down clean _require_username gen-deps
+.PHONY: help build up exec down clean _require_username gen-deps test-deps
 
 help:
 	@echo "Usage: make [target]"
@@ -85,5 +85,8 @@ clean: down ## Full reset: stop container, remove image, and delete toolchain vo
 	-podman rmi $(IMAGE)
 
 # META PROGRAMS
+test-deps: ## Run the generate_deps pytest suite
+	python3 -m pytest programs/generate_deps/tests/ -q
+
 gen-deps: ## Regenerate dependencies/layer_<N>/<manager>.txt + 02 AUTO-GEN block from packages.toml
 	python3 programs/generate_deps/main.py

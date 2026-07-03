@@ -23,6 +23,7 @@ README.md
 ## It may be exposed by default
 .chezmoiignore
 .chezmoidata.yaml
+.chezmoidata/*.yaml
 
 # Git-related files
 **/.git/
@@ -30,8 +31,6 @@ README.md
 **/.gitignore
 **/.gitmodules
 **/.worktrees
-## only allow global gitignore (and gitmodules)
-!.config/git/gitignore
 
 # ============================================================
 # Bind mounts in the container

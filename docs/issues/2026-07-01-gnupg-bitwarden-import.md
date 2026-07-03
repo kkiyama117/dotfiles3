@@ -2,7 +2,31 @@
 
 **Date:** 2026-07-01
 **Status:** open (deferred)
-**Related:** [parent issue](2026-07-01-gnupg-container-setup.md), [design (parent)](../specifications/implementations/2026-07-01-gnupg-container-setup-design.md), [spec 13](../specifications/13-secret-management.md), [spec 20](../specifications/20-container-rules.md)
+**Related:** [parent issue](2026-07-01-gnupg-container-setup.md), [design (parent)](../specifications/implementations/2026-07-01-gnupg-container-setup-design.md), [spec 13](../specifications/13-secret-management.md), [spec 20](../specifications/20-container-rules.md), [manual host-key import (closed)](2026-07-02-gnupg-host-key-import.md)
+
+## Status update (2026-07-02)
+
+The `dotfiles_gnupg` volume was seeded **manually** (host export →
+`podman cp` → container import) on 2026-07-02 — see
+[`2026-07-02-gnupg-host-key-import.md`](2026-07-02-gnupg-host-key-import.md)
+(+ [result-log](2026-07-02-phase-gnupg-host-key-import.md)). The
+container now holds the operator's real `[E]` / `[S]` / `[A]` subkeys
+but the **primary as a stub** (`sec#`), because the export carried the
+primary as a GNU-dummy stub. Per operator decision 2026-07-02, this
+issue's scope is widened to also cover:
+
+- **importing the real primary key** (resolving open sub-question (b)
+  in favor of a full secret key, or deliberately keeping the
+  primary-offline posture and documenting it as such); and
+- **gpgsign configuration** — setting `user.signingkey` (the `[S]`
+  subkey `A1E4E20240EA5BAA`) and `commit.gpgsign` via the chezmoi-
+  managed `dot_config/git` (per the `git_config` work), alongside the
+  key-import automation.
+
+The title's "from Bitwarden" should be read as "from Bitwarden **or an
+alternative** secret store" — the operator left the transport open; the
+chosen transport will be settled in this issue's design. This issue
+remains `open (deferred)`.
 
 ## Context
 
@@ -75,6 +99,15 @@ password out of every environment variable (consistent with the existing
 - Open sub-questions to resolve in that design: (a) whether the key
   passphrase lives as a Bitwarden item password field, a custom field, or
   a separate attachment; (b) whether to support importing **only** a
-  public-key ring + signing subkey vs. a full secret key; (c) whether
-  `loopback` pinentry needs a `gpg-agent.conf` baked by chezmoi (which
-  would flip `gnupg` to `has_configs = true` in spec 02).
+  public-key ring + signing subkey vs. a full secret key (the 2026-07-02
+  manual import left the primary as a stub — `sec#` — with real
+  subkeys; see the [host-key-import result-log]
+  (2026-07-02-phase-gnupg-host-key-import.md); this issue decides
+  whether the automated import brings the real primary or deliberately
+  keeps the primary-offline posture); (c) whether `loopback` pinentry
+  needs a `gpg-agent.conf` baked by chezmoi (which would flip `gnupg`
+  to `has_configs = true` in spec 02); (d) **gpgsign** — whether/how to
+  set `user.signingkey` (= the `[S]` subkey `A1E4E20240EA5BAA`) and
+  `commit.gpgsign` in the chezmoi-managed `dot_config/git` as part of
+  this setup; (e) whether the secret transport is Bitwarden or an
+  alternative (operator left this open 2026-07-02).

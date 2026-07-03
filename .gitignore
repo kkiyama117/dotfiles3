@@ -1,6 +1,8 @@
 # ============================================================
 # Repository metadata and programs itself
 # ============================================================
+# Git worktrees (local isolated checkouts; never tracked)
+**/.worktrees/
 
 # ============================================================
 # User generated files for dotfiles
@@ -16,6 +18,7 @@
 # ============================================================
 # AI-related files
 # ============================================================
-.agents
-.claude
-.superpowers
+**/.agents
+**/.claude
+**/.pi-subagents
+**/.superpowers

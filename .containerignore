@@ -31,4 +31,6 @@ container/.gitignore
 # ============================================================
 .agents
 .claude
+.pi-subagents
 .superpowers
+

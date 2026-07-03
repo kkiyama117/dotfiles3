@@ -63,6 +63,42 @@ labels directly.
   manages the keyring (consistent with the `cargo` / `rustup` / `mise` /
   `chezmoi` ignore entries).
 
+- I-GIT1: `~/.config/git/config` is rendered by chezmoi from
+  `dot_config/git/config.tmpl`; `[user] name/email/signingkey` are injected
+  from `.chezmoidata/git_config.yaml` (`{{ .git.identity_default.* }}`).
+  The data file is the single source of identity; the template is the
+  single source of the config structure.
+- I-GIT2: `~/.config/git/ignore` is a static chezmoi-managed file
+  (`dot_config/git/ignore`, no template): a verbatim port of the host
+  global gitignore, which contains only generic toptal patterns (no
+  personal/secret entries — verified). Read by git via the XDG default
+  `core.excludesFile` (`$XDG_CONFIG_HOME/git/ignore`).
+- I-GIT3: `credential.helper = libsecret` is gated to host runtime only
+  by `{{ if and (not .build_mode) (eq .runtime "host") }}`. The container
+  has no keyring daemon (I-GPG9); writing the line there would be a broken
+  reference. The build-time pre-pass (`build_mode = true`) also omits it.
+- I-GIT4: `commit.gpgsign = true`, `gpg.format = openpgp`, and
+  `user.signingkey` render in all modes (build + host runtime + container
+  runtime). Signing is NOT gated by `runtime`: once the GPG key is
+  imported into the `dotfiles_gnupg` volume (deferred Bitwarden import),
+  the container signs automatically. Gating signing off in the container
+  would silently disable it even after the key arrives.
+- I-GIT5: No secret is baked into any image layer. `user.email` and
+  `user.signingkey` (a public GPG subkey ID) are acceptable plain text
+  (spec 13 §2 Tier 2) and are already public in the committed data file.
+  The GPG secret key is never baked (it lives only in the runtime
+  `dotfiles_gnupg` volume — I-GPG4). Extends I4 / spec 13 I-S4.
+- I-GIT6: `delta` is provided by the `git-delta` Arch `extra` package
+  (Layer 1, `packages.toml`), so `core.pager=delta` / `pager.*=delta` work
+  identically in host and container. No gating needed for delta.
+- I-GIT7: The `runtime` chezmoi data var (`host` | `container`, default
+  `host`) is driven by the `DOTFILES_RUNTIME` env var in
+  `.chezmoi.toml.tmpl`. Only `entrypoint.sh` sets it (to `container`); the
+  build prepass does not need to (`build_mode = true` already suppresses
+  the gated line). The host never sets it (defaults to `host`). This is the
+  repo's host/container signal — `build_mode` alone is build-time vs
+  runtime only (both host and container run with `build_mode = false`).
+
 - I-AUR1: `paru` is bootstrapped exactly once, in the `aur` stage, via
   `makepkg -si` against the AUR `paru` PKGBUILD clone. No other stage
   runs `makepkg`.
@@ -80,6 +116,23 @@ labels directly.
   Rust package). The cache mounts are not written to image layers.
 - I-AUR4: The `aur` stage's bootstrap clone (`/tmp/paru-build`) is
   removed before the stage ends so it cannot ride into the final image.
+- I-INFRA1: **Toolchain installer binaries are infrastructure, not
+  `packages.toml` entries.** A tool whose sole purpose is to
+  install/manage other tools (an installer-of-installers) and which
+  ships an official prebuilt binary is curl-bootstrapped in the
+  Containerfile and is NOT declared in `packages.toml`. Instances:
+  `rustup` (Layer 3-2), `mise` (Layer 3-3), `cargo-binstall` (Layer 3-5).
+  This is the formal carve-out from I5 for installer infra (the
+  `paru` `manager = "custom"` doc-only mechanism is a separate,
+  package-specific carve-out via I-AUR2).
+- I-CARGO1: **`cargo-binstall` is the cargo instance of I-INFRA1.** It is
+  bootstrapped at Layer 3-5 from a version-pinned (v1.20.1) + SHA256-gated
+  (`f12954bc382e1d0b2df3fbfb217a05d92c25570e4517841e0613499a24f4594e`)
+  prebuilt musl tarball, extracted single-file to `$CARGO_HOME/bin`. Build-time
+  cargo tools (`layer = 3`) install via `cargo binstall --only-signed -y`
+  (signed prebuilt only — see [`24-rust-packages-rule.md`](24-rust-packages-rule.md)
+  §3). `cargo-binstall` has no persistent download cache (per-run tempdir in
+  `$CARGO_HOME`), so there is no BuildKit cache mount for binstall downloads.
 
 > NOTE on `git safe.directory`: an earlier draft mandated registering
 > `/var/lib/chezmoi-source` via `git config --global --add safe.directory`.
@@ -96,6 +149,8 @@ labels directly.
 |---|---|
 | Containerfile stage breakdown, layer ordering, acceptance criteria | [`21-container-build-flow.md`](21-container-build-flow.md) |
 | Build-time env vars (`HOST_UID`, `HOST_GID`, `JOBS`) | [`22-container-build-pre-required-envs.md`](22-container-build-pre-required-envs.md) |
+| GPG key runtime lifecycle (import flow, posture, persistence, gpgsign, future automation) | [`23-container-gnupg-management.md`](23-container-gnupg-management.md) |
+| Rust packages rule (paru vs cargo-binstall vs cargo-install; layer 3 vs layer 6) | [`24-rust-packages-rule.md`](24-rust-packages-rule.md) |
 | Host pre-requirements (Bitwarden `bw`, chezmoi) | [`11-pre-required-env-values.md`](11-pre-required-env-values.md) |
 | Make target contract | [`03-makefile.md`](03-makefile.md) |
 | Chezmoi-in-container gotchas (safe.directory, UID remap) | [`../references/2026-06-25-chezmoi-in-containers.md`](../references/2026-06-25-chezmoi-in-containers.md) |

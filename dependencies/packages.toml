@@ -6,16 +6,18 @@
 #   - docs/specifications/02-installed-programs.md (AUTO-GEN block)
 # Generator: programs/generate_deps/main.py
 #
-# Example of entry:
+# Entries should be sorted alphabetically by `name`.
+#
+# Example of entry (Toml):
 # [[tool]]
 # name = "base-devel"
+## Allowed `manager` values: pacman, paru, nix, uv, cargo, mise.
+## `cargo` entries land in layer 3 (Containerfile `toolchain` stage).
 # manager = "pacman"
 # layer = 1
 # has_configs = false
 # description = "base meta-package: gcc, make, binutils, etc."
 #
-# Allowed `manager` values: pacman, paru, nix, uv, cargo, mise.
-# `cargo` entries land in layer 3 (Containerfile `toolchain` stage).
 
 schema = 1
 
@@ -30,6 +32,7 @@ has_configs = true
 
 # Layer 1: Base image, minimum installation only for chezmoi apply
 #          And install that must be used in our environment.
+#          Aur Packages that don't need to container setup or configuration are installed by `paru` (Layer 4).
 
 [[tool]]
 name = "base-devel"
@@ -62,20 +65,30 @@ has_configs = false
 name = "git"
 manager = "pacman"
 layer = 1
+# `~/.config/git/config`
+has_configs = true
+
+[[tool]]
+name = "git-delta"
+manager = "pacman"
+layer = 1
 has_configs = false
+description = "git-delta — syntax-highlighting pager for git diff/blame/log (core.pager/pager.* in ~/.config/git/config)"
 
 [[tool]]
 name = "gnupg"
 manager = "pacman"
 layer = 1
-has_configs = false
+# `~/.local/share/gnupg`, Read `docs/specifications/23-container-gnupg-management.md`
+has_configs = true
 description = "GnuPG (`gpg` / `gpg-agent`); honors GNUPGHOME from .zshenv"
 
 [[tool]]
 name = "openssh"
 manager = "pacman"
 layer = 1
-has_configs = false
+# `~/.ssh`
+has_configs = true
 
 [[tool]]
 name = "pinentry"
@@ -101,15 +114,48 @@ has_configs = false
 name = "zsh"
 manager = "pacman"
 layer = 1
+# `~/.zshenv` and `~/.config/zsh` (ZDOTDIR)
 has_configs = true
 description = "user's login shell"
 
-# Layer 3: cargo-installed tools (Containerfile `toolchain` stage).
-# Add `[[tool]]` entries with `manager = "cargo"` and `layer = 3`.
-# Run `make gen-deps` to regenerate `dependencies/layer_3/cargo.txt`.
-# (Currently empty — infrastructure-only landing per design spec §10 item 1.
-# The empty cargo.txt is still generator-owned: see
-# EXPECTED_EMPTY_FILES in programs/generate_deps/main.py.)
+# Layer 3: cargo-installed tools (Containerfile `toolchain` stage, Layer 3-6).
+# Build-time cargo tools installed via `cargo binstall --only-signed -y` from
+# `dependencies/layer_3/cargo.txt`. Per spec 24, layer=3 entries MUST ship a
+# SIGNED prebuilt (cargo-binstall --only-signed compatible); unsigned-only /
+# source-only tools go to layer = 6 (runtime-manual). Run `make gen-deps` to
+# regenerate.
+[[tool]]
+name = "topgrade"
+manager = "cargo"
+layer = 3
+has_configs = false
+description = "multi-package-manager updater; build-time cargo tool (signed prebuilt via cargo-binstall --only-signed)"
+
+# Layer 3: mise-managed languages (Containerfile `toolchain` stage, Layer 3-4).
+# Add `[[tool]]` entries with `manager = "mise"` and `layer = 3`. The
+# generator renders each line as `<name>@latest` (bare `mise install
+# <tool>` reads a mise.toml, not latest). Run `make gen-deps` to
+# regenerate `dependencies/layer_3/mise.txt`.
+[[tool]]
+name = "go"
+manager = "mise"
+layer = 3
+has_configs = false
+description = "Go programming language (mise-managed, latest)"
+
+[[tool]]
+name = "python"
+manager = "mise"
+layer = 3
+has_configs = false
+description = "CPython (mise-managed, latest)"
+
+[[tool]]
+name = "deno"
+manager = "mise"
+layer = 3
+has_configs = false
+description = "Deno runtime (mise-managed, latest)"
 
 # Layer 4: paru-installed tools (AUR); Containerfile `aur` stage.
 # paru itself is bootstrapped via makepkg in the `aur` stage, so it is
@@ -129,6 +175,27 @@ has_configs = false
 description = "AUR helper; bootstrapped via makepkg in the aur stage (custom install path, not in paru.txt)"
 
 # Layer 4: paru-installed tools (AUR); Containerfile `aur` stage.
+#
+# Almost all packages are installed via `paru -S` (pre-built binary).
+# because it's faster than nix building and doesn't require building from source if it has binaries.
+#
+# Rust packages rule — see docs/specifications/24-rust-packages-rule.md for the
+# normative paru / cargo-binstall / cargo-install selection criteria and the
+# build-time (layer=3) vs runtime-manual (layer=6) boundary.
+
+[[tool]]
+name = "pueue"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "task queue daemon"
+
+[[tool]]
+name = "rsync"
+manager = "pacman"
+layer = 1
+has_configs = false
+
 [[tool]]
 name = "starship"
 manager = "paru"
@@ -143,9 +210,58 @@ layer = 4
 has_configs = false
 description = "tmux multiplexer"
 
+
 [[tool]]
 name = "neovim-git"
 manager = "paru"
 layer = 4
 has_configs = false
 description = "neovim built from upstream git master (AUR); first concrete AUR package"
+
+[[tool]]
+name = "wired"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "notification daemon"
+
+# Layer 6: runtime-manual cargo tools — declared for SoT but NOT build-installed.
+# `cargo-binstall` itself is INFRA (Containerfile bootstrap, not here — see spec 24
+# §4 / spec 20 I-CARGO1). The operator installs these at runtime via
+# `cargo binstall <pkg>` (or `cargo install --locked <pkg>` for source-only).
+# `make gen-deps` emits `layer_6/cargo.txt` as a reference list the Containerfile
+# never reads. See spec 24 (Rust packages rule).
+[[tool]]
+name = "cargo-edit"
+manager = "cargo"
+layer = 6
+has_configs = false
+description = "runtime-manual cargo tool; cargo-add/rm/set-version/upgrade"
+
+[[tool]]
+name = "cargo-expand"
+manager = "cargo"
+layer = 6
+has_configs = false
+description = "runtime-manual cargo tool; pretty-print macro expansion"
+
+[[tool]]
+name = "cargo-outdated"
+manager = "cargo"
+layer = 6
+has_configs = false
+description = "runtime-manual cargo tool; detect outdated crate deps"
+
+[[tool]]
+name = "cargo-zigbuild"
+manager = "cargo"
+layer = 6
+has_configs = false
+description = "runtime-manual cargo tool; cross-compile via zig toolchain"
+
+[[tool]]
+name = "maturin"
+manager = "cargo"
+layer = 6
+has_configs = false
+description = "runtime-manual cargo tool; build & publish Rust-Python extensions"

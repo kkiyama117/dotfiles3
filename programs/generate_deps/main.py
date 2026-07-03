@@ -5,8 +5,10 @@ Source of truth: ``dependencies/packages.toml`` (schema=1).
 
 Outputs (all derived, do not hand-edit):
   - ``dependencies/layer_<N>/<manager>.txt``  — one install list per layer (N>=1)
-    and per list-based manager (pacman / paru / nix / uv). Layer 0 (already in
-    the base image) and ``mise`` (version-pinned, not list-based) produce no txt.
+    and per list-based manager (pacman / paru / nix / uv / cargo / mise). Layer 0
+    (already in the base image) and ``custom`` (bespoke install path) produce no
+    txt. ``mise`` lines are rendered as ``<name>@latest`` (bare ``mise install
+    <tool>`` reads a ``mise.toml``, not latest).
   - The AUTO-GEN block in ``docs/specifications/02-installed-programs.md``
     (between the ``installed-programs`` markers), rendered as per-layer tables.
 
@@ -32,23 +34,29 @@ TOOLS_TOML = DEPS_DIR / "packages.toml"
 DOC_PATH = REPO_ROOT / "docs" / "specifications" / "02-installed-programs.md"
 
 # Managers that install from a flat package list -> emit a .txt file.
-LIST_MANAGERS = ("pacman", "paru", "nix", "uv", "cargo")
+# `mise` lines are rendered as `<name>@latest` (bare `mise install <tool>`
+# reads a `mise.toml`, not latest); see `render_packages_txt`.
+LIST_MANAGERS = ("pacman", "paru", "nix", "uv", "cargo", "mise")
 # Doc-only managers: declared in packages.toml (so they appear in the
 # spec 02 AUTO-GEN doc block and satisfy invariant I5) but NOT installed
 # from a generated `layer_<N>/<manager>.txt` list — they have a bespoke
-# install path in the Containerfile. `mise` is version-pinned (no flat
-# list); `custom` covers packages with a hand-written install step
-# (e.g. `paru`, bootstrapped via `makepkg`, which cannot also be a
-# `paru -S` target).
-DOC_ONLY_MANAGERS = ("mise", "custom")
+# install path in the Containerfile. `custom` covers packages with a
+# hand-written install step (e.g. `paru`, bootstrapped via `makepkg`,
+# which cannot also be a `paru -S` target).
+DOC_ONLY_MANAGERS = ("custom",)
 ALL_MANAGERS = LIST_MANAGERS + DOC_ONLY_MANAGERS
 
 # (layer, manager) pairs that always have a generated install list file,
 # even when no entries exist. Required because the Containerfile COPYs
-# `dependencies/layer_3/cargo.txt` and `dependencies/layer_4/paru.txt`
-# unconditionally; a missing file breaks the build. Keeping these files
-# generator-owned satisfies spec 02 §9 criterion #10 (never hand-edited).
-EXPECTED_EMPTY_FILES: tuple[tuple[int, str], ...] = ((3, "cargo"), (4, "paru"))
+# `dependencies/layer_3/cargo.txt`, `dependencies/layer_4/paru.txt`, and
+# `dependencies/layer_3/mise.txt` unconditionally; a missing file breaks
+# the build. Keeping these files generator-owned satisfies spec 02 §9
+# criterion #10 (never hand-edited).
+EXPECTED_EMPTY_FILES: tuple[tuple[int, str], ...] = (
+    (3, "cargo"),
+    (4, "paru"),
+    (3, "mise"),
+)
 
 MD_BEGIN = "<!-- BEGIN AUTO-GEN: installed-programs -->"
 MD_END = "<!-- END AUTO-GEN: installed-programs -->"
@@ -112,7 +120,10 @@ def render_packages_txt(layer: int, manager: str, tools: list[dict]) -> str:
         "",
     ]
     for t in sorted(tools, key=lambda x: x["name"]):
-        line = t["name"]
+        # `mise` lines carry an `@latest` suffix: bare `mise install <tool>`
+        # reads a `mise.toml` (not latest), so the version must be explicit.
+        # Other list managers keep bare names.
+        line = f"{t['name']}@latest" if manager == "mise" else t["name"]
         desc = t.get("description")
         if desc:
             line = f"{line}  # {desc}"
@@ -136,11 +147,11 @@ def render_doc_block(tools: list[dict]) -> str:
     ]
     for layer in sorted(by_layer):
         entries = sorted(by_layer[layer], key=lambda x: (x["manager"], x["name"]))
-        heading = (
-            f"#### Layer {layer} — already in the base image"
-            if layer == 0
-            else f"#### Layer {layer} — install list"
-        )
+        _LAYER_HEADINGS = {
+            0: "Layer 0 — already in the base image",
+            6: "Layer 6 — runtime-manual (not build-installed)",
+        }
+        heading = f"#### {_LAYER_HEADINGS.get(layer, f'Layer {layer} — install list')}"
         lines += [heading, ""]
         lines += [
             "| name | manager | configs | description |",
