@@ -63,7 +63,7 @@ build: _require_username ## Build the image matching your host uid/gid
 	-t $(IMAGE) \
 	$(BUILD_CTX)
 
-up: _require_username ## Start a detached container with chezmoi bind + toolchain volumes
+up: _require_username ## Start a detached container with chezmoi bind + named volumes (cargo, rustup, mise, gnupg, ssh)
 	podman run -d --replace --name $(CONTAINER) \
 		--userns=keep-id \
 		$(BW_SECRETS) \
@@ -82,7 +82,7 @@ down: ## Stop and remove the container
 	-podman stop $(CONTAINER)
 	-podman rm $(CONTAINER)
 
-clean: down ## Full reset: stop container, remove image, and delete toolchain volumes
+clean: down ## Full reset: stop container, remove image, and delete named volumes (cargo, rustup, mise, gnupg, ssh)
 	-podman volume rm $(CARGO_VOLUME) $(RUSTUP_VOLUME) $(MISE_VOLUME) $(GNUPG_VOLUME) $(SSH_VOLUME)
 	-podman rmi $(IMAGE)
 
