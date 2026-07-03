@@ -8,6 +8,7 @@ ssh_keys:
     # Fill `item` with a Bitwarden item ID or stable item name, then set
     # ssh_import_enabled to true to import this key into container ~/.ssh.
     - name: main
-      item: "ssh_keys"
+      #item: "ssh_keys"
+      item: "62d3df75-32b5-4e7b-b419-b47c00511f33"
       private_attachment: main
       public_attachment: main.pub
