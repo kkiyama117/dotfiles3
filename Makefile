@@ -12,9 +12,11 @@ JOBS ?= 1
 # The build / up targets fail if .env does not define USERNAME.
 -include .env
 
-# Named volumes for toolchain dirs (Podman copy-on-first-mount: build-time
-# binaries under $CARGO_HOME / $RUSTUP_HOME / $MISE_DATA_DIR survive into
-# the volume on the first `make up`; a host bind would hide them).
+# Named volumes (Podman copy-on-first-mount: build-time binaries under
+# $CARGO_HOME / $RUSTUP_HOME / $MISE_DATA_DIR survive into the volume on the
+# first `make up`; a host bind would hide them). dotfiles_gnupg / dotfiles_ssh
+# persist runtime keyrings (no build-time binaries, but kept here as the
+# single named-volume registry).
 CARGO_VOLUME  := dotfiles_cargo
 RUSTUP_VOLUME := dotfiles_rustup
 MISE_VOLUME   := dotfiles_mise
