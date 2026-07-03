@@ -47,7 +47,8 @@
 
 | Item ID env / template var | Consumer | Required at | Notes |
 |---|---|---|---|
-| _(TBD)_ | _(TBD)_ | apply / build | _(TBD)_ |
+| `.ssh_keys[].item` in `.chezmoidata/ssh_keys.yaml` | `.chezmoiscripts/run_after_install-ssh-keys.sh.tmpl` | container runtime apply only | Optional until `ssh_import_enabled: true`; stores a Bitwarden item ID or stable item name only. Private/public key bytes live in Bitwarden attachments named by `.ssh_keys[].private_attachment` / `.ssh_keys[].public_attachment`, never in this repo. |
+| _(TBD)_ | _(TBD)_ | apply / build | Broader host secret survey remains pending. |
 
 ## Local environment variables
 

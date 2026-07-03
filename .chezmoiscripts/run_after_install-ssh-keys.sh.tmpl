@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+{{- if and (not .build_mode) (eq .runtime "container") (env "BW_SESSION") }}
+set -euo pipefail
+
+ssh_dir="${HOME}/.ssh"
+mkdir -p "$ssh_dir"
+chmod 700 "$ssh_dir"
+umask 077
+
+tmp_files=()
+cleanup() {
+  if [ "${#tmp_files[@]}" -gt 0 ]; then
+    rm -f "${tmp_files[@]}"
+  fi
+}
+trap cleanup EXIT
+
+write_key_file() {
+  local destination="$1"
+  local mode="$2"
+  local tmp
+
+  tmp="$(mktemp "${ssh_dir}/.import.XXXXXX")"
+  tmp_files+=("$tmp")
+  cat > "$tmp"
+  chmod "$mode" "$tmp"
+  mv "$tmp" "$destination"
+}
+
+{{- if .ssh_import_enabled }}
+{{- range .ssh_keys }}
+{{- if and .name .item .private_attachment }}
+key_name={{ .name | quote }}
+private_path="${ssh_dir}/${key_name}"
+public_path="${private_path}.pub"
+
+if [ -e "$private_path" ]; then
+  echo "ssh-key-import: Skipping existing SSH key ${key_name}."
+else
+  echo "ssh-key-import: Importing SSH key ${key_name} from Bitwarden."
+  write_key_file "$private_path" 600 <<'__DOTFILES_SSH_PRIVATE_KEY__'
+{{ bitwardenAttachment .item .private_attachment -}}
+__DOTFILES_SSH_PRIVATE_KEY__
+
+{{- if .public_attachment }}
+  write_key_file "$public_path" 644 <<'__DOTFILES_SSH_PUBLIC_KEY__'
+{{ bitwardenAttachment .item .public_attachment -}}
+__DOTFILES_SSH_PUBLIC_KEY__
+{{- else }}
+  ssh-keygen -y -f "$private_path" > "$public_path"
+  chmod 644 "$public_path"
+{{- end }}
+
+  derived_public="$(mktemp "${ssh_dir}/.import.XXXXXX")"
+  tmp_files+=("$derived_public")
+  if ssh-keygen -y -f "$private_path" > "$derived_public"; then
+    if ! cmp -s "$derived_public" "$public_path"; then
+      rm -f "$private_path" "$public_path"
+      echo "ssh-key-import: public key mismatch for ${key_name}; removed imported files." >&2
+      exit 1
+    fi
+  else
+    echo "ssh-key-import: imported private key ${key_name} could not derive a public key." >&2
+    exit 1
+  fi
+fi
+
+{{- end }}
+{{- end }}
+{{- else }}
+echo "ssh-key-import: disabled; set ssh_import_enabled=true after configuring Bitwarden item metadata."
+{{- end }}
+{{- else }}
+exit 0
+{{- end }}

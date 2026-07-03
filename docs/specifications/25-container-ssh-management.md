@@ -102,7 +102,28 @@ chezmoi source.
 > volume + copy model keeps the two keyrings independent and the image
 > secret-free.
 
-## 4. Future work (deferred)
+## 4. Automated Bitwarden import (optional)
+
+The repository now includes an opt-in runtime import path for SSH file keys:
+
+- Non-secret metadata lives in `.chezmoidata/ssh_keys.yaml`.
+- The runtime script is
+  `.chezmoiscripts/run_after_install-ssh-keys.sh.tmpl`.
+- The script only runs in container runtime with `BW_SESSION` present and
+  `ssh_import_enabled: true`; build mode, host runtime, and no-secret
+  container startup render a no-op.
+- Bitwarden item IDs / stable names and attachment names may be committed.
+  Private keys, public keys, passphrases, and exported key bytes must never be
+  committed.
+- Existing private key files are skipped by default. Rotation is manual:
+  remove the target key from `dotfiles_ssh`, then run `make up` again.
+
+The first shipped metadata entry is a disabled `main` sample. To activate it,
+the maintainer fills `.ssh_keys[].item` with the intended Bitwarden item ID or
+stable item name, confirms the attachment names, and sets
+`ssh_import_enabled: true`.
+
+## 5. Future work (deferred)
 
 Tracked in
 [`../issues/2026-07-03-ssh-container-config-setup.md`](../issues/2026-07-03-ssh-container-config-setup.md)
@@ -127,20 +148,12 @@ letters A/B/D per [`09-review.md`](09-review.md) §2.2).
   whether to auto-add `export SSH_AUTH_SOCK=...` in `dot_zshenv.tmpl` /
   `dot_config/zsh/*.zshrc` and how to start `gpg-agent` with SSH support
   before the first `ssh` invocation.
-- **F3 — Automated runtime import.** Seed `dotfiles_ssh` from the secret
-  store at startup, **iff the volume is empty** (idempotent; never
-  overwrites an operator-generated/imported key), keeping the image
-  secret-free (I4 / I-SSH3 / spec 13 I-S3/I-S4 hold). The import runs in
-  the runtime entrypoint, after `bw unlock` and before or as a dedicated
-  post-`chezmoi apply` step; any passphrase is scrubbed before `exec
-  "$@"` (mirrors the `BW_*` scrub, spec 13 §4 step 6).
-- **F4 — Secret transport: Bitwarden or an alternative.** The operator
-  left the transport open. The design decides whether the key +
-  passphrase live as a Bitwarden item/attachment, a custom field, a
-  separate attachment, or an alternative secret store. `make up`
-  **without** the relevant podman secrets must still start the container
-  and leave the keyring empty (no-secret startup preserved, spec 13 §4
-  last paragraph).
+- **F3 — Key rotation automation.** Add an explicit force-refresh or
+  remove-then-reimport workflow. The current Bitwarden import deliberately
+  skips existing private keys and has no force mode.
+- **F4 — Alternative secret transport.** Bitwarden attachments are the
+  supported first transport. An alternative secret store remains out of scope
+  unless a later design replaces or extends the current contract.
 
 ### Open questions (to resolve in the deferred design)
 
@@ -150,9 +163,10 @@ letters A/B/D per [`09-review.md`](09-review.md) §2.2).
   under `~/.ssh/config.d/`?
 - **Q3:** Does the automation need an `ssh-agent` / gpg-agent SSH socket
   baked into the entrypoint or shell env?
-- **Q4:** Is the secret transport Bitwarden or an alternative? (F4.)
+- **Q4:** Is an alternative transport still needed after Bitwarden attachment
+  import, or is Bitwarden sufficient for SSH file keys?
 
-## 5. Management invariants
+## 6. Management invariants
 
 Extends I-SSH1..I-SSH6 ([`20-container-rules.md`](20-container-rules.md)).
 
