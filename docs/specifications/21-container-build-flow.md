@@ -20,6 +20,7 @@ stage; within a stage, numbered **sub-layers** (`Layer N-M`) group related
 | `base` | 1-4 | UID-collision fallback + sudoers + `USER ${USERNAME}` | Idempotent user provisioning; NOPASSWD sudoers; switch to non-root. | build-args |
 | `base` | 1-5 | `install -d -m 0755` for `~/.local/share/{cargo,rustup,mise,chezmoi}` | Owner-correct mountpoints for runtime binds/volumes. | build-args |
 | `base` | 1-6 | `install -d -m 0700` for `~/.local/share/gnupg` | Owner-correct `0700` mountpoint for the `dotfiles_gnupg` named volume (`GNUPGHOME`); empty at build time (no key baked). | build-args |
+| `base` | 1-7 | `install -d -m 0700` for `~/.ssh` | Owner-correct `0700` mountpoint for the `dotfiles_ssh` named volume; empty at build time (no key baked). | build-args |
 | `build-prepass` (`FROM base`) | 2 | `COPY --from=srcroot`; `BUILD_MODE=true chezmoi execute-template --init < /tmp/chezmoi-src/.chezmoi.toml.tmpl > ~/.config/chezmoi/chezmoi.toml` (`build_mode = true`); `chezmoi apply --destination /tmp/build-home` | Scratch render of ENV-bearing dotfiles with `build_mode = true`; secret-free. | `srcroot` named build-context, `.chezmoi.toml.tmpl` |
 | `toolchain` (`FROM build-prepass`) | 3 | `rustup-init`, mise installer, `cargo binstall --only-signed -y`; cache mounts on `$CARGO_HOME/{registry,git}` (4-1/4-2 only; binstall uses the crates.io HTTP API) | Install rustup/mise/cargo binaries under XDG-compliant paths. | `/tmp/build-home/.zshenv`, `dependencies/layer_3/cargo.txt` |
 | `toolchain` (`FROM build-prepass`) | 3-4 | `COPY --from=deps layer_3/mise.txt`; `mise install ${=pkgs}` + `mise use -g ${=pkgs}` with `~/.cache/mise` cache mount | Install the Layer 3 mise-managed language set (go/python/deno, `@latest`) from the generated list (`manager = "mise"` entries only) and set them as the global default (`mise use -g` writes `~/.config/mise/config.toml` so runtime shims resolve — `mise install` alone leaves shims erroring "No version is set"). Tools land in `~/.local/share/mise` (the `dotfiles_mise` named-volume mountpoint). | `/tmp/build-home/.zshenv`, `dependencies/layer_3/mise.txt` |
@@ -36,11 +37,12 @@ stage; within a stage, numbered **sub-layers** (`Layer N-M`) group related
 
 - The image is fully implemented across 5 stages. `no-config-base`
   is retired.
-- `base` Layer 1-5 provisions XDG-compliant directories so the four
-  Podman named volumes (cargo / rustup / mise / gnupg) and the host bind
-  for the chezmoi source root attach without overlay-hiding image
+- `base` Layer 1-5 provisions XDG-compliant directories so the five
+  Podman named volumes (cargo / rustup / mise / gnupg / ssh) and the host
+  bind for the chezmoi source root attach without overlay-hiding image
   content; the gnupg mountpoint (`GNUPGHOME`) is provisioned at `0700`
-  in Layer 1-6.
+  in Layer 1-6 and the SSH mountpoint (`~/.ssh`) at `0700` in Layer 1-7.
+  Together these are six runtime mounts (one bind + five named volumes).
 - The `aur` stage (Layer 4) bootstraps `paru` from the AUR via
   `makepkg -si` as non-root `${USERNAME}`, then installs the Layer 4
   AUR package set from `dependencies/layer_4/paru.txt`. `paru` itself is
@@ -156,6 +158,10 @@ A new stage may land only when:
 15. An empty `layer_3/cargo.txt` does not break the build (the Layer 3-6 `if [ -n "$pkgs" ]` guard + `(3, "cargo")` in `EXPECTED_EMPTY_FILES`).
 16. `make down && make up` preserves cargo / rustup binaries (the `dotfiles_cargo` / `dotfiles_rustup` named volumes persist — analog of criterion #8). **Rollout:** an existing `dotfiles_cargo` volume will NOT pick up new `$CARGO_HOME/bin` binaries on `make up`; run `podman volume rm dotfiles_cargo` (NOT `make clean` — `make clean` also removes the image and the `dotfiles_gnupg`/`dotfiles_mise`/`dotfiles_rustup` volumes) before the first `make up` after the cargo-binstall/topgrade change.
 17. A `layer = 3` cargo entry with no signed prebuilt fails `cargo binstall --only-signed -y` loudly at Layer 3-6 (recovery: move to `layer = 6` — see [`24-rust-packages-rule.md`](24-rust-packages-rule.md) §3).
+18. After `make up`, `podman exec <container> zsh -ic 'ssh -V'` succeeds.
+19. After `make up`, `stat ~/.ssh` prints `0700` and is `${USERNAME}`-owned.
+20. `make down && make up` preserves key material written into `dotfiles_ssh` (test key).
+21. **Rollout:** existing deployments must run **`make build`** (Layer 1-7) before the first `make up` after this change; to reset SSH keys only use `podman volume rm dotfiles_ssh` (NOT `make clean` — also wipes `dotfiles_gnupg` / cargo / mise / rustup).
 
 ## Open questions
 

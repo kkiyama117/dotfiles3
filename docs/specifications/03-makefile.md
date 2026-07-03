@@ -12,10 +12,10 @@ It may be moved in `1x-` or `2x-` because it is not a rule of metadata or docume
 | `help`  | meta | print one-line summary of every target. Default target. |
 | `build` | container | build the container image for the current host uid/gid via rootless Podman. Requires `$(USERNAME)`. Tags the image as `$(IMAGE)`. |
 | `build_container` | container | alias of `build`. |
-| `up`    | container | start a detached container named `$(CONTAINER)`. Bind-mounts the repo root (chezmoi source) at `/home/$(USERNAME)/.local/share/chezmoi`, mounts the named toolchain volumes `dotfiles_cargo`/`dotfiles_rustup`/`dotfiles_mise` at the XDG paths (`$XDG_DATA_HOME/{cargo,rustup,mise}`), passes `BW_SESSION` through from the host shell, and uses `--userns=keep-id --replace` per [`20-container-rules.md`](20-container-rules.md) I2. The Stage 4 entrypoint runs `chezmoi apply --no-tty --force` at runtime, then `exec`s the passed command (`sleep infinity`). Requires `$(USERNAME)`. |
+| `up`    | container | start a detached container named `$(CONTAINER)`. Bind-mounts the repo root (chezmoi source) at `/home/$(USERNAME)/.local/share/chezmoi`, mounts the named volumes `dotfiles_cargo`/`dotfiles_rustup`/`dotfiles_mise`/`dotfiles_gnupg`/`dotfiles_ssh` at the XDG paths (`$XDG_DATA_HOME/{cargo,rustup,mise,gnupg}` and `~/.ssh`), passes `BW_SESSION` through from the host shell, and uses `--userns=keep-id --replace` per [`20-container-rules.md`](20-container-rules.md) I2. The Stage 4 entrypoint runs `chezmoi apply --no-tty --force` at runtime, then `exec`s the passed command (`sleep infinity`). Requires `$(USERNAME)`. |
 | `exec`  | container | open an interactive shell inside `$(CONTAINER)`. |
 | `down`  | container | stop and remove `$(CONTAINER)`. Errors during stop/rm are ignored so the target is idempotent. |
-| `clean` | container | depends on `down`; removes the `dotfiles_cargo`/`dotfiles_rustup`/`dotfiles_mise` named volumes and the image. Errors are ignored so the target is idempotent. |
+| `clean` | container | depends on `down`; removes the `dotfiles_cargo`/`dotfiles_rustup`/`dotfiles_mise`/`dotfiles_gnupg`/`dotfiles_ssh` named volumes and the image. Errors are ignored so the target is idempotent. |
 
 ## Optional / planned targets
 
@@ -47,6 +47,8 @@ It may be moved in `1x-` or `2x-` because it is not a rule of metadata or docume
 | `CARGO_VOLUME`  | str | `dotfiles_cargo`  | named volume mounted at `$XDG_DATA_HOME/cargo` by `up`; removed by `clean`. |
 | `RUSTUP_VOLUME` | str | `dotfiles_rustup` | named volume mounted at `$XDG_DATA_HOME/rustup` by `up`; removed by `clean`. |
 | `MISE_VOLUME`   | str | `dotfiles_mise`   | named volume mounted at `$XDG_DATA_HOME/mise` by `up`; removed by `clean`. |
+| `GNUPG_VOLUME`  | str | `dotfiles_gnupg`  | named volume mounted at `$XDG_DATA_HOME/gnupg` (`GNUPGHOME`) by `up`; removed by `clean`. |
+| `SSH_VOLUME`    | str | `dotfiles_ssh`    | named volume mounted at `~/.ssh` by `up`; removed by `clean`. |
 
 ## `.env` contract
 
