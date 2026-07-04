@@ -313,7 +313,7 @@ description = "A modern alternative to the tree command"
 #description = "C header generation"
 
 ### LLVM
-[[tool]]
+#[[tool]]
 #name = "cargo-llvm-cov"
 #manager = "cargo"
 #layer = 6
