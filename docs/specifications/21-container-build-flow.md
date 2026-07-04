@@ -110,6 +110,11 @@ A new stage may land only when:
     removes the files that Layer 1-3's `usermod -l ... -d
     /home/${USERNAME} -m builder` moved out of the base image's `builder`
     home (chezmoi does not manage them, so `chezmoi apply` never would).
+5c. `make up` passes Podman `--init`, and the entrypoint handles `SIGTERM`
+    while startup commands are still running. Re-running `make up`
+    (`--replace`) and `podman stop dotfiles-manjaro` stop the container
+    without the `StopSignal SIGTERM failed ... resorting to SIGKILL`
+    warning.
 6. After `make up`, `podman exec <container> zsh -ic 'echo $CARGO_HOME'`
    outputs `~/.local/share/cargo` (XDG-compliant). The toolchain PATH/HOMEs
    are now **split across phases**: `.zshenv` carries them only at build

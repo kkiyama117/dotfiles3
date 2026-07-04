@@ -65,8 +65,9 @@ build: _require_username ## Build the image matching your host uid/gid
 	-t $(IMAGE) \
 	$(BUILD_CTX)
 
-up: _require_username ## Start a detached container with chezmoi bind + named volumes (cargo, rustup, mise, gnupg, ssh)
+up: _require_username ## Start a detached container with init, chezmoi bind, and named volumes (cargo, rustup, mise, gnupg, ssh)
 	podman run -d --replace --name $(CONTAINER) \
+		--init \
 		--userns=keep-id \
 		$(BW_SECRETS) \
 		-v $(CURDIR):/home/$(USERNAME)/.local/share/chezmoi \

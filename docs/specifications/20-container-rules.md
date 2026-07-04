@@ -17,6 +17,11 @@ labels directly.
 - I1: **Rootless Podman only.** The container is never built or run as root on the host.
 - I2: **`--userns=keep-id` is required** for any run that bind-mounts host files. The host UID/GID survive the user-namespace remap so bind-mount ownership (chezmoi-source, home dir) is preserved.
 - I3: **No `:U` volume flag.** It recursively `chown`s the host directory, which is destructive.
+- I-RUN1: **`make up` uses Podman `--init`.** The runtime command is a
+  long-lived keepalive (`sleep infinity`), which must not be PID 1 because
+  PID 1 ignores default `SIGTERM` handling. Podman's init process forwards
+  stop signals so `make up --replace`, `podman stop`, and `make down` exit
+  cleanly without falling back to `SIGKILL`.
 
 ### Secrets (build-time & runtime)
 
