@@ -1,0 +1,9 @@
+# Sheldon plugin manifest.
+# Add plugins with `sheldon add <name> --github <owner>/<repo>` or by hand.
+# Lockfile (`plugins.lock`) is generated at runtime under $XDG_DATA_HOME/sheldon
+# and is NOT committed (it lives outside the chezmoi source tree).
+
+shell = "zsh"
+
+[plugins]
+# (empty by design — first plumbing-only landing)
