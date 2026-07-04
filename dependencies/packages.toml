@@ -153,7 +153,7 @@ name = "cargo-outdated"
 manager = "cargo"
 layer = 3
 has_configs = false
-description = "provides cargo-add / cargo-rm / cargo-set-version / cargo-upgrade binaries (no cargo-edit binary by upstream design)"
+description = "Detect outdated Rust crate dependencies"
 
 # Layer 4: paru-installed tools (AUR); Containerfile `aur` stage.
 # paru itself is bootstrapped via makepkg in the `aur` stage, so it is

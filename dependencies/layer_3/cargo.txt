@@ -4,5 +4,5 @@
 # manager: cargo | layer: 3 | packages: 3
 
 cargo-edit  # provides cargo-add / cargo-rm / cargo-set-version / cargo-upgrade binaries (no cargo-edit binary by upstream design)
-cargo-outdated  # provides cargo-add / cargo-rm / cargo-set-version / cargo-upgrade binaries (no cargo-edit binary by upstream design)
+cargo-outdated  # Detect outdated Rust crate dependencies
 topgrade  # multi-package-manager updater; build-time cargo tool (signed prebuilt via cargo-binstall --only-signed)
