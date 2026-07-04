@@ -1,0 +1,23 @@
+# Global mise config — per-project versions go in each
+# project's `.mise.toml` or `.tool-versions`.
+
+[tools]
+# Latest stable releases of deno, go, and python are global defaults so
+# scratch shells have something usable without per-project setup.
+deno = "latest"
+go = "latest"
+python = "latest"
+
+# Rust is intentionally NOT installed via mise. The mise rust plugin
+# hardcodes rustup defaults (~/.cargo, ~/.rustup) and ignores
+# CARGO_HOME/RUSTUP_HOME, which scatters files outside the XDG layout
+# used elsewhere in this repo and breaks `mise activate`'s PATH
+# integration (mise where rust = symlink to ~/.cargo/bin, no /bin
+# subdirectory). The container bakes rust nightly via the official
+# rustup-init in Containerfile Stage 2; host operators install rust
+# however they prefer (rustup, pacman, nix).
+
+[settings]
+# Show install progress and quiet warnings for missing plugins on first run.
+verbose = false
+experimental = true
