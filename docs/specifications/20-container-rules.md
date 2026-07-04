@@ -157,12 +157,14 @@ labels directly.
   install/manage other tools (an installer-of-installers) and which
   ships an official prebuilt binary is curl-bootstrapped in the
   Containerfile and is NOT declared in `packages.toml`. Instances:
-  `rustup` (Layer 3-2), `mise` (Layer 3-3), `cargo-binstall` (Layer 3-5).
+  `rustup` (Layer 3-2), `cargo-binstall` (Layer 3-4). (`mise` is now a
+  regular `pacman` package at Layer 1, not curl-bootstrapped infra; mise-managed
+  languages install at Layer 3-3 from `dot_config/mise/config.toml`.)
   This is the formal carve-out from I5 for installer infra (the
   `paru` `manager = "custom"` doc-only mechanism is a separate,
   package-specific carve-out via I-AUR2).
 - I-CARGO1: **`cargo-binstall` is the cargo instance of I-INFRA1.** It is
-  bootstrapped at Layer 3-5 from a version-pinned (v1.20.1) + SHA256-gated
+  bootstrapped at Layer 3-4 from a version-pinned (v1.20.1) + SHA256-gated
   (`f12954bc382e1d0b2df3fbfb217a05d92c25570e4517841e0613499a24f4594e`)
   prebuilt musl tarball, extracted single-file to `$CARGO_HOME/bin`. Build-time
   cargo tools (`layer = 3`) install via `cargo binstall --only-signed -y`
