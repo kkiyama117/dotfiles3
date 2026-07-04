@@ -206,7 +206,7 @@ RUN --mount=type=cache,target=/home/${USERNAME}/.cache/mise,uid=${HOST_UID},gid=
 # Layer 3-4: Install cargo-binstall (prebuilt bootstrap — INFRA, not in packages.toml).
 #
 # cargo-binstall is the installer for the rest of the cargo ecosystem; like
-# rustup (3-2) / mise (3-3) it is curl-bootstrapped from a prebuilt binary
+# rustup (3-2) it is curl-bootstrapped from a prebuilt binary
 # (compiling binstall itself via `cargo install` would defeat its purpose).
 # It is infra, not a packages.toml entry (spec 20 I-INFRA1 / I-CARGO1).
 #
