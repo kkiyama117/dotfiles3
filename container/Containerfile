@@ -42,8 +42,8 @@ ARG USERNAME # GIVEN BY `.env` (required; build fails if not set)
 COPY bind/layer_1_files/pacman_mirrorlist /etc/pacman.d/mirrorlist
 COPY --from=deps layer_1/pacman.txt /tmp/pacman_deps.txt
 RUN --mount=type=cache,target=/var/cache/pacman/pkg \
-    pacman -Syu --noconfirm --needed $(sed 's/#.*//' /tmp/pacman_deps.txt | xargs) \
- && sed -i -e '/^[[:space:]]*[^#[:space:]]/ s/^/#/' /etc/locale.gen \
+    pacman -Syu --noconfirm --needed $(sed 's/#.*//' /tmp/pacman_deps.txt | xargs)
+RUN sed -i -e '/^[[:space:]]*[^#[:space:]]/ s/^/#/' /etc/locale.gen \
  && printf '%s\n' 'ja_JP.UTF-8 UTF-8' 'en_US.UTF-8 UTF-8' >> /etc/locale.gen \
  && locale-gen \
  && printf 'LANG=ja_JP.UTF-8\n' > /etc/locale.conf
