@@ -167,21 +167,33 @@ RUN mkdir -p /tmp/build-home \
 # ---------------------------------------------------------------------------
 # Stage 3: toolchain
 #
-# Install rustup, mise, and cargo binaries with ENV inherited from the
-# build-prepass scratch render. Each RUN is a fresh shell, so each must
-# `source /tmp/build-home/.zshenv` to materialize CARGO_HOME / RUSTUP_HOME /
-# MISE_DATA_DIR. BuildKit cache mounts (uid/gid require Podman >= 4.0) keep
-# the rustup download cache (3-2) and the mise download cache (3-3) across
-# rebuilds without bloating image layers. cargo-binstall (3-4) has no
-# persistent cache (per-run tempdir in $CARGO_HOME), and the cargo tools
-# (3-5) resolve via the crates.io HTTP API, so neither carries a cache mount;
-# the cargo registry/git cache mounts live on the `aur` stage (4-1/4-2) for
-# paru / Rust AUR builds.
+# Copy the rendered Cargo config, then install rustup, mise, and cargo
+# binaries with ENV inherited from the build-prepass scratch render. Each RUN
+# is a fresh shell, so each must `source /tmp/build-home/.zshenv` to
+# materialize CARGO_HOME / RUSTUP_HOME / MISE_DATA_DIR. BuildKit cache mounts
+# (uid/gid require Podman >= 4.0) keep the rustup download cache (3-3) and
+# the mise download cache (3-4) across rebuilds without bloating image
+# layers. cargo-binstall (3-5) has no persistent cache (per-run tempdir in
+# $CARGO_HOME), and the cargo tools (3-6) resolve via the crates.io HTTP API,
+# so neither carries a cache mount; the cargo registry/git cache mounts live
+# on the `aur` stage (4-1/4-2) for paru / Rust AUR builds.
 # ---------------------------------------------------------------------------
 # Layer 3-1: use Container imange of Layer 2
 FROM build-prepass AS toolchain
 
-# Layer 3-2: Install rustup with minimum zshenv
+# Layer 3-2: Copy rendered Cargo config into $CARGO_HOME before Rust work
+RUN zsh -c 'set -eo pipefail; \
+      source /tmp/build-home/.zshenv; \
+      cargo_config=/tmp/build-home/.local/share/cargo/config.toml; \
+      if [ ! -s "$cargo_config" ]; then \
+        echo "toolchain: missing rendered cargo config: $cargo_config" >&2; \
+        exit 1; \
+      fi; \
+      install -d "$CARGO_HOME"; \
+      cp "$cargo_config" "$CARGO_HOME/config.toml"; \
+    '
+
+# Layer 3-3: Install rustup with minimum zshenv
 RUN --mount=type=cache,target=/home/${USERNAME}/.cache/cargo-install,uid=${HOST_UID},gid=${HOST_GID} \
     zsh -c 'set -eo pipefail; \
       source /tmp/build-home/.zshenv; \
@@ -189,7 +201,7 @@ RUN --mount=type=cache,target=/home/${USERNAME}/.cache/cargo-install,uid=${HOST_
         | sh -s -- -y --no-modify-path --default-toolchain stable --profile minimal; \
     '
 
-# Layer 3-3: Install mise-managed languages from rendered chezmoi config
+# Layer 3-4: Install mise-managed languages from rendered chezmoi config
 RUN --mount=type=cache,target=/home/${USERNAME}/.cache/mise,uid=${HOST_UID},gid=${HOST_GID} \
     zsh -c 'set -eo pipefail; \
       source /tmp/build-home/.zshenv; \
@@ -203,10 +215,10 @@ RUN --mount=type=cache,target=/home/${USERNAME}/.cache/mise,uid=${HOST_UID},gid=
       mise install --yes; \
     '
 
-# Layer 3-4: Install cargo-binstall (prebuilt bootstrap — INFRA, not in packages.toml).
+# Layer 3-5: Install cargo-binstall (prebuilt bootstrap — INFRA, not in packages.toml).
 #
 # cargo-binstall is the installer for the rest of the cargo ecosystem; like
-# rustup (3-2) it is curl-bootstrapped from a prebuilt binary
+# rustup (3-3) it is curl-bootstrapped from a prebuilt binary
 # (compiling binstall itself via `cargo install` would defeat its purpose).
 # It is infra, not a packages.toml entry (spec 20 I-INFRA1 / I-CARGO1).
 #
@@ -230,7 +242,7 @@ RUN zsh -c 'set -eo pipefail; \
       cargo binstall -V; \
     '
 
-# Layer 3-5: Install build-time cargo tools via cargo-binstall (was 3-4).
+# Layer 3-6: Install build-time cargo tools via cargo-binstall.
 #
 # `cargo binstall --only-signed -y` (H2/B-F2): `--only-signed` mandates a
 # signed prebuilt source (the `--secure` flag does NOT exist; `--only-signed`

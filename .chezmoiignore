@@ -38,7 +38,12 @@ README.md
 
 # Toolchain / keyring volume mountpoints
 ## never managed by chezmoi
-.local/share/cargo
+
+# Cargo: chezmoi manages ONLY ~/.local/share/cargo/config.toml. Everything
+# else under $CARGO_HOME (bin, registry, git cache) is volume-owned.
+.local/share/cargo/*
+!.local/share/cargo/config.toml
+
 .local/share/rustup
 .local/share/mise
 .local/share/gnupg
