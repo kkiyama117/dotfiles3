@@ -246,7 +246,8 @@ has_configs = false
 name = "starship"
 manager = "paru"
 layer = 4
-has_configs = false
+# `~/.config/starship.toml`
+has_configs = true
 description = "zsh prompt theme manager"
 
 [[tool]]
