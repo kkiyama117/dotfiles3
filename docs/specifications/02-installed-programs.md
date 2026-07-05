@@ -36,7 +36,7 @@ mise language defaults belong in `dot_config/mise/config.toml`, not in
 - `uv`: installed via `uv` (Python package manager)
 - `cargo`: build-time cargo tools (`layer = 3`) are installed via
   `cargo binstall --only-signed -y` from `dependencies/layer_3/cargo.txt`
-  in the `toolchain` stage (Layer 3-5); per spec 24 they MUST ship a
+  in the `toolchain` stage (Layer 3-6); per spec 24 they MUST ship a
   signed prebuilt. `layer = 6` cargo tools are runtime-manual
   (declared for SoT, NOT build-installed; `layer_6/cargo.txt` is a
   reference list the Containerfile never reads). See
