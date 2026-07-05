@@ -23,7 +23,7 @@ stage; within a stage, numbered **sub-layers** (`Layer N-M`) group related
 | `base` | 1-7 | `install -d -m 0700` for `~/.ssh` | Owner-correct `0700` mountpoint for the `dotfiles_ssh` named volume; empty at build time (no key baked). | build-args |
 | `build-prepass` (`FROM base`) | 2 | `COPY --from=srcroot`; `BUILD_MODE=true chezmoi execute-template --init < /tmp/chezmoi-src/.chezmoi.toml.tmpl > ~/.config/chezmoi/chezmoi.toml` (`build_mode = true`); `chezmoi apply --destination /tmp/build-home` | Scratch render of ENV-bearing dotfiles with `build_mode = true`; secret-free. | `srcroot` named build-context, `.chezmoi.toml.tmpl` |
 | `toolchain` (`FROM build-prepass`) | 3 | Copy rendered Cargo config (3-2), `rustup-init` (3-3), mise-managed languages (3-4), `cargo-binstall` (3-5), cargo tools (3-6); cache mounts on `$CARGO_HOME/{registry,git}` (4-1/4-2 only; binstall uses the crates.io HTTP API) | Install the rendered Cargo config, then rustup, mise-managed languages, and cargo binaries under XDG-compliant paths. | `/tmp/build-home/.zshenv`, `/tmp/build-home/.local/share/cargo/config.toml`, `dependencies/layer_3/cargo.txt` |
-| `toolchain` (`FROM build-prepass`) | 3-2 | Copy `/tmp/build-home/.local/share/cargo/config.toml` to `$CARGO_HOME/config.toml` | Install the rendered Cargo config before any Rust/cargo/AUR step can compile Rust code. | `/tmp/build-home/.zshenv`, `/tmp/build-home/.local/share/cargo/config.toml` |
+| `toolchain` (`FROM build-prepass`) | 3-2 | Copy `/tmp/build-home/.local/share/cargo/config.toml` and `/tmp/build-home/.local/share/cargo/binstall.toml` under `$CARGO_HOME/` and `$CARGO_HOME/binstall.toml` | Install the rendered Cargo config before any Rust/cargo/AUR step can compile Rust code. | `/tmp/build-home/.zshenv`, `/tmp/build-home/.local/share/cargo/config.toml`, `dependencies/layer_3/cargo.txt` |
 | `toolchain` (`FROM build-prepass`) | 3-3 | `rustup-init` | Install stable Rust with `profile=minimal`. | `/tmp/build-home/.zshenv` |
 | `toolchain` (`FROM build-prepass`) | 3-4 | Copy `/tmp/build-home/.config/mise/config.toml` to `${XDG_CONFIG_HOME}/mise/config.toml`; `mise install --yes` with `~/.cache/mise` cache mount | Install mise-managed language defaults from the rendered mise config. | `/tmp/build-home/.zshenv`, [`dot_config/mise/config.toml`](../../dot_config/mise/config.toml) (rendered to `/tmp/build-home/.config/mise/config.toml`) |
 | `toolchain` (`FROM build-prepass`) | 3-5 | `curl` the pinned v1.20.1 `cargo-binstall-x86_64-unknown-linux-musl.tgz`; `sha256sum -c` against the hardcoded SHA256; single-file `tar` + `mv` to `$CARGO_HOME/bin` | Bootstrap `cargo-binstall` as infra (I-INFRA1 / I-CARGO1) — the installer for the rest of the cargo ecosystem. Not a `packages.toml` entry. No cache mount (binstall has no persistent download cache). | `/tmp/build-home/.zshenv`, `ARG CARGO_BINSTALL_VERSION`/`CARGO_BINSTALL_SHA256` |
@@ -53,8 +53,9 @@ stage; within a stage, numbered **sub-layers** (`Layer N-M`) group related
   `LC_CTYPE=en_US.UTF-8`, and `LANGUAGE=ja_JP.UTF-8:en_US.UTF-8:C`,
   without generating extra base-image locales.
 - The `toolchain` stage copies the rendered Cargo config from
-  `/tmp/build-home/.local/share/cargo/config.toml` to
-  `$CARGO_HOME/config.toml` before rustup, cargo-binstall, build-time cargo
+  `/tmp/build-home/.local/share/cargo/config.toml` and
+  `/tmp/build-home/.local/share/cargo/binstall.toml` under
+  `$CARGO_HOME/` before rustup, cargo-binstall, build-time cargo
   tools, and the AUR stage. This keeps build-time Rust compilation aligned
   with runtime `chezmoi apply`, which manages the same non-secret config file
   in the `dotfiles_cargo` volume.

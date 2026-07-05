@@ -70,13 +70,12 @@ labels directly.
   `chezmoi` ignore entries).
 
 - I-CARGO2: `.chezmoiignore` excludes everything under
-  `~/.local/share/cargo/` except `~/.local/share/cargo/config.toml`
-  (`.local/share/cargo/*` then `!.local/share/cargo/config.toml`).
+  `~/.local/share/cargo/` except `~/.local/share/cargo/config.toml` and `~/.local/share/cargo/binstall.toml`
   Chezmoi manages only the non-secret Cargo config; `$CARGO_HOME/bin`,
   registry data, and git cache are volume-owned and never touched by
   chezmoi. The build-prepass renders this config to
-  `/tmp/build-home/.local/share/cargo/config.toml`, and the toolchain
-  stage copies it to `$CARGO_HOME/config.toml` before Rust/cargo/AUR work.
+  `/tmp/build-home/.local/share/cargo/(filename).toml`, and the toolchain
+  stage copies it under `$CARGO_HOME/` before Rust/cargo/AUR work.
 
 - I-SSH1: The SSH client keyring is persisted via the Podman named volume
   `dotfiles_ssh` mounted at `~/.ssh`, the same pattern as `dotfiles_gnupg`

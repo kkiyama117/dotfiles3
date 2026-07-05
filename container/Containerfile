@@ -185,6 +185,7 @@ FROM build-prepass AS toolchain
 RUN zsh -c 'set -eo pipefail; \
       source /tmp/build-home/.zshenv; \
       cargo_config=/tmp/build-home/.local/share/cargo/config.toml; \
+      cargo_bistall_config=/tmp/build-home/.local/share/cargo/binstall.toml; \
       if [ ! -s "$cargo_config" ]; then \
         echo "toolchain: missing rendered cargo config: $cargo_config" >&2; \
         exit 1; \

@@ -43,6 +43,7 @@ README.md
 # else under $CARGO_HOME (bin, registry, git cache) is volume-owned.
 .local/share/cargo/*
 !.local/share/cargo/config.toml
+!.local/share/cargo/binstall.toml
 
 .local/share/rustup
 .local/share/mise

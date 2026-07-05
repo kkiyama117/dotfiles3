@@ -32,7 +32,8 @@ the map of which top-level path serves which concern.
 │   └── zsh/
 │       └── dot_zshrc.tmpl  # chezmoi-managed ~/.config/zsh/.zshrc (runtime toolchain block)
 ├── dot_local/          # chezmoi-managed ~/.local/ (XDG data/state, rare static configs only)
-│   └── share/cargo/config.toml  # chezmoi-managed ~/.local/share/cargo/config.toml (the only managed file under $CARGO_HOME)
+│   ├── share/cargo/config.toml    # chezmoi-managed ~/.local/share/cargo/config.toml
+│   └── share/cargo/binstall.toml  # chezmoi-managed ~/.local/share/cargo/binstall.toml 
 ├── (Other dotfiles)    # chezmoi-managed ~/(other dotfiles)
 ├── .chezmoiignore      # chezmoi ignore rules
 ├── .chezmoi.toml.tmpl  # chezmoi config template (build_mode via BUILD_MODE env; rendered by `chezmoi execute-template --init`)
