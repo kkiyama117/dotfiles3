@@ -4,7 +4,7 @@
 # and is NOT committed (it lives outside the chezmoi source tree).
 
 shell = "zsh"
-apply = "defer"
+apply = ["defer"]
 
 # templates for use zsh-defer
 [templates]
@@ -29,4 +29,3 @@ apply = ['source']
 # TODO: to make faster, consider caching it.
 [plugins.starship]
 inline = 'eval "$(starship init zsh)"'
-
