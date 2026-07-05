@@ -9,22 +9,23 @@
 The Containerfile is a multi-stage build. Each `FROM ... AS <stage>` is a
 stage; within a stage, numbered **sub-layers** (`Layer N-M`) group related
 `RUN` / `ARG` / `USER` directives. The table below reflects the file as of
-2026-06-30.
+2026-07-04.
 
 | Stage (`FROM ... AS`) | Sub-layer | Directive(s) | Purpose | Inputs |
 |---|---|---|---|---|
 | `manjarolinux/base:latest` | 0-1 | - | Base image | - |
 | `base` | 1-1 | `ARG` | Receive build-args. | `HOST_UID`, `HOST_GID`, `USERNAME` |
-| `base` | 1-2 | mirrorlist + `pacman -Sy` | Install Layer 1 pacman set with BuildKit cache. | `bind/layer_1_files/pacman_mirrorlist`, `dependencies/layer_1/pacman.txt` |
+| `base` | 1-2 | mirrorlist + `pacman -Syu` + `/etc/locale.gen` reset + `locale-gen` | Install Layer 1 pacman set with BuildKit cache, then generate exactly `ja_JP.UTF-8` and `en_US.UTF-8` for the `.zshenv` locale exports. | `bind/layer_1_files/pacman_mirrorlist`, `dependencies/layer_1/pacman.txt`, `/etc/locale.gen` |
 | `base` | 1-3 | `groupmod` / `usermod` | Remap builder -> ${USERNAME} with host uid/gid; set zsh login. | build-args |
 | `base` | 1-4 | UID-collision fallback + sudoers + `USER ${USERNAME}` | Idempotent user provisioning; NOPASSWD sudoers; switch to non-root. | build-args |
 | `base` | 1-5 | `install -d -m 0755` for `~/.local/share/{cargo,rustup,mise,chezmoi}` | Owner-correct mountpoints for runtime binds/volumes. | build-args |
 | `base` | 1-6 | `install -d -m 0700` for `~/.local/share/gnupg` | Owner-correct `0700` mountpoint for the `dotfiles_gnupg` named volume (`GNUPGHOME`); empty at build time (no key baked). | build-args |
+| `base` | 1-7 | `install -d -m 0700` for `~/.ssh` | Owner-correct `0700` mountpoint for the `dotfiles_ssh` named volume; empty at build time (no key baked). | build-args |
 | `build-prepass` (`FROM base`) | 2 | `COPY --from=srcroot`; `BUILD_MODE=true chezmoi execute-template --init < /tmp/chezmoi-src/.chezmoi.toml.tmpl > ~/.config/chezmoi/chezmoi.toml` (`build_mode = true`); `chezmoi apply --destination /tmp/build-home` | Scratch render of ENV-bearing dotfiles with `build_mode = true`; secret-free. | `srcroot` named build-context, `.chezmoi.toml.tmpl` |
-| `toolchain` (`FROM build-prepass`) | 3 | `rustup-init`, mise installer, `cargo binstall --only-signed -y`; cache mounts on `$CARGO_HOME/{registry,git}` (4-1/4-2 only; binstall uses the crates.io HTTP API) | Install rustup/mise/cargo binaries under XDG-compliant paths. | `/tmp/build-home/.zshenv`, `dependencies/layer_3/cargo.txt` |
-| `toolchain` (`FROM build-prepass`) | 3-4 | `COPY --from=deps layer_3/mise.txt`; `mise install ${=pkgs}` + `mise use -g ${=pkgs}` with `~/.cache/mise` cache mount | Install the Layer 3 mise-managed language set (go/python/deno, `@latest`) from the generated list (`manager = "mise"` entries only) and set them as the global default (`mise use -g` writes `~/.config/mise/config.toml` so runtime shims resolve — `mise install` alone leaves shims erroring "No version is set"). Tools land in `~/.local/share/mise` (the `dotfiles_mise` named-volume mountpoint). | `/tmp/build-home/.zshenv`, `dependencies/layer_3/mise.txt` |
-| `toolchain` (`FROM build-prepass`) | 3-5 | `curl` the pinned v1.20.1 `cargo-binstall-x86_64-unknown-linux-musl.tgz`; `sha256sum -c` against the hardcoded SHA256; single-file `tar` + `mv` to `$CARGO_HOME/bin` | Bootstrap `cargo-binstall` as infra (I-INFRA1 / I-CARGO1) — the installer for the rest of the cargo ecosystem. Not a `packages.toml` entry. No cache mount (binstall has no persistent download cache). | `/tmp/build-home/.zshenv`, `ARG CARGO_BINSTALL_VERSION`/`CARGO_BINSTALL_SHA256` |
-| `toolchain` (`FROM build-prepass`) | 3-6 | `COPY --from=deps layer_3/cargo.txt`; `cargo binstall --only-signed -y ${=pkgs}` | Install the Layer 3 build-time cargo tool set (currently `topgrade`) from the generated list (`manager = "cargo"`, `layer = 3` only) via signed prebuilt binaries. Per [`24-rust-packages-rule.md`](24-rust-packages-rule.md) §3, layer=3 entries MUST ship a signed prebuilt; unsigned-only/source-only tools are `layer = 6` (runtime-manual). No cache mount (binstall resolves via the crates.io HTTP API, not the registry/git index). | `/tmp/build-home/.zshenv`, `dependencies/layer_3/cargo.txt` |
+| `toolchain` (`FROM build-prepass`) | 3 | `rustup-init` (3-2), mise-managed languages (3-3), `cargo-binstall` (3-4), cargo tools (3-5); cache mounts on `$CARGO_HOME/{registry,git}` (4-1/4-2 only; binstall uses the crates.io HTTP API) | Install rustup, mise-managed languages, and cargo binaries under XDG-compliant paths. | `/tmp/build-home/.zshenv`, `dependencies/layer_3/cargo.txt` |
+| `toolchain` (`FROM build-prepass`) | 3-3 | Copy `/tmp/build-home/.config/mise/config.toml` to `${XDG_CONFIG_HOME}/mise/config.toml`; `mise install --yes` with `~/.cache/mise` cache mount | Install mise-managed language defaults from the rendered mise config. | `/tmp/build-home/.zshenv`, [`dot_config/mise/config.toml`](../../dot_config/mise/config.toml) (rendered to `/tmp/build-home/.config/mise/config.toml`) |
+| `toolchain` (`FROM build-prepass`) | 3-4 | `curl` the pinned v1.20.1 `cargo-binstall-x86_64-unknown-linux-musl.tgz`; `sha256sum -c` against the hardcoded SHA256; single-file `tar` + `mv` to `$CARGO_HOME/bin` | Bootstrap `cargo-binstall` as infra (I-INFRA1 / I-CARGO1) — the installer for the rest of the cargo ecosystem. Not a `packages.toml` entry. No cache mount (binstall has no persistent download cache). | `/tmp/build-home/.zshenv`, `ARG CARGO_BINSTALL_VERSION`/`CARGO_BINSTALL_SHA256` |
+| `toolchain` (`FROM build-prepass`) | 3-5 | `COPY --from=deps layer_3/cargo.txt`; `cargo binstall --only-signed -y ${=pkgs}` | Install the Layer 3 build-time cargo tool set (currently `topgrade`) from the generated list (`manager = "cargo"`, `layer = 3` only) via signed prebuilt binaries. Per [`24-rust-packages-rule.md`](24-rust-packages-rule.md) §3, layer=3 entries MUST ship a signed prebuilt; unsigned-only/source-only tools are `layer = 6` (runtime-manual). No cache mount (binstall resolves via the crates.io HTTP API, not the registry/git index). | `/tmp/build-home/.zshenv`, `dependencies/layer_3/cargo.txt` |
 | `aur` (`FROM toolchain`) | 4-1 | `git clone` paru PKGBUILD + `makepkg -si` (sources `/tmp/build-home/.zshenv`; cache mounts on `~/.cache/paru` + `/var/cache/pacman/pkg` + `$CARGO_HOME/{registry,git}`) | Bootstrap `paru` from the AUR as non-root `${USERNAME}`. | AUR `paru` PKGBUILD, Layer 1-4 sudoers |
 | `aur` (`FROM toolchain`) | 4-2 | `paru -S --noconfirm --needed` | Install the Layer 4 AUR package set from the generated list (`manager = "paru"` entries only). | `dependencies/layer_4/paru.txt` |
 | `runtime` (`FROM aur`) | 5-1 | `FROM aur AS runtime` | Runtime stage base (inherits the `aur` image). | - |
@@ -36,11 +37,19 @@ stage; within a stage, numbered **sub-layers** (`Layer N-M`) group related
 
 - The image is fully implemented across 5 stages. `no-config-base`
   is retired.
-- `base` Layer 1-5 provisions XDG-compliant directories so the four
-  Podman named volumes (cargo / rustup / mise / gnupg) and the host bind
-  for the chezmoi source root attach without overlay-hiding image
+- `base` Layer 1-5 provisions XDG-compliant directories so the five
+  Podman named volumes (cargo / rustup / mise / gnupg / ssh) and the host
+  bind for the chezmoi source root attach without overlay-hiding image
   content; the gnupg mountpoint (`GNUPGHOME`) is provisioned at `0700`
-  in Layer 1-6.
+  in Layer 1-6 and the SSH mountpoint (`~/.ssh`) at `0700` in Layer 1-7.
+  Together these are six runtime mounts (one bind + five named volumes).
+- `base` Layer 1-2 also comments out any already-enabled
+  `/etc/locale.gen` entries, appends exactly `ja_JP.UTF-8 UTF-8` and
+  `en_US.UTF-8 UTF-8`, then runs `locale-gen` before any later stage
+  sources the rendered `.zshenv`. This keeps the image-level locale archive
+  aligned with `dot_zshenv.tmpl`, which exports `LANG=ja_JP.UTF-8`,
+  `LC_CTYPE=en_US.UTF-8`, and `LANGUAGE=ja_JP.UTF-8:en_US.UTF-8:C`,
+  without generating extra base-image locales.
 - The `aur` stage (Layer 4) bootstraps `paru` from the AUR via
   `makepkg -si` as non-root `${USERNAME}`, then installs the Layer 4
   AUR package set from `dependencies/layer_4/paru.txt`. `paru` itself is
@@ -101,6 +110,11 @@ A new stage may land only when:
     removes the files that Layer 1-3's `usermod -l ... -d
     /home/${USERNAME} -m builder` moved out of the base image's `builder`
     home (chezmoi does not manage them, so `chezmoi apply` never would).
+5c. `make up` passes Podman `--init`, and the entrypoint handles `SIGTERM`
+    while startup commands are still running. Re-running `make up`
+    (`--replace`) and `podman stop dotfiles-manjaro` stop the container
+    without the `StopSignal SIGTERM failed ... resorting to SIGKILL`
+    warning.
 6. After `make up`, `podman exec <container> zsh -ic 'echo $CARGO_HOME'`
    outputs `~/.local/share/cargo` (XDG-compliant). The toolchain PATH/HOMEs
    are now **split across phases**: `.zshenv` carries them only at build
@@ -127,21 +141,27 @@ A new stage may land only when:
    > into the image (acceptance #5a) is safe — build-time and runtime
    > renders are byte-identical. Re-introducing the `build_mode` branch
    > to actually omit the block at runtime is tracked separately.
-7. After `make up`, `~/.local/share/chezmoi/.git` is visible inside the
+7. The final image generates exactly the `/etc/locale.gen` entries used by
+   `.zshenv`: the only uncommented entries are `ja_JP.UTF-8 UTF-8` and
+   `en_US.UTF-8 UTF-8`; `locale -a` inside
+   `localhost/dotfiles-manjaro:latest` includes `ja_JP.utf8` and
+   `en_US.utf8`; and `locale charmap` under a `zsh` command environment
+   reports `UTF-8`.
+8. After `make up`, `~/.local/share/chezmoi/.git` is visible inside the
    container (host bind verified).
-8. `make down && make up` preserves toolchain binaries (named-volume
+9. `make down && make up` preserves toolchain binaries (named-volume
    persistence verified).
-9. After `make up`, `podman exec <container> paru --version` prints a
+10. After `make up`, `podman exec <container> paru --version` prints a
    paru version string as `${USERNAME}` (AUR bootstrap succeeded);
    `nvim --version` (or whatever AUR package is listed in
    `layer_4/paru.txt`) is likewise installed.
-10. `podman build --target aur` succeeds in isolation and the resulting
+11. `podman build --target aur` succeeds in isolation and the resulting
     image has `paru` on PATH.
-11. Every `aur`-stage `RUN` carries `--mount=type=cache` on both
+12. Every `aur`-stage `RUN` carries `--mount=type=cache` on both
     `/var/cache/pacman/pkg` and `/home/${USERNAME}/.cache/paru` (AUR +
     pacman cache reuse, resolving Q1); the bootstrap RUN also mounts the
     cargo registry/git caches (paru is a Rust package).
-12. After `make up`, `${USERNAME}` can run `gpg --version` and
+13. After `make up`, `${USERNAME}` can run `gpg --version` and
     `gpg-agent --version`; `echo $GNUPGHOME` resolves to
     `~/.local/share/gnupg`; `stat -c '%a %U:%G'
     ~/.local/share/gnupg` prints `700 <USERNAME>:<group>` (gpg strict
@@ -151,11 +171,15 @@ A new stage may land only when:
     volumes). No key material is baked into the image (the Layer 1-6
     directory is empty in the built image). See
     [`implementations/2026-07-01-gnupg-container-setup-design.md`](implementations/2026-07-01-gnupg-container-setup-design.md).
-13. After `make up`, `podman exec <container> zsh -ic 'go version; python --version; deno --version'` prints a version for each (mise shims active via `dot_zshenv.tmpl`); `make down && make up` preserves them (the `dotfiles_mise` named volume persists — analog of criterion #8 for cargo/rustup). An empty `layer_3/mise.txt` does not break the build (the `if [ -n "$pkgs" ]` guard + `(3, "mise")` in `EXPECTED_EMPTY_FILES`).
-14. After `make up` (preceded by `podman volume rm dotfiles_cargo` on an existing `dotfiles_cargo` volume — see the rollout note in #16; do NOT use `make clean`, which also wipes `dotfiles_gnupg`/`dotfiles_mise`/`dotfiles_rustup`), `podman exec <container> zsh -ic 'cargo binstall -V'` prints a version and `podman exec <container> zsh -ic 'which topgrade'` resolves. `cargo-binstall` is infra (I-CARGO1), not a `packages.toml` entry.
-15. An empty `layer_3/cargo.txt` does not break the build (the Layer 3-6 `if [ -n "$pkgs" ]` guard + `(3, "cargo")` in `EXPECTED_EMPTY_FILES`).
-16. `make down && make up` preserves cargo / rustup binaries (the `dotfiles_cargo` / `dotfiles_rustup` named volumes persist — analog of criterion #8). **Rollout:** an existing `dotfiles_cargo` volume will NOT pick up new `$CARGO_HOME/bin` binaries on `make up`; run `podman volume rm dotfiles_cargo` (NOT `make clean` — `make clean` also removes the image and the `dotfiles_gnupg`/`dotfiles_mise`/`dotfiles_rustup` volumes) before the first `make up` after the cargo-binstall/topgrade change.
-17. A `layer = 3` cargo entry with no signed prebuilt fails `cargo binstall --only-signed -y` loudly at Layer 3-6 (recovery: move to `layer = 6` — see [`24-rust-packages-rule.md`](24-rust-packages-rule.md) §3).
+14. After `make up`, `podman exec <container> zsh -ic 'go version; python --version; deno --version'` prints a version for each (mise shims active via `dot_zshenv.tmpl`); `make down && make up` preserves them (the `dotfiles_mise` named volume persists — analog of criterion #8 for cargo/rustup). Layer 3 installs mise-managed languages by copying `/tmp/build-home/.config/mise/config.toml` into the build user's `${XDG_CONFIG_HOME}/mise/config.toml` and running `mise install --yes`.
+15. After `make up` (preceded by `podman volume rm dotfiles_cargo` on an existing `dotfiles_cargo` volume — see the rollout note in #17; do NOT use `make clean`, which also wipes `dotfiles_gnupg`/`dotfiles_mise`/`dotfiles_rustup`), `podman exec <container> zsh -ic 'cargo binstall -V'` prints a version and `podman exec <container> zsh -ic 'which topgrade'` resolves. `cargo-binstall` is infra (I-CARGO1), not a `packages.toml` entry.
+16. An empty `layer_3/cargo.txt` does not break the build (the Layer 3-5 `if [ -n "$pkgs" ]` guard + `(3, "cargo")` in `EXPECTED_EMPTY_FILES`).
+17. `make down && make up` preserves cargo / rustup binaries (the `dotfiles_cargo` / `dotfiles_rustup` named volumes persist — analog of criterion #8). **Rollout:** an existing `dotfiles_cargo` volume will NOT pick up new `$CARGO_HOME/bin` binaries on `make up`; run `podman volume rm dotfiles_cargo` (NOT `make clean` — `make clean` also removes the image and the `dotfiles_gnupg`/`dotfiles_mise`/`dotfiles_rustup` volumes) before the first `make up` after the cargo-binstall/topgrade change.
+18. A `layer = 3` cargo entry with no signed prebuilt fails `cargo binstall --only-signed -y` loudly at Layer 3-5 (recovery: move to `layer = 6` — see [`24-rust-packages-rule.md`](24-rust-packages-rule.md) §3).
+19. After `make up`, `podman exec <container> zsh -ic 'ssh -V'` succeeds.
+20. After `make up`, `stat ~/.ssh` prints `0700` and is `${USERNAME}`-owned.
+21. `make down && make up` preserves key material written into `dotfiles_ssh` (test key).
+22. **Rollout:** existing deployments must run **`make build`** (Layer 1-7) before the first `make up` after this change; to reset SSH keys only use `podman volume rm dotfiles_ssh` (NOT `make clean` — also wipes `dotfiles_gnupg` / cargo / mise / rustup).
 
 ## Open questions
 

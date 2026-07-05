@@ -44,7 +44,7 @@ usual and are out of scope here.
   especially beta / latest / source-driven ones.
 - **Failure mode + recovery:** if a `layer = 3` cargo entry has no
   signed prebuilt source, `cargo binstall --only-signed -y` fails at
-  Layer 3-6 with a "no signed artifact found" error. Recovery: move the
+  Layer 3-5 with a "no signed artifact found" error. Recovery: move the
   entry to `layer = 6` (runtime-manual; install via `cargo install
   --locked` or `cargo binstall` without `--only-signed` at the
   operator's discretion). The generator cannot pre-validate
@@ -55,7 +55,7 @@ usual and are out of scope here.
 
 `cargo-binstall` itself is **infrastructure** (Containerfile bootstrap,
 NOT a `packages.toml` entry), extending the curl-bootstrap precedent of
-`rustup` (spec 21 row 3-2) / `mise` (row 3-3), now formalized as
+`rustup` (spec 21 row 3-2), now formalized as
 [`20-container-rules.md`](20-container-rules.md) `I-INFRA1` with
 `I-CARGO1` as its cargo instance. The bootstrap is version-pinned +
 SHA256-gated (currently v1.20.1, SHA256

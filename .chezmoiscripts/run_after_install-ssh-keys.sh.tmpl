@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+{{- if and (not .build_mode) (eq .runtime "container") }}
+set -euo pipefail
+
+ssh_dir="${HOME}/.ssh"
+mkdir -p "$ssh_dir"
+chmod 700 "$ssh_dir"
+umask 077
+
+tmp_files=()
+cleanup() {
+  if [ "${#tmp_files[@]}" -gt 0 ]; then
+    rm -f "${tmp_files[@]}"
+  fi
+}
+trap cleanup EXIT
+
+write_key_file() {
+  local destination="$1"
+  local mode="$2"
+  local tmp
+
+  tmp="$(mktemp "${ssh_dir}/.import.XXXXXX")"
+  tmp_files+=("$tmp")
+  cat > "$tmp"
+  chmod "$mode" "$tmp"
+  mv "$tmp" "$destination"
+}
+
+fetch_attachment_file() {
+  local item="$1"
+  local attachment="$2"
+  local destination="$3"
+  local mode="$4"
+  local tmp
+
+  if [ -z "${BW_SESSION:-}" ]; then
+    echo "ssh-key-import: BW_SESSION is missing; cannot import ${attachment}." >&2
+    exit 1
+  fi
+
+  tmp="$(mktemp "${ssh_dir}/.import.XXXXXX")"
+  tmp_files+=("$tmp")
+  bw get attachment "$attachment" --itemid "$item" --session "$BW_SESSION" --raw > "$tmp"
+  chmod "$mode" "$tmp"
+  mv "$tmp" "$destination"
+}
+
+normalize_key_file() {
+  local path="$1"
+
+  perl -0pi -e 's/\r\n/\n/g; s/\r/\n/g' "$path"
+}
+
+{{- if .ssh_import_enabled }}
+{{- range .ssh_keys }}
+{{- if and .name .item .private_attachment }}
+key_name={{ .name | quote }}
+private_path="${ssh_dir}/${key_name}"
+public_path="${private_path}.pub"
+
+if [ -e "$private_path" ]; then
+  echo "ssh-key-import: Skipping existing SSH key ${key_name}."
+  if [ ! -e "$public_path" ]; then
+    echo "ssh-key-import: Repairing missing public key ${key_name}.pub."
+{{- if .public_attachment }}
+    fetch_attachment_file {{ .item | quote }} {{ .public_attachment | quote }} "$public_path" 644
+    normalize_key_file "$public_path"
+{{- else }}
+    ssh-keygen -y -f "$private_path" > "$public_path"
+    chmod 644 "$public_path"
+{{- end }}
+  fi
+else
+  echo "ssh-key-import: Importing SSH key ${key_name} from Bitwarden."
+  fetch_attachment_file {{ .item | quote }} {{ .private_attachment | quote }} "$private_path" 600
+  normalize_key_file "$private_path"
+
+{{- if .public_attachment }}
+  fetch_attachment_file {{ .item | quote }} {{ .public_attachment | quote }} "$public_path" 644
+  normalize_key_file "$public_path"
+{{- else }}
+  ssh-keygen -y -f "$private_path" > "$public_path"
+  chmod 644 "$public_path"
+{{- end }}
+
+  derived_public="$(mktemp "${ssh_dir}/.import.XXXXXX")"
+  tmp_files+=("$derived_public")
+  if ssh-keygen -y -f "$private_path" > "$derived_public"; then
+    if ! cmp -s "$derived_public" "$public_path"; then
+      rm -f "$private_path" "$public_path"
+      echo "ssh-key-import: public key mismatch for ${key_name}; removed imported files." >&2
+      exit 1
+    fi
+  else
+    echo "ssh-key-import: imported private key ${key_name} could not derive a public key." >&2
+    exit 1
+  fi
+fi
+{{- end }}
+{{- end }}
+{{- else }}
+echo "ssh-key-import: disabled; set ssh_import_enabled=true after configuring Bitwarden item metadata."
+{{- end }}
+{{- else }}
+exit 0
+{{- end }}

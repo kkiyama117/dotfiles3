@@ -9,7 +9,7 @@
 
 | Name | Status | Trigger | Inputs | Outputs |
 |---|---|---|---|---|
-| dependency generation | active | `make gen-deps` | `dependencies/packages.toml` | `dependencies/layer_<N>/<manager>.txt` (layers >= 1; `pacman`/`paru`/`nix`/`uv`/`cargo`/`mise`) + AUTO-GEN block in [`02-installed-programs.md`](02-installed-programs.md) |
+| dependency generation | active | `make gen-deps` | `dependencies/packages.toml` | `dependencies/layer_<N>/<manager>.txt` (layers >= 1; `pacman`/`paru`/`nix`/`uv`/`cargo`; mise language defaults live in `dot_config/mise/config.toml`) + AUTO-GEN block in [`02-installed-programs.md`](02-installed-programs.md) |
 | generator tests | active | `make test-deps` | `programs/generate_deps/main.py` + `tests/` | pytest pass/fail (no output files) |
 | container build | active | `make build` | `Containerfile`, `dependencies/layer_<N>/<manager>.txt`, `HOST_UID`/`HOST_GID` | Podman image |
 | bitwarden auth | manual | `bw login --apikey` + `bw unlock --raw` (shell) | `BW_CLIENTID`/`BW_CLIENTSECRET` (shell env) | `BW_SESSION` in shell env |

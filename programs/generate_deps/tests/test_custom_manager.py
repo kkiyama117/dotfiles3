@@ -5,8 +5,8 @@ appear in the spec 02 AUTO-GEN doc block and satisfy invariant I5) but
 are NOT installed from a generated `layer_<N>/<manager>.txt` list — they
 have a bespoke install path in the Containerfile (e.g. `paru`, which is
 bootstrapped via `makepkg` and therefore cannot also be a `paru -S`
-target). `custom` is doc-only, no .txt emitted (`mise` is now a list
-manager — see `test_mise_manager.py`).
+target). `custom` is doc-only, no .txt emitted. Mise language defaults
+live in dot_config/mise/config.toml, outside packages.toml.
 """
 
 from __future__ import annotations

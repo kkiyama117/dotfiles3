@@ -10,9 +10,9 @@ curl
 git
 git-delta  # git-delta — syntax-highlighting pager for git diff/blame/log (core.pager/pager.* in ~/.config/git/config)
 gnupg  # GnuPG (`gpg` / `gpg-agent`); honors GNUPGHOME from .zshenv
+mise  # mise — language version manager
 openssh
 pinentry  # pinentry frontends (tty/curses) + default wrapper; hard-deps libsecret (library only, no daemon)
-rsync
 sheldon  # shell plugin/source manager
 sudo
 zsh  # user's login shell

@@ -20,6 +20,29 @@ set -euo pipefail
 
 CHEZMOI_SOURCE="${HOME}/.local/share/chezmoi"
 RUNTIME_CONFIG="${HOME}/.config/chezmoi/chezmoi.toml"
+child_pid=""
+
+terminate() {
+  trap - TERM INT
+  if [[ -n "$child_pid" ]]; then
+    kill -TERM "$child_pid" 2>/dev/null || true
+  fi
+  exit 143
+}
+
+run_interruptible() {
+  "$@" &
+  child_pid=$!
+  if wait "$child_pid"; then
+    child_pid=""
+    return 0
+  fi
+  local rc=$?
+  child_pid=""
+  return "$rc"
+}
+
+trap terminate TERM INT
 
 if [[ ! -e "$CHEZMOI_SOURCE/.git" ]]; then
   echo "entrypoint: $CHEZMOI_SOURCE is not a chezmoi source (no .git)." >&2
@@ -46,7 +69,7 @@ fi
 # not appear in the container (e.g. credential.helper=libsecret — the
 # container has no keyring daemon; see dot_config/git/config.tmpl I-GIT3).
 export DOTFILES_RUNTIME=container
-chezmoi execute-template --init \
+run_interruptible chezmoi execute-template --init \
   < "$CONFIG_TEMPLATE" \
   > "$RUNTIME_CONFIG"
 
@@ -86,7 +109,7 @@ if [ -f /run/secrets/bw_password ]; then
   export BW_SESSION
 fi
 
-chezmoi apply --no-tty --force
+run_interruptible chezmoi apply --no-tty --force
 
 # Scrub the Bitwarden credentials from this process's environment before
 # exec'ing CMD — unconditionally within the auth-ran path (gated on the

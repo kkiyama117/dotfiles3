@@ -1,7 +1,7 @@
 # Set up SSH file keys in the container (named volume at `~/.ssh`)
 
 **Date:** 2026-07-03
-**Status:** open
+**Status:** closed (see [result-log](2026-07-03-phase-ssh-container-setup.md))
 **Related:** [deferred: chezmoi SSH config + GPG auth](2026-07-03-ssh-container-config-setup.md), [deferred: Bitwarden key import](2026-07-03-ssh-bitwarden-import.md), [GPG plumbing (closed)](2026-07-01-gnupg-container-setup.md), [GPG manual import (closed)](2026-07-02-gnupg-host-key-import.md), [spec 20](../specifications/20-container-rules.md), [spec 21](../specifications/21-container-build-flow.md), [spec 22](../specifications/22-container-build-pre-required-envs.md), [spec 02](../specifications/02-installed-programs.md), [host config inventory §13](../references/host_config_list.md)
 
 ## Context
@@ -46,11 +46,10 @@ GPG-agent SSH wiring or chezmoi-managed Host config (deferred siblings).
 4. `make down && make up` preserves key material written into the volume
    (named-volume persistence verified with a test key pair — spec 21 acceptance
    #8 analog).
-5. `.chezmoiignore` excludes **secret key material** under `.ssh/` (patterns
-   such as `.ssh/id_*`, `.ssh/*_ed25519`, `.ssh/*_rsa`, `.ssh/*_ecdsa`, and
-   sk variants). Chezmoi must not manage private keys. The entire `.ssh` tree
-   is **not** ignored (unlike `.local/share/gnupg`) so a future config issue can
-   manage non-secret files under `.ssh/`.
+5. `.chezmoiignore` excludes **everything under `~/.ssh/` except `~/.ssh/config`**
+   (`.ssh/*` then `!.ssh/config`). Chezmoi manages only the config file; all
+   other entries (keys, `known_hosts`, `config.d/*`) are volume-owned and
+   never touched by chezmoi (I-SSH4).
 6. No SSH private key material is baked into any image layer (spec 20 I4 / spec
    13 I-S4 hold); image inspection uses an entrypoint override and confirms
    `~/.ssh` is empty before first volume seed.
@@ -71,8 +70,9 @@ GPG-agent SSH wiring or chezmoi-managed Host config (deferred siblings).
 - **I-SSH1:** `dotfiles_ssh` named volume at `~/.ssh`; no host bind mount.
 - **I-SSH2:** Layer 1-7 pre-creates `0700` owner-correct mountpoint.
 - **I-SSH3:** No private key material in image layers.
-- **I-SSH4:** `.chezmoiignore` excludes secret key filename patterns under
-  `.ssh/`; chezmoi never manages private keys.
+- **I-SSH4:** `.chezmoiignore` excludes everything under `~/.ssh/` except
+  `~/.ssh/config` (`.ssh/*` + `!.ssh/config`); chezmoi manages only the config
+  file — keys, `known_hosts`, `config.d/*` are volume-owned.
 - **I-SSH5:** `make clean` removes `dotfiles_ssh`; rollout docs warn that
   targeted `podman volume rm dotfiles_ssh` resets keys only (preserves
   `dotfiles_gnupg` — do **not** recommend `make clean` for SSH-only reset; cargo
@@ -101,6 +101,18 @@ GPG-agent SSH wiring or chezmoi-managed Host config (deferred siblings).
   `podman volume rm dotfiles_ssh` (NOT `make clean`, which also wipes GPG).
 - **Verification sketch:** generate or copy a test ed25519 key into the volume;
   `make down && make up`; confirm `stat` perms and key still present.
+
+## Status update (2026-07-03 — complete)
+
+Complete. Plumbing + spec sync implemented (2 commits 9b9362a / 9f3d2f8) +
+task-review Minor 1-2 fix (e0d38e5); implementation task review Approved (no
+Critical/Important). Phase 3 build green: `make build` (Layer 1-7 new); image
+inspect `~/.ssh` = `0700 kiyama:kiyama`, empty; `ssh -V` = `OpenSSH_10.3p1`;
+manual `podman cp` import + `make down && make up` persistence verified (test
+ed25519 key survives, same fingerprint); GPG key in `dotfiles_gnupg`
+preserved (no regression). Spec 25 §1-3 normative; §4+ deferred to config
+issue. See the
+[result-log](2026-07-03-phase-ssh-container-setup.md).
 
 ## Status update (2026-07-03)
 

@@ -1,0 +1,8 @@
+Host github.com
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/main
+    IdentitiesOnly yes
+
+# Include local SSH configs (especially for containers)
+Include ~/.ssh/config.d/local/*

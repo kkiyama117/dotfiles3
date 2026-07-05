@@ -17,6 +17,11 @@ labels directly.
 - I1: **Rootless Podman only.** The container is never built or run as root on the host.
 - I2: **`--userns=keep-id` is required** for any run that bind-mounts host files. The host UID/GID survive the user-namespace remap so bind-mount ownership (chezmoi-source, home dir) is preserved.
 - I3: **No `:U` volume flag.** It recursively `chown`s the host directory, which is destructive.
+- I-RUN1: **`make up` uses Podman `--init`.** The runtime command is a
+  long-lived keepalive (`sleep infinity`), which must not be PID 1 because
+  PID 1 ignores default `SIGTERM` handling. Podman's init process forwards
+  stop signals so `make up --replace`, `podman stop`, and `make down` exit
+  cleanly without falling back to `SIGKILL`.
 
 ### Secrets (build-time & runtime)
 
@@ -37,6 +42,7 @@ labels directly.
 - I9: **`/run/user/${HOST_UID}` is baked at Stage 5 (Layer 5-2)** (root `install -d -m 0700 -o ${HOST_UID} -g ${HOST_GID}`). The container has no `pam_systemd` to create the XDG runtime dir, but `/run` is rootfs (not tmpfs) under `podman run --userns=keep-id`, so the build-time dir persists and is writable at runtime. This lets the shared `.zshenv` line `export XDG_RUNTIME_DIR=/run/user/$UID` work identically on host (systemd creates it) and container, so tools that `MkdirAll($XDG_RUNTIME_DIR)` (e.g. `chezmoi cd`) don't fail with `mkdir /run/user/<uid>: permission denied`.
 - I10: **The final image bakes a minimum `$HOME`** (`~/.zshenv` only — **NOT** `~/.config/chezmoi/chezmoi.toml`), copied in Stage 5 (Layer 5-2) from the Stage 2 `build-prepass` render before the scratch tree is dropped (Layer 5-3). The build-prepass `chezmoi.toml` (`build_mode = true`, rendered from `.chezmoi.toml.tmpl` by `chezmoi execute-template --init` with `BUILD_MODE=true`, USERNAME-owned) rides the Stage chain into the runtime image and is **stripped** in Layer 5-3; the runtime `~/.config/chezmoi/chezmoi.toml` (`build_mode = false`) is **re-rendered from the same `.chezmoi.toml.tmpl` by the entrypoint** (`BUILD_MODE` unset) as `${USERNAME}` before `chezmoi apply`. `BUILD_MODE` is inline in the Stage 2 `RUN` (not `ENV`), so it never appears in image `Env` / `podman inspect`. This makes the image boot into a **wizard-free, PATH-equipped, shell-usable state independent of the runtime entrypoint** (the shell is usable without the entrypoint, but `chezmoi apply` requires the entrypoint or a manually-created config) — covering (a) `make exec` racing the entrypoint's `chezmoi apply` (an exec'd interactive `zsh` would otherwise find no zsh startup file in `$HOME` and the `zsh/newuser` module would source `/usr/share/zsh/scripts/newuser`, launching the first-run `zsh-newuser-install` wizard; a single `~/.zshenv` suppresses it), and (b) the container being exec'd with the entrypoint bypassed (e.g. `podman run --entrypoint ...`). Safe because `dot_zshenv.tmpl` has no chezmoi template directives and no `build_mode` branch, so the Stage 2 render is byte-identical to the runtime `chezmoi apply --force` output (idempotent overwrite). See spec 21 acceptance #5a.
 - I11: **No `/etc/skel` bash remnants in `$HOME`** (`.bashrc`, `.bash_profile`, `.bash_logout`, `.profile`). Stage 5 removes the files that Layer 1-3's `usermod -l ... -d /home/${USERNAME} -m builder` moves out of the base image's `builder` home; these are not chezmoi-managed, so `chezmoi apply` would never remove them. See spec 21 acceptance #5b.
+- I12: **Container locales match `.zshenv` exactly.** Layer 1-2 generates only `ja_JP.UTF-8` and `en_US.UTF-8`, matching `LANG` / `LC_CTYPE` in `dot_zshenv.tmpl`; detailed build-flow behavior and verification live in spec 21 acceptance #7.
 - I-GPG1: The GPG keyring is persisted via the Podman named volume
   `dotfiles_gnupg` mounted at `~/.local/share/gnupg` (= `GNUPGHOME`
   from `dot_zshenv.tmpl`), the same pattern as `dotfiles_cargo` /
@@ -62,6 +68,41 @@ labels directly.
 - I-GPG5: `.chezmoiignore` lists `.local/share/gnupg` so chezmoi never
   manages the keyring (consistent with the `cargo` / `rustup` / `mise` /
   `chezmoi` ignore entries).
+
+- I-SSH1: The SSH client keyring is persisted via the Podman named volume
+  `dotfiles_ssh` mounted at `~/.ssh`, the same pattern as `dotfiles_gnupg`
+  (different path, same mechanics). The image carries no key material
+  (extends I4 / [`13-secret-management.md`](13-secret-management.md)
+  I-S4: keys live only in the runtime volume). No host `~/.ssh` bind mount.
+- I-SSH2: `~/.ssh` is baked owner-correct at `0700` in Containerfile
+  Layer 1-7 (extension of the Layer 1 XDG-directory provisioning,
+  parallel to Layer 1-6 for gnupg). Owner-correct provisioning prevents
+  Podman from root-creating an absent mountpoint (the `/home` re-own
+  failure mode, Layer 5-2).
+- I-SSH3: No SSH private key material is baked into any image layer. The
+  build-time pre-pass (Stage 2, `build_mode = true`) never touches
+  `~/.ssh` (the Layer 1-7 directory is empty at build time); runtime keys
+  live only in the `dotfiles_ssh` named volume, never in an image layer or
+  `podman inspect`.
+- I-SSH4: `.chezmoiignore` excludes **everything under `~/.ssh/` except
+  `~/.ssh/config`** (`.ssh/*` then `!.ssh/config`). Chezmoi manages only
+  `~/.ssh/config`; all other entries (private/public keys, `known_hosts`,
+  `config.d/*`) are volume-owned and never touched by chezmoi. This is a
+  stricter, single-managed-file policy than the earlier conventional-key-name
+  pattern list (I-GPG5 ignores the whole GPG keyring tree; SSH inverts it —
+  ignore the tree, re-include the one non-secret config file).
+- I-SSH5: `make clean` removes `dotfiles_ssh` alongside the other named
+  volumes. Targeted reset and rollout safety live in spec 21 acceptance
+  #22.
+- I-SSH6: Plumbing phase wires **no** `ssh-agent` in the entrypoint or
+  `dot_zshenv.tmpl`. File keys are used directly via `IdentityFile` /
+  `ssh -i`. Agent wiring (`SSH_AUTH_SOCK`, gpg-agent SSH socket) is
+  deferred to the config issue.
+
+> NOTE: `openssh` is already declared in `dependencies/packages.toml`
+> (`layer = 1`, `has_configs = true`). The `has_configs` flag is
+> structurally accurate, but config sources are unrealized until the
+> deferred config issue populates spec 25 §4+.
 
 - I-GIT1: `~/.config/git/config` is rendered by chezmoi from
   `dot_config/git/config.tmpl`; `[user] name/email/signingkey` are injected
@@ -121,12 +162,14 @@ labels directly.
   install/manage other tools (an installer-of-installers) and which
   ships an official prebuilt binary is curl-bootstrapped in the
   Containerfile and is NOT declared in `packages.toml`. Instances:
-  `rustup` (Layer 3-2), `mise` (Layer 3-3), `cargo-binstall` (Layer 3-5).
+  `rustup` (Layer 3-2), `cargo-binstall` (Layer 3-4). (`mise` is now a
+  regular `pacman` package at Layer 1, not curl-bootstrapped infra; mise-managed
+  languages install at Layer 3-3 from `dot_config/mise/config.toml`.)
   This is the formal carve-out from I5 for installer infra (the
   `paru` `manager = "custom"` doc-only mechanism is a separate,
   package-specific carve-out via I-AUR2).
 - I-CARGO1: **`cargo-binstall` is the cargo instance of I-INFRA1.** It is
-  bootstrapped at Layer 3-5 from a version-pinned (v1.20.1) + SHA256-gated
+  bootstrapped at Layer 3-4 from a version-pinned (v1.20.1) + SHA256-gated
   (`f12954bc382e1d0b2df3fbfb217a05d92c25570e4517841e0613499a24f4594e`)
   prebuilt musl tarball, extracted single-file to `$CARGO_HOME/bin`. Build-time
   cargo tools (`layer = 3`) install via `cargo binstall --only-signed -y`
@@ -151,6 +194,7 @@ labels directly.
 | Build-time env vars (`HOST_UID`, `HOST_GID`, `JOBS`) | [`22-container-build-pre-required-envs.md`](22-container-build-pre-required-envs.md) |
 | GPG key runtime lifecycle (import flow, posture, persistence, gpgsign, future automation) | [`23-container-gnupg-management.md`](23-container-gnupg-management.md) |
 | Rust packages rule (paru vs cargo-binstall vs cargo-install; layer 3 vs layer 6) | [`24-rust-packages-rule.md`](24-rust-packages-rule.md) |
+| Container SSH management (named volume, manual import, persistence, future config/automation) | [`25-container-ssh-management.md`](25-container-ssh-management.md) |
 | Host pre-requirements (Bitwarden `bw`, chezmoi) | [`11-pre-required-env-values.md`](11-pre-required-env-values.md) |
 | Make target contract | [`03-makefile.md`](03-makefile.md) |
 | Chezmoi-in-container gotchas (safe.directory, UID remap) | [`../references/2026-06-25-chezmoi-in-containers.md`](../references/2026-06-25-chezmoi-in-containers.md) |

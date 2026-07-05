@@ -1,8 +1,8 @@
 # Import SSH private keys into the container from Bitwarden at startup
 
 **Date:** 2026-07-03
-**Status:** open (deferred)
-**Related:** [parent plumbing issue](2026-07-03-ssh-container-setup.md), [SSH config (deferred)](2026-07-03-ssh-container-config-setup.md), [spec 13](../specifications/13-secret-management.md), [spec 20](../specifications/20-container-rules.md), [GPG Bitwarden import (deferred sibling)](2026-07-01-gnupg-bitwarden-import.md), [git config setup (closed)](2026-07-01-git-config-setup.md)
+**Status:** in-progress
+**Related:** [design](../specifications/implementations/2026-07-03-ssh-bitwarden-import-design.md), [plan](../plans/2026-07-03-ssh-bitwarden-import-impl.md), [parent plumbing issue](2026-07-03-ssh-container-setup.md), [SSH config (deferred)](2026-07-03-ssh-container-config-setup.md), [spec 13](../specifications/13-secret-management.md), [spec 20](../specifications/20-container-rules.md), [GPG Bitwarden import (deferred sibling)](2026-07-01-gnupg-bitwarden-import.md), [git config setup (closed)](2026-07-01-git-config-setup.md)
 
 ## Context
 
@@ -45,3 +45,7 @@ manual `podman cp`, while keeping the image secret-free.
   closes (volume plumbing must exist first).
 - GPG-over-SSH does **not** replace this issue: file keys remain needed for VPS /
   non-Git Hosts even after the config issue adds Tier 1 GPG auth.
+- Initial implementation ships a disabled `main` sample in
+  `.chezmoidata/ssh_keys.yaml`. Import becomes active only after the maintainer
+  supplies a non-secret Bitwarden item ID / stable item name and sets
+  `ssh_import_enabled: true`.

@@ -8,6 +8,11 @@
 # Secrets MUST NOT live here — chezmoi bakes this file into the image-bound
 # source tree at /var/lib/chezmoi-source. Use Podman secrets for credentials.
 
+# And almost all config of zsh are managed by [`sheldon`]
+# (https://github.com/rossmacarthur/sheldon).
+# This file is for common PATH or config to programs that are called by login
+# shell or before loading `sheldon`.
+
 ################################################################################
 # PATH config(general)
 ################################################################################
@@ -57,9 +62,11 @@
     ## TERM config
     export TERM="${TERM:-xterm-256color}"
   }
-  : "LANG, LC_ALL, TZ" && {
+  : "LANG, TZ" && {
     export LANG="${LANG:-ja_JP.UTF-8}"
-    export LC_ALL="${LC_ALL:-ja_JP.UTF-8}"
+    export LC_CTYPE=en_US.UTF-8
+    export LANGUAGE=ja_JP.UTF-8:en_US.UTF-8:C # fallback
+    #export LC_ALL="${LC_ALL:-ja_JP.UTF-8}" # For debug
     #export TZ=UTC
   }
   : "EDITOR, VISUAL, PAGER" && {
@@ -105,6 +112,7 @@
 # Minimum ZSH config
 ################################################################################
 # Almost all ZSH config should be in dot_zshrc or mise config
+# TODO: Is it really? should we manage these configs here or by sheldon?
 : "ZSH config in zshenv" && {
   export ZDOTDIR="${ZDOTDIR:-$XDG_CONFIG_HOME/zsh}"
   : "ZSH history" && {

@@ -1,3 +1,10 @@
+
+{{- /* Chezmoi config values */ -}}
+{{- $id := index .git.identities .chezmoi.hostname | default .git.identity_default -}}
+{{- $isUseLibsecret := and (not .build_mode) (eq .runtime "host") -}}
+{{- /* `$id` is injected from the chezmoidata. default is git.identity_default */ -}}
+{{- /* but it is overridden by .git.identities (default: empty) */ -}}
+{{- /* Chezmoi config values END */ -}}
 ; main
 [core]
   editor = nvim
@@ -5,9 +12,9 @@
   quotepath = false
   autocrlf = input
 [user]
-  name = {{ .git.identity_default.name }}
-  email = {{ .git.identity_default.email }}
-  signingkey = {{ .git.identity_default.signingkey }}
+  name = {{ $id.name }}
+  email = {{ $id.email }}
+  signingkey = {{ $id.signingkey }}
 [init]
   defaultBranch = main
 [commit]
@@ -26,12 +33,14 @@
   wt = worktree
   wtl = worktree list
   wta = worktree add -b
-{{- if and (not .build_mode) (eq .runtime "host") }}
+
+{{- if $isUseLibsecret -}}
 ; cred — libsecret (host has a keyring daemon; the container does not, so
 ; this section is host-runtime only; see I-GIT3)
 [credential]
   helper = libsecret
-{{ end -}}
+{{- end -}}
+
 ; pager
 [diff]
   colorMoved = default
