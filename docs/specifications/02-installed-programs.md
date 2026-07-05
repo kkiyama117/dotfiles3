@@ -94,6 +94,7 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `cargo-edit` | cargo | no | provides cargo-add / cargo-rm / cargo-set-version / cargo-upgrade binaries (no cargo-edit binary by upstream design) |
 | `cargo-outdated` | cargo | no | Detect outdated Rust crate dependencies |
 | `topgrade` | cargo | no | multi-package-manager updater; build-time cargo tool (signed prebuilt via cargo-binstall --only-signed) |
+| `cargo-binstall` | custom | no | Install binaries |
 
 #### Layer 4 — install list
 
@@ -102,10 +103,11 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `paru` | custom | no | AUR helper; bootstrapped via makepkg in the aur stage (custom install path, not in paru.txt) |
 | `rsync` | pacman | no |  |
 | `bat` | paru | no | Alternative `cat` |
+| `lazygit` | paru | yes | TUI for git |
 | `neovim-git` | paru | no | neovim built from upstream git master (AUR); first concrete AUR package |
 | `pastel` | paru | no | color utility |
 | `pueue` | paru | no | task queue daemon |
-| `starship` | paru | no | zsh prompt theme manager |
+| `starship` | paru | yes | zsh prompt theme manager |
 | `tmux` | paru | no | tmux multiplexer |
 | `wired` | paru | no | notification daemon |
 

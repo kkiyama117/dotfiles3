@@ -216,6 +216,14 @@ has_configs = false
 description = "Alternative `cat`"
 
 [[tool]]
+name = "lazygit"
+manager = "paru"
+layer = 4
+# `~/.config/lazygit/config.toml`. depends on `neovim` and `git-delta`.
+has_configs = true
+description = "TUI for git"
+
+[[tool]]
 name = "neovim-git"
 manager = "paru"
 layer = 4
