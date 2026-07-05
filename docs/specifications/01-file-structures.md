@@ -31,6 +31,9 @@ the map of which top-level path serves which concern.
 │   │   └── ignore       # chezmoi-managed ~/.config/git/ignore (global gitignore; static, generic toptal patterns)
 │   └── zsh/
 │       └── dot_zshrc.tmpl  # chezmoi-managed ~/.config/zsh/.zshrc (runtime toolchain block)
+├── dot_local/          # chezmoi-managed ~/.local/ (XDG data/state, rare static configs only)
+│   ├── share/cargo/config.toml    # chezmoi-managed ~/.local/share/cargo/config.toml
+│   └── share/cargo/binstall.toml  # chezmoi-managed ~/.local/share/cargo/binstall.toml 
 ├── (Other dotfiles)    # chezmoi-managed ~/(other dotfiles)
 ├── .chezmoiignore      # chezmoi ignore rules
 ├── .chezmoi.toml.tmpl  # chezmoi config template (build_mode via BUILD_MODE env; rendered by `chezmoi execute-template --init`)
@@ -85,6 +88,11 @@ the map of which top-level path serves which concern.
 - **I-FS5: `docs/` is placement-governed by
   [`00-document-management.md`](00-document-management.md).** No ad-hoc files
   outside the documented subdirectories.
+- **I-FS6: `dot_*` source entries may include static XDG data configs when the
+  file is non-secret configuration rather than volume-owned tool data.** For
+  example, `dot_local/share/cargo/config.toml` is managed because it is a
+  static linker config, while `$CARGO_HOME/bin`, `registry/`, and `git/` are
+  volume-owned and ignored via `.chezmoiignore`.
 
 ## 4. Open questions
 

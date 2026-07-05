@@ -57,6 +57,19 @@ has_configs = true
 description = "dotfiles manager"
 
 [[tool]]
+name = "clang"
+manager = "pacman"
+layer = 1
+has_configs = false
+
+[[tool]]
+name = "compiler-rt"
+manager = "pacman"
+layer = 1
+has_configs = false
+description = "Compiler runtime libraries for clang"
+
+[[tool]]
 name = "curl"
 manager = "pacman"
 layer = 1
@@ -91,6 +104,13 @@ layer = 1
 # `~/.config/mise/config.toml`
 has_configs = true
 description = "mise — language version manager"
+
+[[tool]]
+name = "mold"
+manager = "pacman"
+layer = 1
+has_configs = false
+description = "Fast linker, mainly to compile Rust"
 
 [[tool]]
 name = "openssh"
@@ -134,6 +154,13 @@ description = "user's login shell"
 # SIGNED prebuilt (cargo-binstall --only-signed compatible); unsigned-only /
 # source-only tools go to layer = 6 (runtime-manual). Run `make gen-deps` to
 # regenerate.
+[[tool]]
+name = "cargo-binstall"
+manager = "custom"
+layer = 3
+has_configs = false
+description = "Install binaries"
+
 [[tool]]
 name = "topgrade"
 manager = "cargo"
@@ -180,6 +207,13 @@ description = "AUR helper; bootstrapped via makepkg in the aur stage (custom ins
 # Rust packages rule — see docs/specifications/24-rust-packages-rule.md for the
 # normative paru / cargo-binstall / cargo-install selection criteria and the
 # build-time (layer=3) vs runtime-manual (layer=6) boundary.
+
+[[tool]]
+name = "bat"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "Alternative `cat`"
 
 [[tool]]
 name = "neovim-git"

@@ -69,6 +69,14 @@ labels directly.
   manages the keyring (consistent with the `cargo` / `rustup` / `mise` /
   `chezmoi` ignore entries).
 
+- I-CARGO2: `.chezmoiignore` excludes everything under
+  `~/.local/share/cargo/` except `~/.local/share/cargo/config.toml` and `~/.local/share/cargo/binstall.toml`
+  Chezmoi manages only the non-secret Cargo config; `$CARGO_HOME/bin`,
+  registry data, and git cache are volume-owned and never touched by
+  chezmoi. The build-prepass renders this config to
+  `/tmp/build-home/.local/share/cargo/(filename).toml`, and the toolchain
+  stage copies it under `$CARGO_HOME/` before Rust/cargo/AUR work.
+
 - I-SSH1: The SSH client keyring is persisted via the Podman named volume
   `dotfiles_ssh` mounted at `~/.ssh`, the same pattern as `dotfiles_gnupg`
   (different path, same mechanics). The image carries no key material
@@ -162,14 +170,14 @@ labels directly.
   install/manage other tools (an installer-of-installers) and which
   ships an official prebuilt binary is curl-bootstrapped in the
   Containerfile and is NOT declared in `packages.toml`. Instances:
-  `rustup` (Layer 3-2), `cargo-binstall` (Layer 3-4). (`mise` is now a
+  `rustup` (Layer 3-3), `cargo-binstall` (Layer 3-5). (`mise` is now a
   regular `pacman` package at Layer 1, not curl-bootstrapped infra; mise-managed
-  languages install at Layer 3-3 from `dot_config/mise/config.toml`.)
+  languages install at Layer 3-4 from `dot_config/mise/config.toml`.)
   This is the formal carve-out from I5 for installer infra (the
   `paru` `manager = "custom"` doc-only mechanism is a separate,
   package-specific carve-out via I-AUR2).
 - I-CARGO1: **`cargo-binstall` is the cargo instance of I-INFRA1.** It is
-  bootstrapped at Layer 3-4 from a version-pinned (v1.20.1) + SHA256-gated
+  bootstrapped at Layer 3-5 from a version-pinned (v1.20.1) + SHA256-gated
   (`f12954bc382e1d0b2df3fbfb217a05d92c25570e4517841e0613499a24f4594e`)
   prebuilt musl tarball, extracted single-file to `$CARGO_HOME/bin`. Build-time
   cargo tools (`layer = 3`) install via `cargo binstall --only-signed -y`
