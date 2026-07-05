@@ -73,11 +73,14 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `base-devel` | pacman | no | base meta-package: gcc, make, binutils, etc. |
 | `bitwarden-cli` | pacman | no | Bitwarden CLI (`bw`); secret backend for chezmoi templates |
 | `chezmoi` | pacman | yes | dotfiles manager |
+| `clang` | pacman | no |  |
+| `compiler-rt` | pacman | no | Compiler runtime libraries for clang |
 | `curl` | pacman | no |  |
 | `git` | pacman | yes |  |
 | `git-delta` | pacman | no | git-delta — syntax-highlighting pager for git diff/blame/log (core.pager/pager.* in ~/.config/git/config) |
 | `gnupg` | pacman | yes | GnuPG (`gpg` / `gpg-agent`); honors GNUPGHOME from .zshenv |
 | `mise` | pacman | yes | mise — language version manager |
+| `mold` | pacman | no | Fast linker, mainly to compile Rust |
 | `openssh` | pacman | yes |  |
 | `pinentry` | pacman | no | pinentry frontends (tty/curses) + default wrapper; hard-deps libsecret (library only, no daemon) |
 | `sheldon` | pacman | yes | shell plugin/source manager |
@@ -98,6 +101,7 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 |---|---|---|---|
 | `paru` | custom | no | AUR helper; bootstrapped via makepkg in the aur stage (custom install path, not in paru.txt) |
 | `rsync` | pacman | no |  |
+| `bat` | paru | no | Alternative `cat` |
 | `neovim-git` | paru | no | neovim built from upstream git master (AUR); first concrete AUR package |
 | `pastel` | paru | no | color utility |
 | `pueue` | paru | no | task queue daemon |
