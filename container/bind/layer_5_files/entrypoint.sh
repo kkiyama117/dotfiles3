@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 #
 # Container entrypoint — runtime chezmoi apply against the host-bound source.
 #
@@ -69,7 +69,9 @@ fi
 # not appear in the container (e.g. credential.helper=libsecret — the
 # container has no keyring daemon; see dot_config/git/config.tmpl I-GIT3).
 export DOTFILES_RUNTIME=container
-run_interruptible chezmoi execute-template --init \
+# Keep this render in the foreground: background jobs in non-interactive shell
+# read redirected stdin from /dev/null, which would create an empty config.
+chezmoi execute-template --init \
   < "$CONFIG_TEMPLATE" \
   > "$RUNTIME_CONFIG"
 
