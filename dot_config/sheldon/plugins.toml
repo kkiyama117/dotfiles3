@@ -17,3 +17,16 @@ defer = "{{ hooks?.pre | nl }}{% for file in files %}zsh-defer source \"{{ file 
 [plugins.zsh-defer]
 github = "romkatv/zsh-defer"
 apply = ['source']
+
+#############################################################################
+# program language load
+#############################################################################
+# Now that it's almost all in `~/.zshenv` and mise
+
+#############################################################################
+# graphic and view
+#############################################################################
+# TODO: to make faster, consider caching it.
+[plugins.starship]
+inline = 'eval "$(starship init zsh)"'
+
