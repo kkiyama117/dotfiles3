@@ -215,6 +215,15 @@ layer = 4
 has_configs = false
 description = "Alternative `cat`"
 
+#[[tool]]
+#name = "kitty"
+## (and `kitty-shell-integration`, `kitty-terminfo`)
+#manager = "paru"
+#layer = 4
+## `~/.kitty/kitty.conf`
+#has_configs = true
+#description = "terminal emulator. Now it is only installed for host, and not for container."
+
 [[tool]]
 name = "lazygit"
 manager = "paru"
