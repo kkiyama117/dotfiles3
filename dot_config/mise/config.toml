@@ -6,7 +6,7 @@
 experimental = true
 
 # set to true to see full installation output, see `MISE_VERBOSE`
-verbose = true
+verbose = false
 
 #legacy_version_file = true
 # legacy_version_file_disable_tools = ['python']
@@ -27,7 +27,7 @@ plugin_autoupdate_last_check_duration = '1 week' # set to 0 to disable updates
 asdf_compat = false
 
 # timeout of HTTP
-http_timeoout = "30s"
+http_timeout = "30s"
 
 # number of plugins or runtimes to install in parallel. The default is `4`.
 jobs = 8
@@ -64,6 +64,7 @@ go = "latest"
 python = "latest"
 julia = "latest"
 node = "latest"
+usage = "latest" # This is only for `mise completion`
 
 [env]
 # Language specific env value are managed by mise. (except Rust)
