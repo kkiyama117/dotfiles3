@@ -268,6 +268,14 @@ has_configs = true
 description = "zsh prompt theme manager"
 
 [[tool]]
+name = "tealdeer"
+manager = "paru"
+layer = 4
+# `~/.config/tealdeer/config.toml`
+has_configs = true
+description = "tldr alternative"
+
+[[tool]]
 name = "tmux"
 manager = "paru"
 layer = 4

@@ -108,6 +108,7 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `pastel` | paru | no | color utility |
 | `pueue` | paru | no | task queue daemon |
 | `starship` | paru | yes | zsh prompt theme manager |
+| `tealdeer` | paru | yes | tldr alternative |
 | `tmux` | paru | no | tmux multiplexer |
 | `wired` | paru | yes | notification daemon |
 
