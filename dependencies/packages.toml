@@ -290,6 +290,13 @@ layer = 4
 has_configs = true
 description = "notification daemon"
 
+[[tool]]
+name = "zoxide"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "Enhanced cd command"
+
 # Layer 6: runtime-manual cargo tools — declared for SoT but NOT build-installed.
 # `cargo-binstall` itself is INFRA (Containerfile bootstrap, not here — see spec 24
 # §4 / spec 20 I-CARGO1). The operator installs these at runtime via

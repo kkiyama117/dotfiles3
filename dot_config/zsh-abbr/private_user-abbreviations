@@ -7,6 +7,12 @@
 # 対話的に `abbr add ...` を実行するとこのファイルへ自動 sync される。
 # 展開したくない場合は SPACE ではなく CTRL-SPACE を使う。
 
+# tree
+abbr "tree"="tre"
+
 # nvim
 abbr "vi"="nvim"
 abbr "vim"="nvim"
+
+# zoxide
+abbr "cd"="z"

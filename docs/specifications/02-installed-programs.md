@@ -111,6 +111,7 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `tealdeer` | paru | yes | tldr alternative |
 | `tmux` | paru | no | tmux multiplexer |
 | `wired` | paru | yes | notification daemon |
+| `zoxide` | paru | no | Enhanced cd command |
 
 #### Layer 6 — runtime-manual (not build-installed)
 
