@@ -51,6 +51,11 @@ This is the exact race I10 anticipates ("`make exec` racing the entrypoint's
    runtime readiness signal, not baking more files.
 5. The existing `container/tests/test_entrypoint.py` signal-forwarding tests
    still pass, and new tests cover the sentinel + the `make up` wait loop.
+6. `make up` refuses to start if the image's entrypoint differs from the
+   source `container/bind/layer_5_files/entrypoint.sh` — a stale image
+   (built before an entrypoint edit) would never write the sentinel and so
+   would always hit `UP_WAIT_TIMEOUT` with a misleading "apply timed out"
+   message. The guard fails fast with `run \`make build\`` instead.
 
 ## Planned fix
 
@@ -63,8 +68,14 @@ This is the exact race I10 anticipates ("`make exec` racing the entrypoint's
   test -f /tmp/chezmoi-applied` once per second up to `UP_WAIT_TIMEOUT`
   (default 120 s). Abort early if the container exits before the sentinel
   appears (apply failed); tail `podman logs` on abort.
-- **Specs:** add invariant I-RUN2 to spec 20 (readiness sentinel + `make up`
-  wait); update the `up` row in spec 03 and its Contract section.
+- **Makefile `_verify_image_fresh`** (prerequisite of `up`): compare the
+  SHA-256 of the source entrypoint to the entrypoint inside the image via
+  `podman run --rm --entrypoint /usr/bin/sha256sum $(IMAGE)
+  /usr/local/bin/entrypoint.sh`. On mismatch or missing image, exit non-zero
+  with `run \`make build\` then re-run \`make up\``. Catches any entrypoint
+  drift, not just the sentinel.
+- **Specs:** add invariant I-RUN2 (readiness sentinel + `make up` wait) and
+  I-RUN3 (image-freshness guard) to spec 20; update the `up` row in spec 03.
 
 ## Notes
 

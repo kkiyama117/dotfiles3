@@ -43,6 +43,21 @@ labels directly.
   readiness signal, NOT baking more files into the image — I10's
   "`~/.zshenv` only" policy is unchanged. See
   [`docs/issues/2026-07-06-make-up-races-chezmoi-apply.md`](../issues/2026-07-06-make-up-races-chezmoi-apply.md).
+- I-RUN3: **`make up` refuses to run a stale image.** The readiness-sentinel
+  wait loop (I-RUN2) only works if the running image's entrypoint actually
+  contains the sentinel logic — an image built before an entrypoint edit
+  would never write `/tmp/chezmoi-applied`, so `make up` would always hit
+  `UP_WAIT_TIMEOUT` and report a misleading "chezmoi apply timed out". To
+  close that foot-gun, `make up` depends on a `_verify_image_fresh` target
+  that compares the SHA-256 of the source
+  `container/bind/layer_5_files/entrypoint.sh` to the entrypoint inside the
+  image (`podman run --rm --entrypoint /usr/bin/sha256sum $(IMAGE)
+  /usr/local/bin/entrypoint.sh` — a throwaway container, no volumes, no
+  entrypoint script, no `--userns`, ~1–2 s). On mismatch or missing image,
+  `make up` exits non-zero with `run \`make build\` then re-run \`make up\``
+  before starting the real container. The check is byte-hash based, so it
+  catches ANY entrypoint drift, not just the sentinel. See
+  [`docs/issues/2026-07-06-make-up-races-chezmoi-apply.md`](../issues/2026-07-06-make-up-races-chezmoi-apply.md).
 
 ### Secrets (build-time & runtime)
 
