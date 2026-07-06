@@ -278,7 +278,8 @@ description = "tmux multiplexer"
 name = "wired"
 manager = "paru"
 layer = 4
-has_configs = false
+# `~/.config/wired/wired.ron`
+has_configs = true
 description = "notification daemon"
 
 # Layer 6: runtime-manual cargo tools — declared for SoT but NOT build-installed.

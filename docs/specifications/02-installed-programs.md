@@ -109,7 +109,7 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `pueue` | paru | no | task queue daemon |
 | `starship` | paru | yes | zsh prompt theme manager |
 | `tmux` | paru | no | tmux multiplexer |
-| `wired` | paru | no | notification daemon |
+| `wired` | paru | yes | notification daemon |
 
 #### Layer 6 — runtime-manual (not build-installed)
 
