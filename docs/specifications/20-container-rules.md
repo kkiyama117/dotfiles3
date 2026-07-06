@@ -22,6 +22,27 @@ labels directly.
   PID 1 ignores default `SIGTERM` handling. Podman's init process forwards
   stop signals so `make up --replace`, `podman stop`, and `make down` exit
   cleanly without falling back to `SIGKILL`.
+- I-RUN2: **`make up` does not return until the entrypoint's `chezmoi apply`
+  has finished.** Because `make up` is `podman run -d` (detached) and the
+  entrypoint runs `chezmoi apply --no-tty --force` before `exec sleep
+  infinity`, an immediate `make exec` would race the apply and start a
+  zsh that sees the I10 baked `~/.zshenv` but **no** `~/.zshrc` /
+  `~/.config/sheldon/plugins.toml` / `~/.config/starship.toml` — i.e.
+  sheldon and starship never load on that first shell. To close the race,
+  the entrypoint writes a readiness sentinel at `/tmp/chezmoi-applied`
+  (`rm -f` at start so a container restart cannot satisfy the wait with a
+  stale flag; `touch` only after `chezmoi apply` succeeds, so a failed
+  apply never publishes readiness — `set -e` exits before the `touch`),
+  and `make up` polls `podman exec $(CONTAINER) test -f /tmp/chezmoi-applied`
+  once per second up to `UP_WAIT_TIMEOUT` (default 120 s, covering Bitwarden
+  auth + apply). If the container exits before the sentinel appears (apply
+  failed) or the timeout elapses, `make up` exits non-zero and tails
+  `podman logs` so the operator sees the apply error. The sentinel lives
+  in `/tmp` (ephemeral per container, fresh on each `make up --replace`,
+  not the chezmoi bind mount, not a named volume). The fix is a runtime
+  readiness signal, NOT baking more files into the image — I10's
+  "`~/.zshenv` only" policy is unchanged. See
+  [`docs/issues/2026-07-06-make-up-races-chezmoi-apply.md`](../issues/2026-07-06-make-up-races-chezmoi-apply.md).
 
 ### Secrets (build-time & runtime)
 

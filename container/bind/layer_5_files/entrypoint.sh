@@ -20,6 +20,16 @@ set -euo pipefail
 
 CHEZMOI_SOURCE="${HOME}/.local/share/chezmoi"
 RUNTIME_CONFIG="${HOME}/.config/chezmoi/chezmoi.toml"
+# Readiness sentinel for `make up`'s wait loop. Written ONLY after
+# `chezmoi apply` succeeds (so any `make exec` started after the sentinel
+# exists is guaranteed a fully applied $HOME: ~/.zshrc, sheldon, starship,
+# etc.). Removed at start so a container restart cannot satisfy the wait
+# with a stale flag from a previous apply. Lives in /tmp — ephemeral per
+# container, fresh on each `make up --replace`, NOT the chezmoi bind mount
+# and NOT a named volume. See spec 20 I-RUN2 and
+# docs/issues/2026-07-06-make-up-races-chezmoi-apply.md.
+READINESS_SENTINEL="/tmp/chezmoi-applied"
+rm -f "$READINESS_SENTINEL"
 child_pid=""
 
 terminate() {
@@ -112,6 +122,12 @@ if [ -f /run/secrets/bw_password ]; then
 fi
 
 run_interruptible chezmoi apply --no-tty --force
+
+# `chezmoi apply` succeeded: publish the readiness sentinel so `make up`
+# (which polls for this file) can return. `set -e` above exits before this
+# line if apply failed, so the sentinel is never written on failure —
+# `make up` then sees the container exit and surfaces `podman logs`.
+touch "$READINESS_SENTINEL"
 
 # Scrub the Bitwarden credentials from this process's environment before
 # exec'ing CMD — unconditionally within the auth-ran path (gated on the

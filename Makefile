@@ -8,6 +8,13 @@ HOST_GID := $(shell id -g)
 
 JOBS ?= 1
 
+# Seconds `make up` waits for the entrypoint's `chezmoi apply` to finish
+# before returning. Covers Bitwarden auth + apply against the host bind.
+# `make up` aborts (non-zero, with `podman logs`) if the entrypoint exits
+# early or this timeout elapses without the readiness sentinel appearing.
+# See spec 20 I-RUN2 and docs/issues/2026-07-06-make-up-races-chezmoi-apply.md.
+UP_WAIT_TIMEOUT ?= 120
+
 # Container username: read from .env (gitignored, machine-specific).
 # The build / up targets fail if .env does not define USERNAME.
 -include .env
@@ -77,6 +84,24 @@ up: _require_username ## Start a detached container with init, chezmoi bind, and
 		-v $(GNUPG_VOLUME):/home/$(USERNAME)/.local/share/gnupg \
 		-v $(SSH_VOLUME):/home/$(USERNAME)/.ssh \
 		$(IMAGE) sleep infinity
+	@echo "make: waiting for entrypoint's chezmoi apply to finish (timeout $(UP_WAIT_TIMEOUT)s)..."
+	@i=0; \
+	while [ $$i -lt $(UP_WAIT_TIMEOUT) ]; do \
+		if podman exec $(CONTAINER) test -f /tmp/chezmoi-applied 2>/dev/null; then \
+			echo "make: container ready (chezmoi apply finished)."; \
+			exit 0; \
+		fi; \
+		if [ "$$(podman inspect -f '{{.State.Running}}' $(CONTAINER) 2>/dev/null)" != "true" ]; then \
+			echo "make: *** container exited before chezmoi apply finished" >&2; \
+			podman logs $(CONTAINER) >&2 || true; \
+			exit 1; \
+		fi; \
+		sleep 1; \
+		i=$$((i+1)); \
+	done; \
+	echo "make: *** timed out after $(UP_WAIT_TIMEOUT)s waiting for chezmoi apply" >&2; \
+	podman logs $(CONTAINER) >&2 || true; \
+	exit 1
 
 exec: ## Open an interactive shell in the running container
 	podman exec -it $(CONTAINER) zsh
