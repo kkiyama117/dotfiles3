@@ -11,7 +11,7 @@ And you also need to read or update specifications in [`specifications/`](specif
 | [`plans/`](plans/) | `plan` | `YYYY-MM-DD-<slug>-impl.md` |
 | [`references/`](references/) | `reference` | `<topic>.md` or `YYYY-MM-DD-<topic>.md` |
 | [`reviews/`](reviews/) | `review` | `YYYY-MM-DD-<slug>-review[-passN][-<letter>-<topic>][-prompt].md` |
-| [`specifications/`](specifications/) | `spec` (normative) + `implementation/*-design.md` | `NN-<topic>.md` / `<topic>.md` / `YYYY-MM-DD-<slug>-design.md` |
+| [`specifications/`](specifications/) | `spec` (normative) + `implementations/*-design.md` | `NN-<topic>.md` / `<topic>.md` / `YYYY-MM-DD-<slug>-design.md` |
 
 ## Document Lifecycle (Summary)
 
