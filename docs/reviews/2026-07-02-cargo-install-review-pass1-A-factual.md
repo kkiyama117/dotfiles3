@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-02
 **Reviewer:** review subagent (Letter A — factual / correctness)
-**Subject:** [`docs/specifications/implementations/2026-07-02-cargo-install-design.md`](../../../specifications/implementations/2026-07-02-cargo-install-design.md)
+**Subject:** [`docs/specifications/implementations/2026-07-02-cargo-install-design.md`](../specifications/implementations/2026-07-02-cargo-install-design.md)
 **Pass:** 1
 **Status:** done
 
