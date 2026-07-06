@@ -39,16 +39,16 @@ raw = false
 yes = false
 
 # see MISE_NOT_FOUND_AUTO_INSTALL
-not_found_auto_install = false 
+not_found_auto_install = false
 
 # see MISE_PARANOID
 paranoid = true
 
 # see Tasks Runner for more information
-task_output = "prefix" 
+task_output = "prefix"
 
 # path to the shorthands file, see `MISE_SHORTHANDS_FILE`
-shorthands_file = '~/.config/mise/shorthands.toml' 
+shorthands_file = '~/.config/mise/shorthands.toml'
 disable_default_registry = true
 # disable specific tools, generally used to turn off core tools
 disable_tools = ['rust']
@@ -74,7 +74,7 @@ GOROOT = '/home/kiyama/.local/share/mise/installs/go/latest'
 
 # Java
 _JAVA_OPTIONS = '-Djava.util.prefs.userRoot=/home/kiyama/.config/java'
-GRADLE_USER_HOME = '/home/kiyama/.local/share/gradle
+GRADLE_USER_HOME = '/home/kiyama/.local/share/gradle'
 
 # node
 NODE_ENV = 'production'
@@ -83,4 +83,3 @@ NPM_CONFIG_USERCONFIG = '/home/kiyama/.config/npm/npmrc'
 # pnpm: `pnpm setup` 相当を mise の env で固定。rc を書き換えさせない。
 PNPM_HOME = '/home/kiyama/.local/share/pnpm'
 _.path = ['/home/kiyama/.local/share/pnpm/bin']
-
