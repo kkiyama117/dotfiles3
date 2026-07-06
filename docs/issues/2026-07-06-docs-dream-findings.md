@@ -12,10 +12,8 @@
 
 ## Problem
 
-1. **result-log 命名の spec と実態の乖離** — `00-document-management.md` §3 は
-   `YYYY-MM-DD-<phase>-<topic>.md`（例: `2026-06-28-phase7-smoke-matrix.md`）と定めるが、
-   実在する result-log 全件は literal `phase`（例: `2026-06-30-phase-bitwarden-auto-auth.md`、
-   形式 `YYYY-MM-DD-phase-<slug>.md`）。実態側に spec を合わせる改訂を提案。
+1. **result-log 命名の spec と実態の乖離** — 専用 issue
+   [2026-07-06-result-log-naming-amendment.md](2026-07-06-result-log-naming-amendment.md) で追跡。
 2. **plan 命名違反** — `docs/plans/2026-06-29-chezmoi-apply-twice.md` に `-impl` 接尾辞が無い。
 3. **slug 連鎖の断絶（孤児 plan）** — 対応する issue / design が存在しない:
    - `docs/plans/2026-07-03-host-main-ssh-key-container-impl.md`
@@ -26,10 +24,8 @@
    統一するかの判断が必要。
 5. **review 命名違反** — `docs/reviews/pr-1-review.md` は
    `YYYY-MM-DD-<slug>-review...` 形式に合致しない（historical、§9 により据え置き中）。
-6. **spec 状態の二重管理** — specs README の Status 列と各 spec 先頭の `> Spec status:` が
-   手動二重管理でドリフトする（2026-07-06 に 4 件修正済み）。索引の Status 列を
-   `> Spec status:` 行から機械的に検証・生成するルール（make target または dream 手順への
-   スクリプト組み込み）を提案。
+6. **spec 状態の二重管理** — 専用 issue
+   [2026-07-06-spec-status-single-source.md](2026-07-06-spec-status-single-source.md) で追跡。
 
 ## Acceptance criteria
 
