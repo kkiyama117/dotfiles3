@@ -2,3 +2,7 @@ bind/**/*
 !bind/**/
 !bind/layer_1_files/pacman_mirrorlist
 !bind/layer_5_files/entrypoint.sh
+
+#PYTHON
+**/__pycache__
+**/.pytest_cache

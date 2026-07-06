@@ -8,6 +8,13 @@ HOST_GID := $(shell id -g)
 
 JOBS ?= 1
 
+# Seconds `make up` waits for the entrypoint's `chezmoi apply` to finish
+# before returning. Covers Bitwarden auth + apply against the host bind.
+# `make up` aborts (non-zero, with `podman logs`) if the entrypoint exits
+# early or this timeout elapses without the readiness sentinel appearing.
+# See spec 20 I-RUN2 and docs/issues/2026-07-06-make-up-races-chezmoi-apply.md.
+UP_WAIT_TIMEOUT ?= 120
+
 # Container username: read from .env (gitignored, machine-specific).
 # The build / up targets fail if .env does not define USERNAME.
 -include .env
@@ -37,7 +44,7 @@ BUILD_CTX := $(CURDIR)/container
 IMAGE     := localhost/dotfiles-manjaro:latest
 CONTAINER := dotfiles-manjaro
 
-.PHONY: help build up exec down clean _require_username gen-deps test-deps
+.PHONY: help build up exec down clean _require_username _verify_image_fresh gen-deps test-deps
 
 help:
 	@echo "Usage: make [target]"
@@ -65,7 +72,29 @@ build: _require_username ## Build the image matching your host uid/gid
 	-t $(IMAGE) \
 	$(BUILD_CTX)
 
-up: _require_username ## Start a detached container with init, chezmoi bind, and named volumes (cargo, rustup, mise, gnupg, ssh)
+# Verify the image's /usr/local/bin/entrypoint.sh matches the source at
+# container/bind/layer_5_files/entrypoint.sh, so `make up` cannot silently
+# run a stale image (e.g. one built before an entrypoint edit — which would
+# make the readiness-sentinel wait loop time out at UP_WAIT_TIMEOUT because
+# the old entrypoint never writes /tmp/chezmoi-applied). Byte-hash based;
+# catches ANY entrypoint drift, not just the sentinel. Cheap: a throwaway
+# `podman run --rm --entrypoint` container that just hashes the file and
+# exits — no volumes, no entrypoint script, no --userns. See
+# docs/issues/2026-07-06-make-up-races-chezmoi-apply.md and spec 20 I-RUN3.
+_verify_image_fresh:
+	@src_hash=$$(sha256sum $(BUILD_CTX)/bind/layer_5_files/entrypoint.sh | cut -d' ' -f1); \
+	img_hash=$$(podman run --rm --entrypoint /usr/bin/sha256sum $(IMAGE) /usr/local/bin/entrypoint.sh 2>/dev/null | cut -d' ' -f1); \
+	if [ -z "$$img_hash" ]; then \
+		echo "make: *** image $(IMAGE) not found or unreadable — run \`make build\` first." >&2; \
+		exit 1; \
+	fi; \
+	if [ "$$src_hash" != "$$img_hash" ]; then \
+		echo "make: *** image $(IMAGE) has a stale entrypoint (source $$src_hash != image $$img_hash)." >&2; \
+		echo "make: *** run \`make build\` then re-run \`make up\`." >&2; \
+		exit 1; \
+	fi
+
+up: _require_username _verify_image_fresh ## Start a detached container with init, chezmoi bind, and named volumes (cargo, rustup, mise, gnupg, ssh)
 	podman run -d --replace --name $(CONTAINER) \
 		--init \
 		--userns=keep-id \
@@ -77,6 +106,24 @@ up: _require_username ## Start a detached container with init, chezmoi bind, and
 		-v $(GNUPG_VOLUME):/home/$(USERNAME)/.local/share/gnupg \
 		-v $(SSH_VOLUME):/home/$(USERNAME)/.ssh \
 		$(IMAGE) sleep infinity
+	@echo "make: waiting for entrypoint's chezmoi apply to finish (timeout $(UP_WAIT_TIMEOUT)s)..."
+	@i=0; \
+	while [ $$i -lt $(UP_WAIT_TIMEOUT) ]; do \
+		if podman exec $(CONTAINER) test -f /tmp/chezmoi-applied 2>/dev/null; then \
+			echo "make: container ready (chezmoi apply finished)."; \
+			exit 0; \
+		fi; \
+		if [ "$$(podman inspect -f '{{.State.Running}}' $(CONTAINER) 2>/dev/null)" != "true" ]; then \
+			echo "make: *** container exited before chezmoi apply finished" >&2; \
+			podman logs $(CONTAINER) >&2 || true; \
+			exit 1; \
+		fi; \
+		sleep 1; \
+		i=$$((i+1)); \
+	done; \
+	echo "make: *** timed out after $(UP_WAIT_TIMEOUT)s waiting for chezmoi apply" >&2; \
+	podman logs $(CONTAINER) >&2 || true; \
+	exit 1
 
 exec: ## Open an interactive shell in the running container
 	podman exec -it $(CONTAINER) zsh

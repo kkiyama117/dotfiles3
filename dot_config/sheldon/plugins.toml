@@ -4,6 +4,28 @@
 # and is NOT committed (it lives outside the chezmoi source tree).
 
 shell = "zsh"
+apply = ["defer"]
+
+# templates for use zsh-defer
+[templates]
+defer = "{{ hooks?.pre | nl }}{% for file in files %}zsh-defer source \"{{ file }}\"\n{% endfor %}{{ hooks?.post | nl }}"
 
 [plugins]
-# (empty by design — first plumbing-only landing)
+#############################################################################
+# "defer"
+#############################################################################
+[plugins.zsh-defer]
+github = "romkatv/zsh-defer"
+apply = ['source']
+
+#############################################################################
+# program language load
+#############################################################################
+# Now that it's almost all in `~/.zshenv` and mise
+
+#############################################################################
+# graphic and view
+#############################################################################
+# TODO: to make faster, consider caching it.
+[plugins.starship]
+inline = 'eval "$(starship init zsh)"'

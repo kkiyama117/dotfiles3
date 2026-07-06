@@ -1,0 +1,10 @@
+export QT_QPA_PLATFORMTHEME="qt5ct"
+
+# fix "xdg-open" export your preferred browser from here
+for _browser in google-chrome-stable google-chrome chromium firefox; do
+  if (( $+commands[$_browser] )); then
+    export BROWSER="$commands[$_browser]"
+    break
+  fi
+done
+unset _browser

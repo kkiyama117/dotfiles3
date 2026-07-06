@@ -1,6 +1,8 @@
 # エディターの補完を設定スキーマに合わせて取得
 "$schema" = 'https://starship.rs/config-schema.json'
 
+# TODO: Make color changed by each env
+
 add_newline = true
 follow_symlinks = false
 palette = 'my_shell_color'
