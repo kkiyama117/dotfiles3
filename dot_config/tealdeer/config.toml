@@ -1,9 +1,23 @@
 [display]
-use_paper=true
+use_paper = true
+compact = false
+show_title = true
 
 [style]
 background = { rgb = { r = 255, g = 255, b = 255 } }
 
+[search]
+# Show pages in Japanese if available, otherwise show in English
+# Use default; $LANG and $LANGUAGE
+#languages = ["en"]
+# Search for linux and common, and then search windows before trying the remaining platforms
+#platforms = ["linux", "common", "windows", "all"]
+
 [updates]
 auto_update = true
 auto_update_interval_hours = 24
+#archive_source = "https://my-company.example.com/tldr/"
+
+[directories]
+#cache_dir = ""
+

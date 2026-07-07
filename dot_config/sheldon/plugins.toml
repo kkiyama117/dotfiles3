@@ -4,11 +4,20 @@
 # and is NOT committed (it lives outside the chezmoi source tree).
 
 shell = "zsh"
+# Global `apply` config. we use it instead of "source" as a default.
+# We can use "PATH" or any other "apply" option
+# See https://sheldon.cli.rs/Configuration.html#custom-templates if you need to know about it.
 apply = ["defer"]
 
-# templates for use zsh-defer
+# default templates are "source", "PATH", "path", "fpath"
 [templates]
+# templates for use zsh-defer
+# https://sheldon.cli.rs/Examples.html#deferred-loading-of-plugins-in-zsh
 defer = "{{ hooks?.pre | nl }}{% for file in files %}zsh-defer source \"{{ file }}\"\n{% endfor %}{{ hooks?.post | nl }}"
+# templates for adding path; It adds path at the beginning
+# https://sheldon.cli.rs/Examples.html#overriding-the-path-template
+#PATH = 'export PATH="$PATH:{{ dir }}"'
+#path = 'path=( $path "{{ dir }}")'
 
 [plugins]
 #############################################################################
@@ -19,13 +28,51 @@ github = "romkatv/zsh-defer"
 apply = ['source']
 
 #############################################################################
+# Zshell opt-in
+#############################################################################
+[plugins.compinit]
+inline = 'autoload -Uz compinit && zsh-defer compinit'
+#[plugins.colors]
+#inline = 'autoload -Uz colors && zsh-defer colors'
+
+#############################################################################
 # program language load
 #############################################################################
 # Now that it's almost all in `~/.zshenv` and mise
 
 #############################################################################
+# abbriviations and completions
+#############################################################################
+# abbriviations
+# source 時に ~/.config/zsh/abbreviations (ABBR_USER_ABBREVIATIONS_FILE) を
+# 自動ロードし、SPACE / ENTER で展開する ZLE widget を bind
+[plugins.zsh-abbr]
+github = "olets/zsh-abbr"
+#tag = "v6.5.2"
+apply = ['defer']
+
+# setting for `zsh-abbr`
+#[plugin.zsh-abbr.hooks]
+#pre = ""
+#post = ""
+
+[plugins.zoxide]
+# TODO: make `defer-inline` template and use it
+# TODO: check `compinit` is loaded before it loads
+#       (maybe we need to write codes to check it loaded, in `pre` hook.)
+inline = 'zsh-defer eval "$(zoxide init zsh)"'
+
+# TODO: Add completions settings
+
+#############################################################################
 # graphic and view
 #############################################################################
-# TODO: to make faster, consider caching it.
+# TODO: to make faster, consider caching it. (like mise does in `~/.zshenv`)
 [plugins.starship]
 inline = 'eval "$(starship init zsh)"'
+
+# syntax-highlighting
+# This is faster than "zsh-users/zsh-syntax-highlighting"
+[plugins.zsh-syntax-highlighting]
+github = "zdharma-continuum/fast-syntax-highlighting"
+apply = ["defer"]
