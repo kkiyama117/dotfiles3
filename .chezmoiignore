@@ -55,6 +55,10 @@ README.md
 .ssh/*
 !.ssh/config
 
+# ZSH: compinit generates `.zcompdump` to cache the latest zsh complations.
+# So we unmanage it in chezmoi.
+.config/zsh/.zcompdump
+
 # Self bind-mount target (chezmoi source root)
 .local/share/chezmoi
 
