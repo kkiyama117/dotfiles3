@@ -215,6 +215,13 @@ layer = 4
 has_configs = false
 description = "Alternative `cat`"
 
+[[tool]]
+name = "fd"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "Alternative `find`"
+
 #[[tool]]
 #name = "kitty"
 ## (and `kitty-shell-integration`, `kitty-terminfo`)

@@ -103,6 +103,7 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `paru` | custom | no | AUR helper; bootstrapped via makepkg in the aur stage (custom install path, not in paru.txt) |
 | `rsync` | pacman | no |  |
 | `bat` | paru | no | Alternative `cat` |
+| `fd` | paru | no | Alternative `find` |
 | `lazygit` | paru | yes | TUI for git |
 | `neovim-git` | paru | no | neovim built from upstream git master (AUR); first concrete AUR package |
 | `pastel` | paru | no | color utility |
