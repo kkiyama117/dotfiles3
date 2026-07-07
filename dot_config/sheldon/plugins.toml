@@ -72,7 +72,7 @@ inline = "{{ hooks?.pre | nl }}zsh-defer eval \"$(zoxide init zsh)\"\n{{ hooks?.
 # Source the skim-based `__zoxide_zi` override (used by the `zi` command)
 # *after* `zoxide init` has run. Wrapped in `zsh-defer` so it executes after
 # the deferred `zoxide init` eval above (see NOTE in [plugins.zoxide]).
-post = 'zsh-defer source "$XDG_CONFIG_HOME/zsh/zoxide-zi.zsh"'
+post = 'zsh-defer source "$XDG_CONFIG_HOME/zsh/sheldon_hooks/zoxide-zi.zsh"'
 
 # TODO: Add completions settings
 
