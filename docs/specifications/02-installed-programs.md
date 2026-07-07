@@ -106,7 +106,7 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `lazygit` | paru | yes | TUI for git |
 | `neovim-git` | paru | no | neovim built from upstream git master (AUR); first concrete AUR package |
 | `pastel` | paru | no | color utility |
-| `pueue` | paru | no | task queue daemon |
+| `pueue` | paru | yes | task queue daemon |
 | `skim` | paru | no | fzf alternative written in Rust |
 | `starship` | paru | yes | zsh prompt theme manager |
 | `tealdeer` | paru | yes | tldr alternative |
