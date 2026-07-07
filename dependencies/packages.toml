@@ -250,7 +250,8 @@ description = "color utility"
 name = "pueue"
 manager = "paru"
 layer = 4
-has_configs = false
+# `~/.config/pueue/pueue.yaml`
+has_configs = true
 description = "task queue daemon"
 
 [[tool]]
