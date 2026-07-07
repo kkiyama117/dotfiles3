@@ -45,8 +45,7 @@ inline = 'autoload -Uz compinit && zsh-defer compinit'
 #############################################################################
 # abbriviations
 # source 時に ~/.config/zsh/abbreviations (ABBR_USER_ABBREVIATIONS_FILE) を
-# 自動ロードし、SPACE / ENTER で展開する ZLE widget を bind する。
-# v6.5.2 (2026-02-06) で固定 — 更新時は CHANGELOG を確認のこと。
+# 自動ロードし、SPACE / ENTER で展開する ZLE widget を bind
 [plugins.zsh-abbr]
 github = "olets/zsh-abbr"
 #tag = "v6.5.2"
