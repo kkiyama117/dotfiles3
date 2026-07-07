@@ -64,6 +64,8 @@ apply = ['defer']
 #       `zoxide init` eval and the widget setup are wrapped in `zsh-defer` so
 #       they run after shell-idle, in registration order (FIFO), guaranteeing
 #       `__zoxide_cd` is defined before `__zoxide_zi` is bound.
+
+#TODO: check we can use `apply` with inline or make the template of this inline style
 inline = "{{ hooks?.pre | nl }}zsh-defer eval \"$(zoxide init zsh)\"\n{{ hooks?.post | nl }}"
 
 [plugins.zoxide.hooks]
