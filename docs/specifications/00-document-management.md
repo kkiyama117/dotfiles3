@@ -24,7 +24,7 @@ docs/
     ├── 0x-...                      # Rules of this repo
     ├── 1x-...                      # Specifications for dotfiles3
     ├── 2x-...                      # Specifications for Container image
-    └── implementation/             # 個別実装の design draft
+    └── implementations/            # 個別実装の design draft
         └── YYYY-MM-DD-<slug>-design.md
 ```
 

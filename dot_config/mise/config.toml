@@ -1,23 +1,86 @@
 # Global mise config — per-project versions go in each
 # project's `.mise.toml` or `.tool-versions`.
 
+[settings]
+
+experimental = true
+
+# set to true to see full installation output, see `MISE_VERBOSE`
+verbose = false
+
+#legacy_version_file = true
+# legacy_version_file_disable_tools = ['python']
+
+# configure `mise install` to always keep the downloaded archive
+#always_keep_download = false        # deleted after install by default
+#always_keep_install = false         # deleted on failure by default
+
+# configure how frequently (in minutes) to fetch updated plugin repository changes
+# this is updated whenever a new runtime is installed
+# (note: this isn't currently implemented but there are plans to add it: https://github.com/jdx/mise/issues/128)
+plugin_autoupdate_last_check_duration = '1 week' # set to 0 to disable updates
+
+# config files with these prefixes will be trusted by default.
+#trusted_config_paths = []
+
+# set to true to ensure .tool-versions will be compatible with asdf, see `MISE_ASDF_COMPAT`
+asdf_compat = false
+
+# timeout of HTTP
+http_timeout = "30s"
+
+# number of plugins or runtimes to install in parallel. The default is `4`.
+jobs = 8
+
+# set to true to directly pipe plugins to stdin/stdout/stderr
+raw = false
+
+# set to true to automatically answer yes to all prompts
+yes = false
+
+# see MISE_NOT_FOUND_AUTO_INSTALL
+not_found_auto_install = false
+
+# see MISE_PARANOID
+paranoid = true
+
+# see Tasks Runner for more information
+task_output = "prefix"
+
+# path to the shorthands file, see `MISE_SHORTHANDS_FILE`
+shorthands_file = '~/.config/mise/shorthands.toml'
+disable_default_registry = true
+# disable specific tools, generally used to turn off core tools
+disable_tools = ['rust']
+
+# configure messages displayed when entering directories with config files
+status = { missing_tools = "if_other_versions_installed", show_env = false, show_tools = false }
+
 [tools]
 # Latest stable releases of deno, go, and python are global defaults so
 # scratch shells have something usable without per-project setup.
 deno = "latest"
 go = "latest"
 python = "latest"
+julia = "latest"
+node = "latest"
+usage = "latest" # This is only for `mise completion`
 
-# Rust is intentionally NOT installed via mise. The mise rust plugin
-# hardcodes rustup defaults (~/.cargo, ~/.rustup) and ignores
-# CARGO_HOME/RUSTUP_HOME, which scatters files outside the XDG layout
-# used elsewhere in this repo and breaks `mise activate`'s PATH
-# integration (mise where rust = symlink to ~/.cargo/bin, no /bin
-# subdirectory). The container bakes rust nightly via the official
-# rustup-init in Containerfile Stage 2; host operators install rust
-# however they prefer (rustup, pacman, nix).
+[env]
+# Language specific env value are managed by mise. (except Rust)
 
-[settings]
-# Show install progress and quiet warnings for missing plugins on first run.
-verbose = false
-experimental = true
+# Go
+GOPATH = '/home/kiyama/.local/share/mise/installs/go/latest/packages'
+GOROOT = '/home/kiyama/.local/share/mise/installs/go/latest'
+
+# Java
+_JAVA_OPTIONS = '-Djava.util.prefs.userRoot=/home/kiyama/.config/java'
+GRADLE_USER_HOME = '/home/kiyama/.local/share/gradle'
+
+# node
+NODE_ENV = 'production'
+NPM_CONFIG_USERCONFIG = '/home/kiyama/.config/npm/npmrc'
+
+# pnpm: `pnpm setup` 相当を mise の env で固定。rc を書き換えさせない。
+PNPM_HOME = '/home/kiyama/.local/share/pnpm'
+_.path = ['/home/kiyama/.local/share/pnpm/bin']
