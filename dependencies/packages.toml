@@ -276,6 +276,13 @@ has_configs = true
 description = "tldr alternative"
 
 [[tool]]
+name = "skim"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "fzf alternative written in Rust"
+
+[[tool]]
 name = "tmux"
 manager = "paru"
 layer = 4
