@@ -148,7 +148,7 @@ layer = 1
 has_configs = true
 description = "user's login shell"
 
-# Layer 3: cargo-installed tools (Containerfile `toolchain` stage, Layer 3-6).
+# Layer 3: cargo-installed tools (Containerfile `toolchain` stage, Layer 3-7).
 # Build-time cargo tools installed via `cargo binstall --only-signed -y` from
 # `dependencies/layer_3/cargo.txt`. Per spec 24, layer=3 entries MUST ship a
 # SIGNED prebuilt (cargo-binstall --only-signed compatible); unsigned-only /

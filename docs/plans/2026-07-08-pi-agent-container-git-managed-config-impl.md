@@ -267,13 +267,20 @@
   Run:
 
   ```bash
-  cd /data/dotfiles3 && chezmoi execute-template --init < .chezmoi.toml.tmpl >/tmp/dotfiles3-chezmoi.toml && BUILD_MODE=true chezmoi execute-template --init < .chezmoi.toml.tmpl >/tmp/dotfiles3-chezmoi-build.toml && PI_CONFIG_URL=file:///data/pi-config chezmoi execute-template < .chezmoiexternal.toml.tmpl >/tmp/dotfiles3-externals.toml && BUILD_MODE=true chezmoi execute-template --init < .chezmoi.toml.tmpl >/tmp/dotfiles3-build-config.toml
+  cd /data/dotfiles3 && chezmoi execute-template --init < .chezmoi.toml.tmpl >/tmp/dotfiles3-chezmoi.toml && BUILD_MODE=true chezmoi execute-template --init < .chezmoi.toml.tmpl >/tmp/dotfiles3-chezmoi-build.toml && PI_CONFIG_URL=file:///data/pi-config chezmoi execute-template --config /tmp/dotfiles3-chezmoi.toml --source "$(pwd)" < .chezmoiexternal.toml.tmpl >/tmp/dotfiles3-externals.toml && BUILD_MODE=true chezmoi execute-template --config /tmp/dotfiles3-chezmoi-build.toml --source "$(pwd)" < .chezmoiexternal.toml.tmpl >/tmp/dotfiles3-externals-build.toml
   ```
 
   Expected:
   - `/tmp/dotfiles3-chezmoi.toml` contains `pi_config_url` and `pi_config_ref`.
   - `/tmp/dotfiles3-externals.toml` contains `.local/share/pi-config`.
+  - `/tmp/dotfiles3-externals-build.toml` is empty (`.build_mode` gate).
   - Build-mode config render exits 0.
+
+  Note: `.build_mode`-gated templates such as `.chezmoiexternal.toml.tmpl`
+  require a rendered config context. Use `chezmoi execute-template --init` to
+  produce `/tmp/*.toml`, then pass `--config /tmp/*.toml --source "$(pwd)"` when
+  rendering dependent templates. Standalone `chezmoi execute-template < tmpl`
+  without `--config` fails because `.build_mode` is undefined.
 
 **Acceptance:** focused test passes and templates render without errors. Build mode has the data available but the external template itself is gated by `.build_mode`.
 
@@ -400,11 +407,12 @@
   Run:
 
   ```bash
-  cd /data/dotfiles3 && chezmoi execute-template < .chezmoiscripts/run_after_configure-pi-agent.sh.tmpl >/tmp/run_after_configure-pi-agent.sh && bash -n /tmp/run_after_configure-pi-agent.sh && BUILD_MODE=true chezmoi execute-template --init < .chezmoi.toml.tmpl >/tmp/build-chezmoi.toml
+  cd /data/dotfiles3 && chezmoi execute-template --init < .chezmoi.toml.tmpl >/tmp/dotfiles3-chezmoi.toml && chezmoi execute-template --config /tmp/dotfiles3-chezmoi.toml --source "$(pwd)" < .chezmoiscripts/run_after_configure-pi-agent.sh.tmpl >/tmp/run_after_configure-pi-agent.sh && bash -n /tmp/run_after_configure-pi-agent.sh && BUILD_MODE=true chezmoi execute-template --init < .chezmoi.toml.tmpl >/tmp/build-chezmoi.toml && BUILD_MODE=true chezmoi execute-template --config /tmp/build-chezmoi.toml --source "$(pwd)" < .chezmoiscripts/run_after_configure-pi-agent.sh.tmpl >/tmp/run_after_configure-pi-agent-build.sh
   ```
 
   Expected:
-  - `bash -n` exits 0.
+  - `bash -n /tmp/run_after_configure-pi-agent.sh` exits 0.
+  - `/tmp/run_after_configure-pi-agent-build.sh` is `exit 0` only (`.build_mode` gate).
   - Build-mode config render exits 0.
 
 **Acceptance:** the script is idempotent, build-mode gated, links only stable resources, and passes shell syntax validation.
@@ -751,7 +759,7 @@
   Run:
 
   ```bash
-  cd /data/dotfiles3 && chezmoi execute-template --init < .chezmoi.toml.tmpl >/tmp/dotfiles3-chezmoi.toml && PI_CONFIG_URL=file:///data/pi-config chezmoi execute-template < .chezmoiexternal.toml.tmpl >/tmp/dotfiles3-externals.toml && chezmoi execute-template < .chezmoiscripts/run_after_configure-pi-agent.sh.tmpl >/tmp/run_after_configure-pi-agent.sh && bash -n /tmp/run_after_configure-pi-agent.sh && bash -n programs/chezmoi_pi_commit.sh
+  cd /data/dotfiles3 && chezmoi execute-template --init < .chezmoi.toml.tmpl >/tmp/dotfiles3-chezmoi.toml && PI_CONFIG_URL=file:///data/pi-config chezmoi execute-template --config /tmp/dotfiles3-chezmoi.toml --source "$(pwd)" < .chezmoiexternal.toml.tmpl >/tmp/dotfiles3-externals.toml && chezmoi execute-template --config /tmp/dotfiles3-chezmoi.toml --source "$(pwd)" < .chezmoiscripts/run_after_configure-pi-agent.sh.tmpl >/tmp/run_after_configure-pi-agent.sh && bash -n /tmp/run_after_configure-pi-agent.sh && bash -n programs/chezmoi_pi_commit.sh
   ```
 
   Expected: command exits 0.

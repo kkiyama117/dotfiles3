@@ -14,9 +14,13 @@
   normal install path.
 - Pi stores global state under `~/.pi/agent` by default. Project-local
   resources and settings live under `.pi/` in a project checkout.
-- This repository already contains `.pi/prompts/commit.md` for the host-side
-  chezmoi auto-commit hook, but `.pi` is currently excluded from both
-  `.chezmoiignore` and `.containerignore`.
+- The host-side chezmoi auto-commit hook reads the pi commit prompt from
+  external pi config and linked runtime paths, not from this repository.
+  Precedence: `PI_COMMIT_PROMPT_FILE`, then `~/.pi/agent/prompts/commit.md`,
+  then `~/.local/share/pi-config/agent/prompts/commit.md`. The stable prompt
+  lives in the external `pi-config` repo; chezmoi links it into `~/.pi/agent`
+  at apply time. `.pi` remains excluded from both `.chezmoiignore` and
+  `.containerignore`.
 - There is no `.chezmoiexternal.toml` in this repository yet. Chezmoi externals
   are the intended mechanism for fetching externally managed source state
   without vendoring it directly into this repository.
@@ -54,8 +58,10 @@ The design needs to distinguish:
 6. Container startup/apply flow preserves runtime pi state across
    `make down && make up` only through approved runtime storage, not through
    committed source files or baked image contents.
-7. Existing host auto-commit behavior that reads `.pi/prompts/commit.md` keeps
-   working, or is migrated to the new managed `.pi` layout with equivalent
+7. Existing host auto-commit behavior keeps working via the external pi config
+   prompt and linked runtime paths (`PI_COMMIT_PROMPT_FILE`, then
+   `~/.pi/agent/prompts/commit.md`, then
+   `~/.local/share/pi-config/agent/prompts/commit.md`), with equivalent
    tests/documentation.
 8. Specs 02, 11, and 21 are updated to document the pi package, any required
    non-secret environment variables, the container build/runtime flow, and
