@@ -5,6 +5,8 @@ ENTRYPOINT = ROOT / "container" / "bind" / "layer_5_files" / "entrypoint.sh"
 MAKEFILE = ROOT / "Makefile"
 MISE_CONFIG = ROOT / "dot_config" / "mise" / "config.toml"
 ZSHENV = ROOT / "dot_zshenv.tmpl"
+CHEZMOI_CONFIG = ROOT / ".chezmoi.toml.tmpl"
+CHEZMOI_EXTERNAL = ROOT / ".chezmoiexternal.toml.tmpl"
 
 
 def test_entrypoint_forwards_stop_signal_during_startup_work() -> None:
@@ -100,3 +102,23 @@ def test_zshenv_owns_pnpm_bootstrap_env() -> None:
     assert "PNPM_HOME" not in mise_config
     assert "export PNPM_HOME=" in zshenv
     assert "path=($PNPM_HOME $path)" in zshenv
+
+
+def test_pi_config_external_is_build_mode_gated_and_pinned() -> None:
+    config = CHEZMOI_CONFIG.read_text()
+    external = CHEZMOI_EXTERNAL.read_text()
+
+    assert "pi_config_url" in config
+    assert "PI_CONFIG_URL" in config
+    assert "https://github.com/kkiyama117/pi-config.git" in config
+    assert "pi_config_ref" in config
+    assert "PI_CONFIG_REF" in config
+    assert "pi-config-v2026-07-08-1" in config
+
+    assert "{{- if not .build_mode }}" in external
+    assert '[".local/share/pi-config"]' in external
+    assert 'type = "git-repo"' in external
+    assert 'url = "{{ .pi_config_url }}"' in external
+    assert 'refreshPeriod = "0"' in external
+    assert 'clone.args = ["--branch", "{{ .pi_config_ref }}", "--depth", "1"]' in external
+    assert "file:///data/pi-config" not in external
