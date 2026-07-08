@@ -7,12 +7,51 @@
 # 対話的に `abbr add ...` を実行するとこのファイルへ自動 sync される。
 # 展開したくない場合は SPACE ではなく CTRL-SPACE を使う。
 
-# tree
-abbr "tree"="tre"
+#############################################################################
+# Common
+#############################################################################
+
+# cp
+abbr "cp"="cp -irf"
+# df
+abbr "df"="df -h"
+# free
+abbr "free"="free -m"
+# git
+abbr "ga"="git add"
+abbr "gaA"="git add -A"
+abbr "gb"="git branch"
+abbr "gc"="git commit"
+abbr "gca"="git commit -a"
+abbr "gf"="git fetch"
+abbr "gp"="git pull"
+abbr "gP"="git push"
+abbr "gs"="git switch"
+abbr "gm"="git merge"
+
+#ls
+abbr "ls"="ls -Fh --color=auto"
+abbr "la"="ls -Fh --color=auto -a"
+abbr "ll"="ls -Fh --color=auto -l"
+abbr "lal"="ls -Fh --color=auto -al"
+abbr "lla"="ls -Fh --color=auto -al"
+
+# mkdir
+abbr "mkdir"="mkdir -p"
+# mv
+abbr "mv"="mv -i"
 
 # nvim
 abbr "vi"="nvim"
 abbr "vim"="nvim"
+
+# rm
+abbr "rm"="rm -i"
+# sudo
+abbr "sudo"="sudo -H"
+
+# tree
+abbr "tree"="tre"
 
 # zoxide
 abbr "cd"="z"
