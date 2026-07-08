@@ -33,7 +33,7 @@ the map of which top-level path serves which concern.
 │       ├── dot_zshrc        # chezmoi-managed ~/.config/zsh/.zshrc (sheldon boot; runtime toolchain block)
 │       ├── dot_zprofile     # chezmoi-managed ~/.config/zsh/.zprofile (QT/browser env)
 │       ├── dot_zfunc/       # chezmoi-managed ~/.config/zsh/.zfunc/ (fpath autoload completions: _chezmoi/_sheldon/_mise)
-│       └── zoxide-zi.zsh    # chezmoi-managed ~/.config/zsh/zoxide-zi.zsh (skim-based zoxide Ctrl-Z widget; `zsh-defer source`d via sheldon `[plugins.zoxide.hooks].post`)
+│       └── sheldon_hooks/   # chezmoi-managed ~/.config/zsh/sheldon_hooks/ (sheldon hook scripts, e.g. skim-based zoxide `zi`)
 ├── dot_local/          # chezmoi-managed ~/.local/ (XDG data/state, rare static configs only)
 │   ├── share/cargo/config.toml    # chezmoi-managed ~/.local/share/cargo/config.toml
 │   └── share/cargo/binstall.toml  # chezmoi-managed ~/.local/share/cargo/binstall.toml 
@@ -66,6 +66,8 @@ the map of which top-level path serves which concern.
 │
 ├── programs/           # host-side tooling / codegen
 │   └── generate_deps/  # implementation of `make gen-deps` (see 08-automations.md)
+├── tests/              # repo-level regression tests outside container/program-specific suites
+│   └── zsh/            # zsh dotfile regression tests
 │
 └── docs/               # documentation tree (placement: see [here](00-document-management.md))
 │   └── ... delegate it to `00-document-management.md`

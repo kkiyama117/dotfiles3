@@ -5,10 +5,8 @@
 function __zoxide_zi() {
     \builtin local result
     result="$( \
-        zoxide query -ls -- "$@" \
+        zoxide query -l -- "$@" \
         | sk \
-            --delimiter='[^\t\n ][\t\n ]+' \
-            -n2.. \
             --no-sort \
             --keep-right \
             --height='40%' \
@@ -16,10 +14,10 @@ function __zoxide_zi() {
             --exit-0 \
             --select-1 \
             --bind='ctrl-z:ignore' \
-            --preview='\command -p ls -F --color=always {2..}' \
+            --preview='\command -p ls -F --color=always {}' \
         ;
     )" \
-        && __zoxide_cd "${result:7}"
+        && __zoxide_cd "$result"
 }
 # zle -N __zoxide_zi
 # setopt noflowcontrol
