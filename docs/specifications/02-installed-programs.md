@@ -96,7 +96,7 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 |---|---|---|---|
 | `cargo-edit` | cargo | no | provides cargo-add / cargo-rm / cargo-set-version / cargo-upgrade binaries (no cargo-edit binary by upstream design) |
 | `cargo-outdated` | cargo | no | Detect outdated Rust crate dependencies |
-| `topgrade` | cargo | no | multi-package-manager updater; build-time cargo tool (signed prebuilt via cargo-binstall --only-signed) |
+| `topgrade` | cargo | yes | multi-package-manager updater; build-time cargo tool (signed prebuilt via cargo-binstall --only-signed) |
 | `cargo-binstall` | custom | no | Install binaries |
 
 #### Layer 4 — install list
@@ -111,6 +111,7 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `neovim-git` | paru | no | neovim built from upstream git master (AUR); first concrete AUR package |
 | `pastel` | paru | no | color utility |
 | `pueue` | paru | yes | task queue daemon |
+| `ripgrep` | paru | no | grep alternative |
 | `skim` | paru | no | fzf alternative written in Rust |
 | `starship` | paru | yes | zsh prompt theme manager |
 | `tealdeer` | paru | yes | tldr alternative |

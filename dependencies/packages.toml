@@ -165,7 +165,8 @@ description = "Install binaries"
 name = "topgrade"
 manager = "cargo"
 layer = 3
-has_configs = false
+# `~/.config/topgrade.toml`
+has_configs = true
 description = "multi-package-manager updater; build-time cargo tool (signed prebuilt via cargo-binstall --only-signed)"
 
 [[tool]]
@@ -260,6 +261,13 @@ layer = 4
 # `~/.config/pueue/pueue.yaml`
 has_configs = true
 description = "task queue daemon"
+
+[[tool]]
+name = "ripgrep"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "grep alternative"
 
 [[tool]]
 name = "rsync"
