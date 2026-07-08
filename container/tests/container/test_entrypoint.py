@@ -101,7 +101,7 @@ def test_zshenv_owns_pnpm_bootstrap_env() -> None:
     assert "[env]" not in mise_config
     assert "PNPM_HOME" not in mise_config
     assert "export PNPM_HOME=" in zshenv
-    assert "path=($PNPM_HOME $path)" in zshenv
+    assert "path=($PNPM_HOME/bin $path)" in zshenv
 
 
 def test_pi_config_external_is_build_mode_gated_and_pinned() -> None:
