@@ -175,7 +175,7 @@
     export NODE_ENV="${NODE_ENV:-production}"
     export NPM_CONFIG_USERCONFIG="${NPM_CONFIG_USERCONFIG:-"$XDG_CONFIG_HOME"/npm/npmrc}"
     export PNPM_HOME="${PNPM_HOME:-$XDG_DATA_HOME/pnpm}"
-    path=($PNPM_HOME $path)
+    path=($PNPM_HOME/bin $path)
   }
   # mise owns tool versions; stable global env/PATH defaults live above.
   : "mise" && {
