@@ -167,16 +167,16 @@ RUN mkdir -p /tmp/build-home \
 # ---------------------------------------------------------------------------
 # Stage 3: toolchain
 #
-# Copy the rendered Cargo config, then install rustup, mise, and cargo
+# Copy the rendered Cargo config, then install rustup, mise, pi CLI, and cargo
 # binaries with ENV inherited from the build-prepass scratch render. Each RUN
 # is a fresh shell, so each must `source /tmp/build-home/.zshenv` to
 # materialize CARGO_HOME / RUSTUP_HOME / MISE_DATA_DIR. BuildKit cache mounts
-# (uid/gid require Podman >= 4.0) keep the rustup download cache (3-3) and
-# the mise download cache (3-4) across rebuilds without bloating image
-# layers. cargo-binstall (3-5) has no persistent cache (per-run tempdir in
-# $CARGO_HOME), and the cargo tools (3-6) resolve via the crates.io HTTP API,
-# so neither carries a cache mount; the cargo registry/git cache mounts live
-# on the `aur` stage (4-1/4-2) for paru / Rust AUR builds.
+# (uid/gid require Podman >= 4.0) keep the rustup download cache (3-3), the
+# mise download cache (3-4), and the npm cache (3-5) across rebuilds without
+# bloating image layers. cargo-binstall (3-6) has no persistent cache (per-run
+# tempdir in $CARGO_HOME), and the cargo tools (3-7) resolve via the crates.io
+# HTTP API, so neither carries a cache mount; the cargo registry/git cache
+# mounts live on the `aur` stage (4-1/4-2) for paru / Rust AUR builds.
 # ---------------------------------------------------------------------------
 # Layer 3-1: use Container imange of Layer 2
 FROM build-prepass AS toolchain
@@ -216,7 +216,18 @@ RUN --mount=type=cache,target=/home/${USERNAME}/.cache/mise,uid=${HOST_UID},gid=
       mise install --yes; \
     '
 
-# Layer 3-5: Install cargo-binstall (prebuilt bootstrap — INFRA, not in packages.toml).
+# Layer 3-5: Install pi coding agent CLI with mise-managed Node/npm.
+#
+# The upstream install path is npm global with lifecycle scripts disabled.
+# Node and npm are available through the mise config installed in Layer 3-4.
+RUN --mount=type=cache,target=/home/${USERNAME}/.cache/npm,uid=${HOST_UID},gid=${HOST_GID} \
+    zsh -c 'set -eo pipefail; \
+      source /tmp/build-home/.zshenv; \
+      mise exec node@latest -- npm install -g --ignore-scripts @earendil-works/pi-coding-agent; \
+      pi --version; \
+    '
+
+# Layer 3-6: Install cargo-binstall (prebuilt bootstrap — INFRA, not in packages.toml).
 #
 # cargo-binstall is the installer for the rest of the cargo ecosystem; like
 # rustup (3-3) it is curl-bootstrapped from a prebuilt binary
@@ -243,7 +254,7 @@ RUN zsh -c 'set -eo pipefail; \
       cargo binstall -V; \
     '
 
-# Layer 3-6: Install build-time cargo tools via cargo-binstall.
+# Layer 3-7: Install build-time cargo tools via cargo-binstall.
 #
 # `cargo binstall --only-signed -y` (H2/B-F2): `--only-signed` mandates a
 # signed prebuilt source (the `--secure` flag does NOT exist; `--only-signed`

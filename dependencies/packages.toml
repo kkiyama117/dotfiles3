@@ -183,6 +183,14 @@ layer = 3
 has_configs = false
 description = "Detect outdated Rust crate dependencies"
 
+[[tool]]
+name = "pi-coding-agent"
+manager = "custom"
+layer = 3
+# npm package: @earendil-works/pi-coding-agent
+has_configs = true
+description = "pi coding agent CLI (`@earendil-works/pi-coding-agent`); installed with npm --ignore-scripts after mise-managed Node"
+
 # Layer 4: paru-installed tools (AUR); Containerfile `aur` stage.
 # paru itself is bootstrapped via makepkg in the `aur` stage, so it is
 # declared here with `manager = "custom"` (doc-only: it appears in the

@@ -9,6 +9,8 @@ CHEZMOI_CONFIG = ROOT / ".chezmoi.toml.tmpl"
 CHEZMOI_EXTERNAL = ROOT / ".chezmoiexternal.toml.tmpl"
 PI_LINK_SCRIPT = ROOT / ".chezmoiscripts" / "run_after_configure-pi-agent.sh.tmpl"
 PI_COMMIT_HOOK = ROOT / "programs" / "chezmoi_pi_commit.sh"
+PACKAGES = ROOT / "dependencies" / "packages.toml"
+CONTAINERFILE = ROOT / "container" / "Containerfile"
 
 
 def test_entrypoint_forwards_stop_signal_during_startup_work() -> None:
@@ -147,3 +149,15 @@ def test_pi_commit_hook_uses_external_prompt_precedence() -> None:
     assert "$HOME/.pi/agent/prompts/commit.md" in text
     assert "$HOME/.local/share/pi-config/agent/prompts/commit.md" in text
     assert '$src_dir/.pi/prompts/commit.md' not in text
+
+
+def test_pi_coding_agent_inventory_and_container_install() -> None:
+    packages = PACKAGES.read_text()
+    containerfile = CONTAINERFILE.read_text()
+
+    assert 'name = "pi-coding-agent"' in packages
+    assert 'manager = "custom"' in packages
+    assert "@earendil-works/pi-coding-agent" in packages
+    assert "@earendil-works/pi-coding-agent" in containerfile
+    assert "--ignore-scripts" in containerfile
+    assert "pi --version" in containerfile
