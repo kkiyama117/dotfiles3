@@ -57,10 +57,22 @@ apply = ['defer']
 #post = ""
 
 [plugins.zoxide]
-# TODO: make `defer-inline` template and use it
 # TODO: check `compinit` is loaded before it loads
 #       (maybe we need to write codes to check it loaded, in `pre` hook.)
-inline = 'zsh-defer eval "$(zoxide init zsh)"'
+# NOTE: `inline` plugins do not auto-inject hooks — the inline string must
+#       reference `{{ hooks?.pre }}` / `{{ hooks?.post }}` itself. Both the
+#       `zoxide init` eval and the widget setup are wrapped in `zsh-defer` so
+#       they run after shell-idle, in registration order (FIFO), guaranteeing
+#       `__zoxide_cd` is defined before `__zoxide_zi` is bound.
+
+#TODO: check we can use `apply` with inline or make the template of this inline style
+inline = "{{ hooks?.pre | nl }}zsh-defer eval \"$(zoxide init zsh)\"\n{{ hooks?.post | nl }}"
+
+[plugins.zoxide.hooks]
+# Source the skim-based `__zoxide_zi` override (used by the `zi` command)
+# *after* `zoxide init` has run. Wrapped in `zsh-defer` so it executes after
+# the deferred `zoxide init` eval above (see NOTE in [plugins.zoxide]).
+post = 'zsh-defer source "$XDG_CONFIG_HOME/zsh/sheldon_hooks/zoxide-zi.zsh"'
 
 # TODO: Add completions settings
 
@@ -76,3 +88,12 @@ inline = 'eval "$(starship init zsh)"'
 [plugins.zsh-syntax-highlighting]
 github = "zdharma-continuum/fast-syntax-highlighting"
 apply = ["defer"]
+
+#############################################################################
+# Zsh local config
+#############################################################################
+# Completion fpath
+# it is loaded as a default
+#[plugins.my_fpaths]
+#local="~/.config/zsh/.zfunc"
+#apply = ["fpath"]

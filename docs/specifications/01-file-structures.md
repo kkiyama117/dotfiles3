@@ -30,7 +30,10 @@ the map of which top-level path serves which concern.
 │   │   ├── config.tmpl  # chezmoi-managed ~/.config/git/config (identity from .chezmoidata; credential.helper host-only via `runtime`; GPG signing)
 │   │   └── ignore       # chezmoi-managed ~/.config/git/ignore (global gitignore; static, generic toptal patterns)
 │   └── zsh/
-│       └── dot_zshrc.tmpl  # chezmoi-managed ~/.config/zsh/.zshrc (runtime toolchain block)
+│       ├── dot_zshrc        # chezmoi-managed ~/.config/zsh/.zshrc (sheldon boot; runtime toolchain block)
+│       ├── dot_zprofile     # chezmoi-managed ~/.config/zsh/.zprofile (QT/browser env)
+│       ├── dot_zfunc/       # chezmoi-managed ~/.config/zsh/.zfunc/ (fpath autoload completions: _chezmoi/_sheldon/_mise)
+│       └── zoxide-zi.zsh    # chezmoi-managed ~/.config/zsh/zoxide-zi.zsh (skim-based zoxide Ctrl-Z widget; `zsh-defer source`d via sheldon `[plugins.zoxide.hooks].post`)
 ├── dot_local/          # chezmoi-managed ~/.local/ (XDG data/state, rare static configs only)
 │   ├── share/cargo/config.toml    # chezmoi-managed ~/.local/share/cargo/config.toml
 │   └── share/cargo/binstall.toml  # chezmoi-managed ~/.local/share/cargo/binstall.toml 
