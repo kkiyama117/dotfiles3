@@ -64,6 +64,7 @@ go = "latest"
 python = "latest"
 julia = "latest"
 node = "latest"
+pnpm = "latest"
 usage = "latest" # This is only for `mise completion`
 
 [env]
@@ -84,3 +85,6 @@ NPM_CONFIG_USERCONFIG = '/home/kiyama/.config/npm/npmrc'
 # pnpm: `pnpm setup` 相当を mise の env で固定。rc を書き換えさせない。
 PNPM_HOME = '/home/kiyama/.local/share/pnpm'
 _.path = ['/home/kiyama/.local/share/pnpm/bin']
+
+[settings.npm]
+package_manager = "pnpm"
