@@ -1,8 +1,8 @@
 from pathlib import Path
 
-
-ENTRYPOINT = Path(__file__).parents[1] / "bind" / "layer_5_files" / "entrypoint.sh"
-MAKEFILE = Path(__file__).parents[2] / "Makefile"
+ROOT = Path(__file__).resolve().parents[2]
+ENTRYPOINT = ROOT / "container" / "bind" / "layer_5_files" / "entrypoint.sh"
+MAKEFILE = ROOT / "Makefile"
 
 
 def test_entrypoint_forwards_stop_signal_during_startup_work() -> None:

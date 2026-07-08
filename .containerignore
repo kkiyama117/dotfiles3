@@ -19,8 +19,7 @@ docs
 # ============================================================
 #container/bind/
 container/.gitignore
-# Avoid combining tests; Only for debug.
-container/tests
+# Host-only regression tests (debug / CI on the repo checkout).
 tests/**/*
 
 # ============================================================
@@ -34,5 +33,6 @@ tests/**/*
 # ============================================================
 .agents
 .claude
+.pi
 .pi-subagents
 .superpowers

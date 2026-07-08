@@ -11,3 +11,22 @@
 [data]
 build_mode = {{ if eq (env "BUILD_MODE" | default "false") "true" }}true{{ else }}false{{ end }}
 runtime = {{ env "DOTFILES_RUNTIME" | default "host" | quote }}
+
+{{- /* Git auto-commit via pi CLI hooks — host runtime only.
+   The [git] and [hooks] sections are omitted entirely when running
+   inside the container (DOTFILES_RUNTIME=container) or during the
+   build-prepass (BUILD_MODE=true). Pattern from:
+   https://ikuma-t.com/blog/commit-chezmoi-diff-automaticaly-by-claude/ */ -}}
+{{- if and (eq (env "BUILD_MODE" | default "false") "false") (eq (env "DOTFILES_RUNTIME" | default "host") "host") }}
+[git]
+autoCommit = false
+autoPush = false
+
+[hooks.add.post]
+command = "bash"
+args = ["-c", "bash \"$(chezmoi source-path)/programs/chezmoi_pi_commit.sh\""]
+
+[hooks.edit.post]
+command = "bash"
+args = ["-c", "bash \"$(chezmoi source-path)/programs/chezmoi_pi_commit.sh\""]
+{{- end }}
