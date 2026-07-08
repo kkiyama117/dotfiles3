@@ -7,6 +7,7 @@ MISE_CONFIG = ROOT / "dot_config" / "mise" / "config.toml"
 ZSHENV = ROOT / "dot_zshenv.tmpl"
 CHEZMOI_CONFIG = ROOT / ".chezmoi.toml.tmpl"
 CHEZMOI_EXTERNAL = ROOT / ".chezmoiexternal.toml.tmpl"
+PI_LINK_SCRIPT = ROOT / ".chezmoiscripts" / "run_after_configure-pi-agent.sh.tmpl"
 
 
 def test_entrypoint_forwards_stop_signal_during_startup_work() -> None:
@@ -122,3 +123,17 @@ def test_pi_config_external_is_build_mode_gated_and_pinned() -> None:
     assert 'refreshPeriod = "0"' in external
     assert 'clone.args = ["--branch", "{{ .pi_config_ref }}", "--depth", "1"]' in external
     assert "file:///data/pi-config" not in external
+
+
+def test_pi_link_script_manages_only_stable_resources() -> None:
+    text = PI_LINK_SCRIPT.read_text()
+
+    assert "{{- if not .build_mode }}" in text
+    assert ".local/share/pi-config/agent" in text
+    assert ".pi/agent" in text
+    for name in ("settings.json", "prompts", "skills", "extensions", "themes"):
+        assert f'link_resource "{name}"' in text
+
+    forbidden = ("auth.json", "trust.json", "sessions", "transcripts", "npm", "git", "logs", "cache")
+    for name in forbidden:
+        assert f'link_resource "{name}"' not in text
