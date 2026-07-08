@@ -8,9 +8,6 @@
 # ============================================================
 docs
 
-# Avoid combining tests; Only for debug.
-container/tests
-
 # Git related files
 .git/
 .gitignore
@@ -22,6 +19,9 @@ container/tests
 # ============================================================
 #container/bind/
 container/.gitignore
+# Avoid combining tests; Only for debug.
+container/tests
+
 
 # ============================================================
 # User generated files for dotfiles
