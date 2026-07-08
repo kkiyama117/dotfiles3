@@ -150,25 +150,37 @@
 ################################################################################
 # program languages may be called from outside of interactive shell, so write path here
 : "GENERAL programming config" && {
+  : "mise data" && {
+    export MISE_DATA_DIR="${MISE_DATA_DIR:-$XDG_DATA_HOME/mise}"
+  }
   : "Rust" && {
     export RUSTUP_HOME="${RUSTUP_HOME:-$XDG_DATA_HOME/rustup}"
     export CARGO_HOME="${CARGO_HOME:-$XDG_DATA_HOME/cargo}"
     path=($CARGO_HOME/bin(N-/) $path)
+  }
+  : "Go" && {
+    export GOPATH="${GOPATH:-$MISE_DATA_DIR/installs/go/latest/packages}"
+    export GOROOT="${GOROOT:-$MISE_DATA_DIR/installs/go/latest}"
   }
   : "Python" && {
     # cargo-dist 系インストーラ (uv 等) が rc ファイルを書き換えるのを抑止
     # https://opensource.axo.dev/cargo-dist/book/installers/shell.html
     export INSTALLER_NO_MODIFY_PATH=1
   }
-  # other programing language is managed by mise
+  : "Java" && {
+    export _JAVA_OPTIONS="${_JAVA_OPTIONS:-"-Djava.util.prefs.userRoot=$XDG_CONFIG_HOME/java"}"
+    export GRADLE_USER_HOME="${GRADLE_USER_HOME:-$XDG_DATA_HOME/gradle}"
+  }
+  : "Node" && {
+    export NODE_ENV="${NODE_ENV:-production}"
+    export NPM_CONFIG_USERCONFIG="${NPM_CONFIG_USERCONFIG:-"$XDG_CONFIG_HOME"/npm/npmrc}"
+    export PNPM_HOME="${PNPM_HOME:-$XDG_DATA_HOME/pnpm}"
+    path=($PNPM_HOME $path)
+  }
+  # mise owns tool versions; stable global env/PATH defaults live above.
   : "mise" && {
-    export MISE_DATA_DIR="${MISE_DATA_DIR:-$XDG_DATA_HOME/mise}"
     eval "$(mise activate zsh --shims)"
     path=($MISE_DATA_DIR/shims(N-/) $path)
-
-    # NPM ONLY
-    # TODO: manage inside mise
-    export NPM_CONFIG_USERCONFIG="${NPM_CONFIG_USERCONFIG:-"$XDG_CONFIG_HOME"/npm/npmrc}"
   }
 }
 

@@ -1,6 +1,6 @@
 """Tests that mise tools are configured outside generate_deps.
 
-Mise language defaults live in dot_config/mise/config.toml. The dependency
+Mise-managed tool versions live in dot_config/mise/config.toml. The dependency
 generator must not accept manager = "mise" entries or emit layer_3/mise.txt.
 """
 

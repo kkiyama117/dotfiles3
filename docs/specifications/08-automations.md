@@ -9,9 +9,9 @@
 
 | Name | Status | Trigger | Inputs | Outputs |
 |---|---|---|---|---|
-| dependency generation | active | `make gen-deps` | `dependencies/packages.toml` | `dependencies/layer_<N>/<manager>.txt` (layers >= 1; `pacman`/`paru`/`nix`/`uv`/`cargo`; mise language defaults live in `dot_config/mise/config.toml`) + AUTO-GEN block in [`02-installed-programs.md`](02-installed-programs.md) |
-| generator tests | active | `make test-deps` | `programs/generate_deps/main.py` + `tests/` | pytest pass/fail (no output files) |
-| zsh dotfile tests | active | `make test-zsh` | `dot_config/zsh/` + `tests/zsh/` | zsh test pass/fail (no output files) |
+| dependency generation | active | `make gen-deps` | `dependencies/packages.toml` | `dependencies/layer_<N>/<manager>.txt` (layers >= 1; `pacman`/`paru`/`nix`/`uv`/`cargo`; mise-managed tool versions live in `dot_config/mise/config.toml`) + AUTO-GEN block in [`02-installed-programs.md`](02-installed-programs.md) |
+| generator tests | active | `make test-deps` | `programs/generate_deps/main.py` + `programs/generate_deps/tests/` | pytest pass/fail (no output files) |
+| zsh dotfile tests | active | `make test-zsh` | `dot_config/zsh/` + `container/tests/zsh/` | zsh test pass/fail (no output files) |
 | container build | active | `make build` | `Containerfile`, `dependencies/layer_<N>/<manager>.txt`, `HOST_UID`/`HOST_GID` | Podman image |
 | bitwarden auth | manual | `bw login --apikey` + `bw unlock --raw` (shell) | `BW_CLIENTID`/`BW_CLIENTSECRET` (shell env) | `BW_SESSION` in shell env |
 | chezmoi deploy (host) | manual | `chezmoi apply` | repo source + Bitwarden secrets via `bw` | `~` files |

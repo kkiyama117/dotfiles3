@@ -3,6 +3,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 ENTRYPOINT = ROOT / "container" / "bind" / "layer_5_files" / "entrypoint.sh"
 MAKEFILE = ROOT / "Makefile"
+MISE_CONFIG = ROOT / "dot_config" / "mise" / "config.toml"
+ZSHENV = ROOT / "dot_zshenv.tmpl"
 
 
 def test_entrypoint_forwards_stop_signal_during_startup_work() -> None:
@@ -88,3 +90,13 @@ def test_make_up_verifies_image_entrypoint_is_fresh() -> None:
     assert "stale entrypoint" in verify_body
     assert "make build" in verify_body
     assert "exit 1" in verify_body
+
+
+def test_zshenv_owns_pnpm_bootstrap_env() -> None:
+    mise_config = MISE_CONFIG.read_text()
+    zshenv = ZSHENV.read_text()
+
+    assert "[env]" not in mise_config
+    assert "PNPM_HOME" not in mise_config
+    assert "export PNPM_HOME=" in zshenv
+    assert "path=($PNPM_HOME $path)" in zshenv

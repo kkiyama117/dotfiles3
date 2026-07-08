@@ -13,7 +13,7 @@
 # name = "base-devel"
 ## Allowed `manager` values: pacman, paru, nix, uv, cargo, custom.
 ## `cargo` entries land in layer 3 (Containerfile `toolchain` stage).
-## Mise language defaults live in dot_config/mise/config.toml, not here.
+## Mise-managed tool versions live in dot_config/mise/config.toml, not here.
 # manager = "pacman"
 # layer = 1
 # has_configs = false

@@ -24,7 +24,7 @@ the map of which top-level path serves which concern.
 ├── AGENTS.md           # top-level agent protocol; refs specifications/
 ├── README.md           # repo readme (user entry point)
 ├── Makefile            # build/up/exec/down + codegen targets (see 03-makefile.md)
-├── dot_zshenv.tmpl     # chezmoi-managed ~/.zshenv (template; build_mode-gated toolchain block)
+├── dot_zshenv.tmpl     # chezmoi-managed ~/.zshenv (template; XDG/PATH/toolchain env)
 ├── dot_config/         # chezmoi-managed ~/.config/ (XDG configs)
 │   ├── git/
 │   │   ├── config.tmpl  # chezmoi-managed ~/.config/git/config (identity from .chezmoidata; credential.helper host-only via `runtime`; GPG signing)
@@ -66,8 +66,7 @@ the map of which top-level path serves which concern.
 │
 ├── programs/           # host-side tooling / codegen
 │   └── generate_deps/  # implementation of `make gen-deps` (see 08-automations.md)
-├── tests/              # repo-level regression tests outside container/program-specific suites
-│   └── zsh/            # zsh dotfile regression tests
+├── container/tests/    # host-side container/zsh regression tests, excluded from image build context
 │
 └── docs/               # documentation tree (placement: see [here](00-document-management.md))
 │   └── ... delegate it to `00-document-management.md`

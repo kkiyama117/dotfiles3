@@ -67,24 +67,5 @@ node = "latest"
 pnpm = "latest"
 usage = "latest" # This is only for `mise completion`
 
-[env]
-# Language specific env value are managed by mise. (except Rust)
-
-# Go
-GOPATH = '/home/kiyama/.local/share/mise/installs/go/latest/packages'
-GOROOT = '/home/kiyama/.local/share/mise/installs/go/latest'
-
-# Java
-_JAVA_OPTIONS = '-Djava.util.prefs.userRoot=/home/kiyama/.config/java'
-GRADLE_USER_HOME = '/home/kiyama/.local/share/gradle'
-
-# node
-NODE_ENV = 'production'
-NPM_CONFIG_USERCONFIG = '/home/kiyama/.config/npm/npmrc'
-
-# pnpm: `pnpm setup` 相当を mise の env で固定。rc を書き換えさせない。
-PNPM_HOME = '/home/kiyama/.local/share/pnpm'
-_.path = ['/home/kiyama/.local/share/pnpm/bin']
-
 [settings.npm]
 package_manager = "pnpm"

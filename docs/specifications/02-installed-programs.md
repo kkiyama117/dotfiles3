@@ -8,15 +8,18 @@
 ## Source of truth
 
 - Hand-edited SoT for package-list and doc-only tool definitions: [`../../dependencies/packages.toml`](../../dependencies/packages.toml)
-- Hand-edited SoT for mise language defaults: [`../../dot_config/mise/config.toml`](../../dot_config/mise/config.toml)
+- Hand-edited SoT for mise-managed tool versions: [`../../dot_config/mise/config.toml`](../../dot_config/mise/config.toml)
+- Hand-edited SoT for stable shell bootstrap env/PATH (XDG, Rust, Go, Java,
+  Node/pnpm): [`../../dot_zshenv.tmpl`](../../dot_zshenv.tmpl)
 - Generated artifacts derived from `packages.toml`:
   - `../../dependencies/layer_<N>/<manager>.txt` — per-layer install lists for the Containerfile (layers >= 1; list managers `pacman`/`paru`/`nix`/`uv`/`cargo`)
   - The AUTO-GEN block at the end of this document
 
 `packages.toml` schema is documented at the top of that file. New package-list
 entries belong there only — never edit the AUTO-GEN block by hand. New global
-mise language defaults belong in `dot_config/mise/config.toml`, not in
-`packages.toml`.
+mise-managed tool versions belong in `dot_config/mise/config.toml`, not in
+`packages.toml`; stable shell env/PATH defaults belong in `dot_zshenv.tmpl`,
+not in mise `[env]`.
 
 ## Contract
 
