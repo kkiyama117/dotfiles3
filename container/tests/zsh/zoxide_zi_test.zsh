@@ -3,7 +3,7 @@
 set -eu
 setopt pipefail
 
-repo_root="${0:A:h:h:h}"
+repo_root="${0:A:h:h:h:h}"
 source "$repo_root/dot_config/zsh/sheldon_hooks/zoxide-zi.zsh"
 
 function fail() {

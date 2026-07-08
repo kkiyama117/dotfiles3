@@ -143,10 +143,10 @@ test-deps: ## Run the generate_deps pytest suite
 	python3 -m pytest programs/generate_deps/tests/ -q
 
 test-zsh: ## Run zsh dotfile regression tests
-	zsh tests/zsh/zoxide_zi_test.zsh
+	zsh container/tests/zsh/zoxide_zi_test.zsh
 
 test-container: ## Run container entrypoint/Makefile regression tests
-	python3 -m pytest tests/container/ -q
+	python3 -m pytest container/tests/container/ -q
 
 gen-deps: ## Regenerate dependencies/layer_<N>/<manager>.txt + 02 AUTO-GEN block from packages.toml
 	python3 programs/generate_deps/main.py
