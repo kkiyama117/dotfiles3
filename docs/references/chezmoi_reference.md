@@ -27,8 +27,10 @@ hook pattern is adapted from
   when `DOTFILES_RUNTIME=container` or `BUILD_MODE=true`, so the hook never
   fires inside the container or during the build-prepass.
 - The wrapper script lives at `programs/chezmoi_pi_commit.sh`.
-- The commit prompt is in `.pi/prompts/commit.md` (repo-local, not deployed
-  by chezmoi). Override the model with `PI_COMMIT_MODEL` if needed.
+- The commit prompt is managed by the external pi config repo. The hook checks
+  `PI_COMMIT_PROMPT_FILE`, then `~/.pi/agent/prompts/commit.md`, then
+  `~/.local/share/pi-config/agent/prompts/commit.md`. Override the model with
+  `PI_COMMIT_MODEL` if needed.
 
 ## chezmoi with bitwarden
 

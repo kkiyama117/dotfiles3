@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-08
 **Status:** open
-**Related:** [spec 02](../specifications/02-installed-programs.md), [spec 11](../specifications/11-pre-required-env-values.md), [spec 21](../specifications/21-container-build-flow.md), [chezmoi reference](../references/chezmoi_reference.md), [host config inventory](../references/host_config_list.md)
+**Related:** [design](../specifications/implementations/2026-07-08-pi-agent-container-git-managed-config-design.md), [plan](../plans/2026-07-08-pi-agent-container-git-managed-config-impl.md), [spec 02](../specifications/02-installed-programs.md), [spec 11](../specifications/11-pre-required-env-values.md), [spec 21](../specifications/21-container-build-flow.md), [chezmoi reference](../references/chezmoi_reference.md), [host config inventory](../references/host_config_list.md)
 
 ## Context
 
