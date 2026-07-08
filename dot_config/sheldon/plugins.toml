@@ -97,3 +97,9 @@ apply = ["defer"]
 #[plugins.my_fpaths]
 #local="~/.config/zsh/.zfunc"
 #apply = ["fpath"]
+
+# load config deferred
+[plugins.my_conf_defered]
+local="~/.config/zsh"
+use=["{options}.zsh"]
+apply = ['defer']

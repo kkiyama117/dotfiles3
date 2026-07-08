@@ -21,8 +21,7 @@ docs
 container/.gitignore
 # Avoid combining tests; Only for debug.
 container/tests
-tests
-
+tests/**/*
 
 # ============================================================
 # User generated files for dotfiles
@@ -37,4 +36,3 @@ tests
 .claude
 .pi-subagents
 .superpowers
-
