@@ -4,6 +4,7 @@
 type = "git-repo"
 url = "{{ .pi_config_url }}"
 refreshPeriod = "0"
-clone.args = ["--branch", "{{ .pi_config_ref }}", "--depth", "1"]
+{{- /* clone.args = ["--branch", "{{ .pi_config_ref }}", "--depth", "1"] */ -}}
+clone.args = ["--depth", "1"]
 pull.args = ["--ff-only"]
 {{- end }}
