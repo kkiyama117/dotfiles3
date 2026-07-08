@@ -9,7 +9,7 @@ def test_entrypoint_forwards_stop_signal_during_startup_work() -> None:
     text = ENTRYPOINT.read_text()
 
     assert "trap terminate TERM INT" in text
-    assert "run_interruptible chezmoi execute-template --init" in text
+    assert "chezmoi execute-template --init" in text
     assert "run_interruptible chezmoi apply --no-tty --force" in text
 
 
@@ -31,6 +31,29 @@ def test_entrypoint_writes_readiness_sentinel_only_after_apply() -> None:
     apply_idx = text.index("run_interruptible chezmoi apply --no-tty --force")
     touch_idx = text.index('touch "$READINESS_SENTINEL"')
     assert rm_idx < apply_idx < touch_idx
+
+
+def test_entrypoint_seeds_chezmoi_source_before_readiness() -> None:
+    """The first interactive shell after `make up` should have the source
+    bind in zoxide without needing the user to visit it manually."""
+    text = ENTRYPOINT.read_text()
+
+    apply_idx = text.index("run_interruptible chezmoi apply --no-tty --force")
+    seed_idx = text.index("seed_zoxide_paths", apply_idx)
+    touch_idx = text.index('touch "$READINESS_SENTINEL"')
+    assert apply_idx < seed_idx < touch_idx
+
+    assert 'for path in "$CHEZMOI_SOURCE"; do' in text
+    assert '"$zoxide_bin" add -- "$path"' in text
+
+
+def test_entrypoint_zoxide_seed_uses_absolute_binary_fallback() -> None:
+    """The entrypoint's non-interactive PATH can miss /usr/sbin, while the
+    container zoxide package installs there."""
+    text = ENTRYPOINT.read_text()
+
+    assert "/usr/sbin/zoxide" in text
+    assert '"$zoxide_bin" add -- "$path"' in text
 
 
 def test_make_up_waits_for_readiness_sentinel() -> None:

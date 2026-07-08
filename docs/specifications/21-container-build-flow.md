@@ -162,6 +162,12 @@ A new stage may land only when:
    reports `UTF-8`.
 8. After `make up`, `~/.local/share/chezmoi/.git` is visible inside the
    container (host bind verified).
+8a. After `make up`, zoxide has a first-run candidate for the chezmoi source
+    bind, and the custom `zi` wrapper adds the container home to its
+    no-argument picker:
+    `podman exec <container> zsh -lc 'zoxide query -l --'` includes
+    `/home/<USERNAME>/.local/share/chezmoi`; `zi` candidates include
+    `/home/<USERNAME>` before zoxide's list.
 9. `make down && make up` preserves toolchain binaries (named-volume
    persistence verified).
 10. After `make up`, `podman exec <container> paru --version` prints a

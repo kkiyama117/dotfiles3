@@ -32,7 +32,12 @@ labels directly.
   the entrypoint writes a readiness sentinel at `/tmp/chezmoi-applied`
   (`rm -f` at start so a container restart cannot satisfy the wait with a
   stale flag; `touch` only after `chezmoi apply` succeeds, so a failed
-  apply never publishes readiness — `set -e` exits before the `touch`),
+  apply never publishes readiness — `set -e` exits before the `touch`).
+  Before publishing readiness, the entrypoint also seeds zoxide with
+  `~/.local/share/chezmoi` so the first interactive `zi` invocation has
+  the source bind available. The custom `zi` wrapper prepends `$HOME`
+  directly to its no-argument picker because zoxide itself does not store
+  the home directory,
   and `make up` polls `podman exec $(CONTAINER) test -f /tmp/chezmoi-applied`
   once per second up to `UP_WAIT_TIMEOUT` (default 120 s, covering Bitwarden
   auth + apply). If the container exits before the sentinel appears (apply

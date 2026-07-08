@@ -44,7 +44,7 @@ BUILD_CTX := $(CURDIR)/container
 IMAGE     := localhost/dotfiles-manjaro:latest
 CONTAINER := dotfiles-manjaro
 
-.PHONY: help build up exec down clean _require_username _verify_image_fresh gen-deps test-deps
+.PHONY: help build up exec down clean _require_username _verify_image_fresh gen-deps test-deps test-zsh
 
 help:
 	@echo "Usage: make [target]"
@@ -54,6 +54,7 @@ help:
 	@echo "  exec            Open an interactive shell in the running container"
 	@echo "  down            Stop and remove the container"
 	@echo "  clean           Stop container, remove image, and delete named volumes (cargo, rustup, mise, gnupg, ssh)"
+	@echo "  test-zsh        Run zsh dotfile regression tests"
 
 _require_username:
 	@if [ -z "$(USERNAME)" ]; then \
@@ -139,6 +140,9 @@ clean: down ## Full reset: stop container, remove image, and delete named volume
 # META PROGRAMS
 test-deps: ## Run the generate_deps pytest suite
 	python3 -m pytest programs/generate_deps/tests/ -q
+
+test-zsh: ## Run zsh dotfile regression tests
+	zsh tests/zsh/zoxide_zi_test.zsh
 
 gen-deps: ## Regenerate dependencies/layer_<N>/<manager>.txt + 02 AUTO-GEN block from packages.toml
 	python3 programs/generate_deps/main.py

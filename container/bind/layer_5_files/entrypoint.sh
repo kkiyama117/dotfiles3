@@ -15,7 +15,8 @@
 #      `chezmoi apply --no-tty --force` so the real $HOME picks up the
 #      latest dotfiles and resolves `bitwarden*` templates. Skipped
 #      when /run/secrets/bw_password is absent (no-secret startup).
-#   4. Execs CMD.
+#   4. Seeds zoxide with first-run container paths.
+#   5. Execs CMD.
 set -euo pipefail
 
 CHEZMOI_SOURCE="${HOME}/.local/share/chezmoi"
@@ -50,6 +51,42 @@ run_interruptible() {
   local rc=$?
   child_pid=""
   return "$rc"
+}
+
+# ===========================================================================
+# Zoxide setup functions
+# ===========================================================================
+resolve_zoxide_bin() {
+  local zoxide_bin
+  zoxide_bin="$(command -v zoxide 2>/dev/null || true)"
+  if [[ -n "$zoxide_bin" && -x "$zoxide_bin" ]]; then
+    print -r -- "$zoxide_bin"
+    return 0
+  fi
+
+  local candidate
+  for candidate in /usr/bin/zoxide /usr/sbin/zoxide; do
+    if [[ -x "$candidate" ]]; then
+      print -r -- "$candidate"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+seed_zoxide_paths() {
+  local zoxide_bin
+  if ! zoxide_bin="$(resolve_zoxide_bin)"; then
+    return 0
+  fi
+
+  local path
+  for path in "$CHEZMOI_SOURCE"; do
+    if [[ -d "$path" ]]; then
+      "$zoxide_bin" add -- "$path" || echo "entrypoint: warning: failed to seed zoxide path: $path" >&2
+    fi
+  done
 }
 
 trap terminate TERM INT
@@ -122,6 +159,7 @@ if [ -f /run/secrets/bw_password ]; then
 fi
 
 run_interruptible chezmoi apply --no-tty --force
+seed_zoxide_paths
 
 # `chezmoi apply` succeeded: publish the readiness sentinel so `make up`
 # (which polls for this file) can return. `set -e` above exits before this
