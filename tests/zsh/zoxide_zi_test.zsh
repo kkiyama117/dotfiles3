@@ -33,13 +33,14 @@ function sk() {
 
     (( preview_seen )) || fail "expected preview to use the selected path as a single quoted placeholder"
 
-    # Consume stdin and simulate selecting a path containing a space.
+    # Consume stdin and simulate selecting the seeded home entry.
     while IFS= read -r line; do
         candidates+=("$line")
     done
 
-    (( ${#candidates[@]} == 1 )) || fail "expected one candidate, got ${#candidates[@]}"
-    [[ "${candidates[1]}" == "/tmp/zi target" ]] || fail "expected plain path candidate, got: '${candidates[1]}'"
+    (( ${#candidates[@]} == 2 )) || fail "expected two candidates, got ${#candidates[@]}"
+    [[ "${candidates[1]}" == "$HOME" ]] || fail "expected home candidate first, got: '${candidates[1]}'"
+    [[ "${candidates[2]}" == "/tmp/zi target" ]] || fail "expected plain path candidate, got: '${candidates[2]}'"
 
     print -r -- "${candidates[1]}"
 }
@@ -50,4 +51,4 @@ function __zoxide_cd() {
 
 __zoxide_zi
 
-[[ "$cd_target" == "/tmp/zi target" ]] || fail "expected cd target '/tmp/zi target', got: '$cd_target'"
+[[ "$cd_target" == "$HOME" ]] || fail "expected cd target '$HOME', got: '$cd_target'"

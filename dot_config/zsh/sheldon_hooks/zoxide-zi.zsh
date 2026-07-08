@@ -5,7 +5,10 @@
 function __zoxide_zi() {
     \builtin local result
     result="$( \
-        zoxide query -l -- "$@" \
+        ( \
+            [[ "$#" -eq 0 ]] && print -r -- "$HOME"; \
+            zoxide query -l -- "$@" \
+        ) \
         | sk \
             --no-sort \
             --keep-right \

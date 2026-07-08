@@ -8,6 +8,9 @@
 # ============================================================
 docs
 
+# Avoid combining tests; Only for debug.
+container/tests
+
 # Git related files
 .git/
 .gitignore
