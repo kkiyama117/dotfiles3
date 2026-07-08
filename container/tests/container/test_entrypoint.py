@@ -8,6 +8,7 @@ ZSHENV = ROOT / "dot_zshenv.tmpl"
 CHEZMOI_CONFIG = ROOT / ".chezmoi.toml.tmpl"
 CHEZMOI_EXTERNAL = ROOT / ".chezmoiexternal.toml.tmpl"
 PI_LINK_SCRIPT = ROOT / ".chezmoiscripts" / "run_after_configure-pi-agent.sh.tmpl"
+PI_COMMIT_HOOK = ROOT / "programs" / "chezmoi_pi_commit.sh"
 
 
 def test_entrypoint_forwards_stop_signal_during_startup_work() -> None:
@@ -137,3 +138,12 @@ def test_pi_link_script_manages_only_stable_resources() -> None:
     forbidden = ("auth.json", "trust.json", "sessions", "transcripts", "npm", "git", "logs", "cache")
     for name in forbidden:
         assert f'link_resource "{name}"' not in text
+
+
+def test_pi_commit_hook_uses_external_prompt_precedence() -> None:
+    text = PI_COMMIT_HOOK.read_text()
+
+    assert "PI_COMMIT_PROMPT_FILE" in text
+    assert "$HOME/.pi/agent/prompts/commit.md" in text
+    assert "$HOME/.local/share/pi-config/agent/prompts/commit.md" in text
+    assert '$src_dir/.pi/prompts/commit.md' not in text
