@@ -1,8 +1,8 @@
 # Bake `makepkg.conf` into the container image (Layer 1-2 COPY)
 
 **Date:** 2026-07-09
-**Status:** open
-**Related:** [design](../specifications/implementations/2026-07-09-makepkg-conf-container-design.md), [plan](../plans/2026-07-09-makepkg-conf-container-impl.md), [spec 20](../specifications/20-container-rules.md), [spec 21](../specifications/21-container-build-flow.md), [host config inventory §8](../references/host_config_list.md)
+**Status:** closed
+**Related:** [design](../specifications/implementations/2026-07-09-makepkg-conf-container-design.md), [plan](../plans/2026-07-09-makepkg-conf-container-impl.md), [result log](2026-07-09-phase-makepkg-conf-container.md), [review pass-1](../reviews/2026-07-09-makepkg-conf-container-review-pass1.md), [spec 20](../specifications/20-container-rules.md), [spec 21](../specifications/21-container-build-flow.md), [host config inventory §8](../references/host_config_list.md)
 
 ## Context
 
