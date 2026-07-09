@@ -109,44 +109,85 @@ For nvim, **direct external to `~/.config/nvim`** is sufficient. Neovim runtime
 state (`~/.local/share/nvim`, lazy.nvim cache, etc.) lives outside the config
 tree.
 
-### 5. secrets.vim
+See §6 for reviewer verdict: same workflow for both tools; layout divergence is
+accepted.
 
-Per [host config inventory](host_config_list.md), only
-`~/.config/nvim/rc/secrets.vim` is currently dotfiles-managed; the rest of nvim
-config is outside dotfiles.
+### 5. Container verification (2026-07-09)
 
-**Decision:** Keep secrets in dotfiles at a **separate path** so they do not
-conflict with the external checkout:
+Verified in running container `dotfiles-manjaro`:
 
-```text
-~/.config/nvim-secrets/secrets.vim   ← chezmoi-managed (dotfiles)
-~/.config/nvim/                      ← chezmoi external (nvim_config repo)
+| Path | `.git`? | Notes |
+|---|---|---|
+| `~/.pi` | No | pi runtime parent |
+| `~/.pi/agent` | No | symlinks only |
+| `~/.local/share/pi-config` | **Yes** | chezmoi external git root |
+
+```
+~/.pi/agent/prompts   → ~/.local/share/pi-config/agent/prompts
+~/.pi/agent/skills    → ~/.local/share/pi-config/agent/skills
+~/.pi/agent/extensions → ~/.local/share/pi-config/agent/extensions
+~/.pi/agent/themes    → ~/.local/share/pi-config/agent/themes
 ```
 
-The nvim repo's `init.lua` (or equivalent) sources the secrets file from the
-separate path.
+- Editing via `~/.pi/agent/prompts/foo.md` works; `git status` must run in
+  `~/.local/share/pi-config`
+- `git -C ~/.pi/agent` → `fatal: not a git repository`
+- Container push via HTTPS fails without credentials; clone/pull works
 
-### 6. Oracle verification (2026-07-09)
+### 6. Reviewer verdict: unified workflow, divergent layout (2026-07-09)
 
-An advisory review confirmed in the running container:
+**Question:** Should pi and nvim use the same chezmoi external *pattern* (paths)?
 
-- `~/.local/share/pi-config/.git` exists and `git status` works
-- External checkouts are editable; `chezmoi apply --refresh-externals` with
-  uncommitted local changes preserves the working tree
-- `pull.args = ["--ff-only"]` fails if local and remote diverge — push or rebase
-  first
+**Verdict (Option C):** Same **workflow**, different **layout** — both OK.
+
+| What is unified | pi | nvim |
+|---|---|---|
+| Separate repo outside dotfiles3 | `/data/pi-config` | `/data/nvim_config` |
+| dotfiles role | URL + pin only | URL + pin only |
+| Update flow | edit → `git add` → `commit` → `push` | same |
+| Not via chezmoi | no `chezmoi add` for config | same |
+| Build gating | `BUILD_MODE=true` skips fetch | same |
+
+| What differs (tool constraints) | pi | nvim |
+|---|---|---|
+| Why | `~/.pi/agent` mixes config + runtime | `~/.config/nvim` is config-only |
+| External target | `~/.local/share/pi-config` | `~/.config/nvim` |
+| Edit path | `~/.pi/agent/...` (symlinks) | `~/.config/nvim` (direct) |
+| Git root | `~/.local/share/pi-config` | `~/.config/nvim` |
+| `.git` at edit path? | **No** | **Yes** |
+
+Forcing one structural pattern is rejected:
+
+- **Direct external for pi** → risky (runtime files in git checkout)
+- **Staging+symlinks for nvim** → unnecessary complexity
+
+Reviewer artifact:
+`.pi-subagents/artifacts/5aabfcc6-20b4-4488-b722-27858d8923ed_reviewer_output.md`
+
+### 7. Migration notes (host)
+
+- Host `~/.config/nvim` currently points to legacy remote `miyake-ken/vimrc.git`
+- `/data/nvim_config` is empty; bootstrap from existing config before first
+  external apply
+- First `chezmoi apply` with nvim external requires backup/remove of existing
+  `~/.config/nvim` or chezmoi will conflict
 
 ---
 
 ## Decisions recorded
 
 1. **Mechanism:** chezmoi external (`type = "git-repo"`), not submodule
-2. **Target path:** `~/.config/nvim` (direct external, Option A)
-3. **Authoring checkout:** `/data/nvim_config` on host
-4. **Remote:** `kkiyama117/nvim_config`
-5. **Secrets:** separate `~/.config/nvim-secrets/` managed by dotfiles
-6. **Build mode:** no external fetch when `BUILD_MODE=true`
-7. **Refresh:** `refreshPeriod = "0"`; explicit `--refresh-externals` when needed
+2. **Unified workflow:** edit → git add → commit → push in external repo; dotfiles
+   only pins URL/ref; no `chezmoi add` for config files
+3. **nvim layout:** direct external to `~/.config/nvim` (git root = edit path)
+4. **pi layout:** staging at `~/.local/share/pi-config` + symlinks to
+   `~/.pi/agent` (commit from pi-config root, not `~/.pi/agent`)
+5. **Authoring checkouts:** `/data/nvim_config`, `/data/pi-config` on host
+6. **Remotes:** `kkiyama117/nvim_config`, `kkiyama117/pi-config`
+7. **No dotfiles overlay:** entire config trees come from external repos
+8. **Build mode:** no external fetch when `BUILD_MODE=true`
+9. **Refresh:** `refreshPeriod = "0"`; explicit `--refresh-externals` when needed
+10. **Pattern divergence:** accepted as technically justified (reviewer Option C)
 
 ---
 

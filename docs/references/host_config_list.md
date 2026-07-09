@@ -116,7 +116,7 @@
 
 | Target | Note |
 |---|---|
-| `~/.config/nvim/rc/secrets.vim` ⚠ | nvim の他ファイルは管理外。secrets のみ独立管理 |
+| `~/.config/nvim` | chezmoi external → `kkiyama117/nvim_config`（設計: [nvim external design](../specifications/implementations/2026-07-09-nvim-external-config-design.md)） |
 
 ---
 
@@ -300,7 +300,6 @@ source-tree 直下にはあるが `chezmoi managed` には出ない補助物：
 
 - `~/.config/zsh/rc/secrets.zsh`
 - `~/.config/zsh/rc/functions/bw_session.zsh`
-- `~/.config/nvim/rc/secrets.vim`
 - `~/.config/claude/settings.json`
 - `~/.config/syncthing/config.xml`
 - `~/.ssh/authorized_keys`
