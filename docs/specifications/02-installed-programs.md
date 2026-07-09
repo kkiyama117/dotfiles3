@@ -79,8 +79,10 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `X11` | migrated | yes | X11 config |
 | `aria2` | migrated | yes | download files concurrently |
 | `fcitx5` | migrated | yes | download files concurrently |
+| `gtk` | migrated | yes | GTK |
 | `herdr` | migrated | yes | multiplexer with AI agents |
 | `kitty` | migrated | yes | Terminal emulator |
+| `rofi` | migrated | yes | display and focus switcher |
 
 #### Layer 0 — already in the base image
 
