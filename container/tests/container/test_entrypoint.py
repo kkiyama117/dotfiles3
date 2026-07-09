@@ -11,6 +11,7 @@ PI_LINK_SCRIPT = ROOT / ".chezmoiscripts" / "run_after_configure-pi-agent.sh.tmp
 PI_COMMIT_HOOK = ROOT / "programs" / "chezmoi_pi_commit.sh"
 PACKAGES = ROOT / "dependencies" / "packages.toml"
 CONTAINERFILE = ROOT / "container" / "Containerfile"
+MAKEPKG_CONF = ROOT / "container" / "bind" / "layer_1_files" / "makepkg.conf"
 
 
 def test_entrypoint_forwards_stop_signal_during_startup_work() -> None:
@@ -161,3 +162,16 @@ def test_pi_coding_agent_inventory_and_container_install() -> None:
     assert "@earendil-works/pi-coding-agent" in containerfile
     assert "--ignore-scripts" in containerfile
     assert "pi --version" in containerfile
+
+
+def test_makepkg_conf_baked_into_layer_1_2() -> None:
+    containerfile = CONTAINERFILE.read_text()
+    makepkg = MAKEPKG_CONF.read_text()
+
+    assert "COPY bind/layer_1_files/makepkg.conf /etc/makepkg.conf" in containerfile
+    assert "PKGEXT='.pkg.tar.xz'" in makepkg
+    assert "COMPRESSZST=(zstd -c -z -q -)" in makepkg
+    copy_idx = containerfile.index("COPY bind/layer_1_files/makepkg.conf /etc/makepkg.conf")
+    mirror_idx = containerfile.index("COPY bind/layer_1_files/pacman_mirrorlist")
+    syu_idx = containerfile.index("pacman -Syu --noconfirm")
+    assert copy_idx < mirror_idx < syu_idx

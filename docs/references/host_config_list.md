@@ -158,7 +158,7 @@
 
 | Target | Note |
 |---|---|
-| `~/.config/pacman/makepkg.conf` | |
+| `~/.config/pacman/makepkg.conf` | container-side `container/bind/layer_1_files/makepkg.conf` → `/etc/makepkg.conf` (build COPY, Layer 1-2); not chezmoi-managed |
 | `~/.config/topgrade.toml` | |
 | `~/.config/aria2/aria2.conf` | |
 | `~/.config/dircolors` | |
