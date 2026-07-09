@@ -471,12 +471,28 @@ has_configs = true
 description = "download files concurrently"
 
 [[tool]]
+name = "gtk"
+manager = "migrated" # "pacman" if it used
+layer = -1
+# `~/.config/gtk-3.0/settings.ini`
+has_configs = true
+description = "GTK"
+
+[[tool]]
 name = "herdr"
 manager = "migrated" # "custom" if it used
 layer = -1
 # `~/.config/herdr`
 has_configs = true
 description = "multiplexer with AI agents"
+
+[[tool]]
+name = "rofi"
+manager = "migrated" # "paru" if it used
+layer = -1
+# `~/.config/rofi`
+has_configs = true
+description = "display and focus switcher"
 
 [[tool]]
 name = "kitty"
