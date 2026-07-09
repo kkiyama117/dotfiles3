@@ -21,9 +21,22 @@ if git diff --quiet 2>/dev/null && git diff --cached --quiet 2>/dev/null && \
   exit 0
 fi
 
-prompt_file="$src_dir/.pi/prompts/commit.md"
-if [ ! -f "$prompt_file" ]; then
-  echo "chezmoi commit hook: missing $prompt_file — skipping auto-commit." >&2
+prompt_candidates=(
+  "${PI_COMMIT_PROMPT_FILE:-}"
+  "$HOME/.pi/agent/prompts/commit.md"
+  "$HOME/.local/share/pi-config/agent/prompts/commit.md"
+)
+
+prompt_file=""
+for candidate in "${prompt_candidates[@]}"; do
+  if [ -n "$candidate" ] && [ -f "$candidate" ]; then
+    prompt_file="$candidate"
+    break
+  fi
+done
+
+if [ -z "$prompt_file" ]; then
+  echo "chezmoi commit hook: missing pi commit prompt — skipping auto-commit." >&2
   exit 0
 fi
 

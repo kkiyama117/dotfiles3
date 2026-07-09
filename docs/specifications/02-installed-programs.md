@@ -26,8 +26,8 @@ not in mise `[env]`.
 | Field | Required | Allowed values |
 |---|---|---|
 | `name`        | yes | string |
-| `manager`     | yes | `pacman` / `paru` / `nix` / `uv` / `cargo` / `custom` |
-| `layer`       | yes | integer ≥ 0; 1-5 = Containerfile stage index; 0 = already in the base image; 6 = runtime-manual reference (not build-installed, see [`24-rust-packages-rule.md`](24-rust-packages-rule.md)) |
+| `manager`     | yes | `pacman` / `paru` / `nix` / `uv` / `cargo` / `custom` / `migrated` |
+| `layer`       | yes | integer ≥ -1; -1 = migrated config retained, tool not installed; 0 = already in the base image; 1-5 = Containerfile stage index; 6 = runtime-manual reference (not build-installed, see [`24-rust-packages-rule.md`](24-rust-packages-rule.md)) |
 | `has_configs` | yes | bool — true if config is templated under chezmoi |
 | `description` | no  | string — used in the AUTO-GEN block |
 
@@ -39,7 +39,7 @@ not in mise `[env]`.
 - `uv`: installed via `uv` (Python package manager)
 - `cargo`: build-time cargo tools (`layer = 3`) are installed via
   `cargo binstall --only-signed -y` from `dependencies/layer_3/cargo.txt`
-  in the `toolchain` stage (Layer 3-6); per spec 24 they MUST ship a
+  in the `toolchain` stage (Layer 3-7); per spec 24 they MUST ship a
   signed prebuilt. `layer = 6` cargo tools are runtime-manual
   (declared for SoT, NOT build-installed; `layer_6/cargo.txt` is a
   reference list the Containerfile never reads). See
@@ -54,6 +54,15 @@ not in mise `[env]`.
   bespoke install path in the Containerfile that cannot go through a
   generated list — e.g. `paru`, which is bootstrapped via `makepkg` and
   therefore cannot also be a `paru -S` target.
+  `pi-coding-agent` is a `custom` Layer 3 entry because the package is
+  installed by a bespoke npm command after mise-managed Node is available,
+  not from a generated package-manager list.
+- `migrated`: doc-only. Config copied from a prior dotfiles setup and
+  still templated under chezmoi, but the tool is NOT installed in the
+  container (and the Containerfile MUST NOT be updated for it). Use
+  `layer = -1` and `has_configs = true`. Typical cases: configs kept for
+  reference or host-only use, or superseded by a newer dotfile that was
+  already active in the previous environment.
 
 ## Regeneration
 
@@ -62,6 +71,12 @@ to rewrite the AUTO-GEN block from `packages.toml`.
 
 <!-- BEGIN AUTO-GEN: installed-programs -->
 Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.toml) via `make gen-deps` (`programs/generate_deps/main.py`). Do not edit by hand.
+
+#### Layer -1 — migrated (config retained, tool not installed)
+
+| name | manager | configs | description |
+|---|---|---|---|
+| `X11` | migrated | yes | X11 config |
 
 #### Layer 0 — already in the base image
 
@@ -98,6 +113,7 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `cargo-outdated` | cargo | no | Detect outdated Rust crate dependencies |
 | `topgrade` | cargo | yes | multi-package-manager updater; build-time cargo tool (signed prebuilt via cargo-binstall --only-signed) |
 | `cargo-binstall` | custom | no | Install binaries |
+| `pi-coding-agent` | custom | yes | pi coding agent CLI (`@earendil-works/pi-coding-agent`); installed with npm --ignore-scripts after mise-managed Node |
 
 #### Layer 4 — install list
 

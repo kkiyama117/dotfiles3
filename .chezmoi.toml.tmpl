@@ -11,6 +11,8 @@
 [data]
 build_mode = {{ if eq (env "BUILD_MODE" | default "false") "true" }}true{{ else }}false{{ end }}
 runtime = {{ env "DOTFILES_RUNTIME" | default "host" | quote }}
+pi_config_url = {{ env "PI_CONFIG_URL" | default "https://github.com/kkiyama117/pi-config.git" | quote }}
+pi_config_ref = {{ env "PI_CONFIG_REF" | default "pi-config-v2026-07-08-1" | quote }}
 
 {{- /* Git auto-commit via pi CLI hooks — host runtime only.
    The [git] and [hooks] sections are omitted entirely when running
