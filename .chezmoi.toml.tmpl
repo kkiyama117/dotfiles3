@@ -13,6 +13,8 @@ build_mode = {{ if eq (env "BUILD_MODE" | default "false") "true" }}true{{ else 
 runtime = {{ env "DOTFILES_RUNTIME" | default "host" | quote }}
 pi_config_url = {{ env "PI_CONFIG_URL" | default "https://github.com/kkiyama117/pi-config.git" | quote }}
 pi_config_ref = {{ env "PI_CONFIG_REF" | default "pi-config-v2026-07-08-1" | quote }}
+nvim_config_url = {{ env "NVIM_CONFIG_URL" | default "https://github.com/kkiyama117/nvim_config.git" | quote }}
+nvim_config_ref = {{ env "NVIM_CONFIG_REF" | default "nvim-config-v2026-07-09-1" | quote }}
 
 {{- /* Git auto-commit via pi CLI hooks — host runtime only.
    The [git] and [hooks] sections are omitted entirely when running

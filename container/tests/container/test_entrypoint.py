@@ -129,6 +129,23 @@ def test_pi_config_external_is_build_mode_gated_and_pinned() -> None:
     assert "file:///data/pi-config" not in external
 
 
+def test_nvim_config_external_is_build_mode_gated_and_pinned() -> None:
+    config = CHEZMOI_CONFIG.read_text()
+    external = CHEZMOI_EXTERNAL.read_text()
+
+    assert "nvim_config_url" in config
+    assert "NVIM_CONFIG_URL" in config
+    assert "https://github.com/kkiyama117/nvim_config.git" in config
+    assert "nvim_config_ref" in config
+    assert "NVIM_CONFIG_REF" in config
+    assert "nvim-config-v2026-07-09-1" in config
+
+    assert '[".config/nvim"]' in external
+    assert 'url = "{{ .nvim_config_url }}"' in external
+    assert 'clone.args = ["--branch", "{{ .nvim_config_ref }}", "--depth", "1"]' in external
+    assert "file:///data/nvim_config" not in external
+
+
 def test_pi_link_script_manages_only_stable_resources() -> None:
     text = PI_LINK_SCRIPT.read_text()
 
