@@ -450,7 +450,15 @@ description = "runtime-manual cargo tool; build & publish Rust-Python extensions
 name = "aria2"
 manager = "migrated" # "pacman" if it used
 layer = -1
-## `~/.config/aria2/aria2.toml`
+# `~/.config/aria2/aria2.toml`
+has_configs = true
+description = "download files concurrently"
+
+[[tool]]
+name = "fcitx5"
+manager = "migrated" # "pacman" if it used
+layer = -1
+# `~/.config/fcitx5/` and  `~/.config/environment.d/` to use it in desktop
 has_configs = true
 description = "download files concurrently"
 
@@ -458,7 +466,7 @@ description = "download files concurrently"
 name = "X11"
 manager = "migrated" # "pacman" if it used
 layer = -1
-## `~/.config/X11` and `~/.cache/X11`
+# `~/.config/X11` and `~/.cache/X11`
 has_configs = true
 description = "X11 config"
 

@@ -50,6 +50,10 @@ README.md
 .local/share/mise
 .local/share/gnupg
 
+# Golang: `~/.config/go` is not managed now and may include local data
+.config/go/*
+!.config/go/.keep
+
 # SSH: chezmoi manages ONLY ~/.ssh/config. Everything else under ~/.ssh/
 # (private/public keys, known_hosts, config.d/*) is volume-owned and must
 # never be touched by chezmoi. Exclude the whole tree, then re-include config.

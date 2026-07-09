@@ -77,6 +77,8 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | name | manager | configs | description |
 |---|---|---|---|
 | `X11` | migrated | yes | X11 config |
+| `aria2` | migrated | yes | download files concurrently |
+| `fcitx5` | migrated | yes | download files concurrently |
 
 #### Layer 0 — already in the base image
 
