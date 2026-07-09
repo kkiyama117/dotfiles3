@@ -6,7 +6,8 @@ Source of truth: ``dependencies/packages.toml`` (schema=1).
 Outputs (all derived, do not hand-edit):
   - ``dependencies/layer_<N>/<manager>.txt``  — one install list per layer (N>=1)
     and per list-based manager (pacman / paru / nix / uv / cargo). Layer 0
-    (already in the base image) and ``custom`` (bespoke install path) produce no
+    (already in the base image), ``custom`` (bespoke Containerfile install),
+    and ``migrated`` (config retained, tool not installed; layer -1) produce no
     txt.
   - The AUTO-GEN block in ``docs/specifications/02-installed-programs.md``
     (between the ``installed-programs`` markers), rendered as per-layer tables.
@@ -36,11 +37,12 @@ DOC_PATH = REPO_ROOT / "docs" / "specifications" / "02-installed-programs.md"
 LIST_MANAGERS = ("pacman", "paru", "nix", "uv", "cargo")
 # Doc-only managers: declared in packages.toml (so they appear in the
 # spec 02 AUTO-GEN doc block and satisfy invariant I5) but NOT installed
-# from a generated `layer_<N>/<manager>.txt` list — they have a bespoke
-# install path in the Containerfile. `custom` covers packages with a
-# hand-written install step (e.g. `paru`, bootstrapped via `makepkg`,
-# which cannot also be a `paru -S` target).
-DOC_ONLY_MANAGERS = ("custom",)
+# from a generated `layer_<N>/<manager>.txt` list.
+# - `custom`: bespoke install path in the Containerfile (e.g. `paru`,
+#   bootstrapped via `makepkg`, which cannot also be a `paru -S` target).
+# - `migrated`: config retained from a prior dotfiles setup; the tool is
+#   NOT installed in the container (use `layer = -1`).
+DOC_ONLY_MANAGERS = ("custom", "migrated")
 ALL_MANAGERS = LIST_MANAGERS + DOC_ONLY_MANAGERS
 
 # (layer, manager) pairs that always have a generated install list file,
@@ -90,8 +92,14 @@ def validate(t: dict) -> None:
     if mgr not in ALL_MANAGERS:
         fail(f"{name}: unknown manager {mgr!r} (allowed: {ALL_MANAGERS})")
     layer = t.get("layer")
-    if not isinstance(layer, int) or isinstance(layer, bool) or layer < 0:
-        fail(f"{name}: `layer` must be a non-negative integer, got {layer!r}")
+    if not isinstance(layer, int) or isinstance(layer, bool):
+        fail(f"{name}: `layer` must be an integer, got {layer!r}")
+    if layer < -1:
+        fail(f"{name}: `layer` must be >= -1, got {layer!r}")
+    if mgr == "migrated" and layer != -1:
+        fail(f"{name}: `migrated` entries must use `layer = -1`, got {layer!r}")
+    if mgr != "migrated" and layer == -1:
+        fail(f"{name}: `layer = -1` is reserved for `migrated` entries")
     hc = t.get("has_configs")
     if not isinstance(hc, bool):
         fail(f"{name}: `has_configs` must be bool, got {hc!r}")
@@ -142,6 +150,7 @@ def render_doc_block(tools: list[dict]) -> str:
         _LAYER_HEADINGS = {
             0: "Layer 0 — already in the base image",
             6: "Layer 6 — runtime-manual (not build-installed)",
+            -1: "Layer -1 — migrated (config retained, tool not installed)",
         }
         heading = f"#### {_LAYER_HEADINGS.get(layer, f'Layer {layer} — install list')}"
         lines += [heading, ""]
