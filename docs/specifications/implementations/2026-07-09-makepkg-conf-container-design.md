@@ -48,12 +48,17 @@ in Layer 1-2 — parallel to `pacman_mirrorlist`.
 | `MAKEFLAGS` | `-j2` | `-j$(($(nproc)+1))` |
 | Hardening | `-D_FORTIFY_SOURCE=3` + clash/protection | `-D_FORTIFY_SOURCE=2` + `-fstack-protector-strong` |
 
-## §4 `makepkg.conf.d/` bypass
+## §4 `makepkg.conf.d/` interaction
 
-The base image's `/etc/makepkg.conf` sources
-`/etc/makepkg.conf.d/{fortran,rust}.conf`. The full-file COPY replaces the
-entire file, so `.d/` snippets are no longer sourced. The curated file
-carries the build flags the user wants; this is intentional.
+`makepkg` loads `/etc/makepkg.conf`, then sources
+`/etc/makepkg.conf.d/*.conf` automatically (see `makepkg.conf(5)`). The
+full-file COPY replaces the main file only; `.d/` snippets still apply and
+are sourced **after** the curated file. On `manjarolinux/base`,
+`fortran.conf` and `rust.conf` exist but set only commented-out defaults
+(`FFLAGS`, `RUSTFLAGS`, etc.) — they do not override `PKGEXT`,
+`COMPRESSZST`, `MAKEFLAGS`, or the curated hardening flags. If a future
+base-image drop-in sets a variable the curated file also sets, the drop-in
+wins; monitor `.d/` on base-image upgrades.
 
 ## §5 Rollout
 

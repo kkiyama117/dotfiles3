@@ -211,8 +211,10 @@ labels directly.
   (Layer 1-2, before the first `pacman -Syu`) embeds the curated AUR/pacman
   compression (`PKGEXT`), `COMPRESSZST`, `MAKEFLAGS`, and build flags so
   every `paru -S` / `makepkg -si` in the `aur` stage and at runtime uses
-  the host's preferred settings. The full-file COPY intentionally bypasses
-  the base image's `/etc/makepkg.conf.d/{fortran,rust}.conf` snippets. To
+  the host's preferred settings. `makepkg` still sources
+  `/etc/makepkg.conf.d/*.conf` after the curated file; current base-image
+  drop-ins (`fortran.conf`, `rust.conf`) are comment-only and do not
+  override curated variables. To
   switch compression (e.g. xz → zstd), edit the bind file's `PKGEXT` line
   and re-run `make build` — no Containerfile edit required.
 - I-INFRA1: **Toolchain installer binaries are infrastructure, not
