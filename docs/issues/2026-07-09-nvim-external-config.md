@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-09
 **Status:** open
-**Related:** [conversation log](../references/2026-07-09-nvim-external-config-conversation.md), [design](../specifications/implementations/2026-07-09-nvim-external-config-design.md), [pi-config design](../specifications/implementations/2026-07-08-pi-agent-container-git-managed-config-design.md), [spec 11](../specifications/11-pre-required-env-values.md), [reviewer artifact](../../.pi-subagents/artifacts/5aabfcc6-20b4-4488-b722-27858d8923ed_reviewer_output.md)
+**Related:** [conversation log](../references/2026-07-09-nvim-external-config-conversation.md), [design](../specifications/implementations/2026-07-09-nvim-external-config-design.md), [plan](../plans/2026-07-09-nvim-external-config-impl.md), [pi-config design](../specifications/implementations/2026-07-08-pi-agent-container-git-managed-config-design.md), [spec 11](../specifications/11-pre-required-env-values.md), [reviewer artifact](../../.pi-subagents/artifacts/5aabfcc6-20b4-4488-b722-27858d8923ed_reviewer_output.md)
 
 ## Context
 
@@ -65,4 +65,4 @@ Define and implement a reproducible way to deploy nvim config from
 - Lazy.nvim / plugin data under `~/.local/share/nvim` remains unmanaged.
 - pi-config `pi_config_ref` is defined but not yet used in `clone.args` (fix
   alongside nvim implementation).
-- Implementation plan (`docs/plans/…-impl.md`) follows design approval.
+- Implementation plan: [`docs/plans/2026-07-09-nvim-external-config-impl.md`](../plans/2026-07-09-nvim-external-config-impl.md)
