@@ -9,7 +9,7 @@
 - Neovim config should live in a separate git repository, not inside
   `dotfiles3`.
 - Host authoring checkout: `/data/nvim_config`
-- GitHub remote: `https://github.com/kkiyama117/nvim_config.git`
+- GitHub remote: `git@github.com:kkiyama117/nvim_config.git` (default branch `main`)
 - Deployed target on host and container: `~/.config/nvim`
 - No dotfiles-managed nvim files; the full config tree comes from the external
   repo.
@@ -41,8 +41,8 @@ Define and implement a reproducible way to deploy nvim config from
 
 1. `.chezmoiexternal.toml.tmpl` declares a `git-repo` external for
    `~/.config/nvim` when `build_mode` is false.
-2. Default external URL is `https://github.com/kkiyama117/nvim_config.git` with
-   a pinned ref (tag or commit) in `.chezmoi.toml.tmpl` data.
+2. Default external URL is `git@github.com:kkiyama117/nvim_config.git` with
+   default ref `main` in `.chezmoi.toml.tmpl` data (override via `NVIM_CONFIG_REF`).
 3. `NVIM_CONFIG_URL` and `NVIM_CONFIG_REF` env overrides are documented in
    spec 11 (local dev: `file:///data/nvim_config`).
 4. `BUILD_MODE=true chezmoi execute-template --init` renders **no** nvim

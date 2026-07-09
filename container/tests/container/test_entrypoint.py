@@ -135,10 +135,10 @@ def test_nvim_config_external_is_build_mode_gated_and_pinned() -> None:
 
     assert "nvim_config_url" in config
     assert "NVIM_CONFIG_URL" in config
-    assert "https://github.com/kkiyama117/nvim_config.git" in config
+    assert "git@github.com:kkiyama117/nvim_config.git" in config
     assert "nvim_config_ref" in config
     assert "NVIM_CONFIG_REF" in config
-    assert "nvim-config-v2026-07-09-1" in config
+    assert 'nvim_config_ref = {{ env "NVIM_CONFIG_REF" | default "main" | quote }}' in config
 
     assert '[".config/nvim"]' in external
     assert 'url = "{{ .nvim_config_url }}"' in external
