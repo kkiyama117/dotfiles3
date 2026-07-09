@@ -1,6 +1,7 @@
 bind/**/*
 !bind/**/
 !bind/layer_1_files/pacman_mirrorlist
+!bind/layer_1_files/makepkg.conf
 !bind/layer_5_files/entrypoint.sh
 
 #PYTHON

@@ -206,6 +206,15 @@ labels directly.
   Rust package). The cache mounts are not written to image layers.
 - I-AUR4: The `aur` stage's bootstrap clone (`/tmp/paru-build`) is
   removed before the stage ends so it cannot ride into the final image.
+- I-MAKEPKG1: `/etc/makepkg.conf` is image-owned, not chezmoi-managed.
+  The build-time `COPY bind/layer_1_files/makepkg.conf /etc/makepkg.conf`
+  (Layer 1-2, before the first `pacman -Syu`) embeds the curated AUR/pacman
+  compression (`PKGEXT`), `COMPRESSZST`, `MAKEFLAGS`, and build flags so
+  every `paru -S` / `makepkg -si` in the `aur` stage and at runtime uses
+  the host's preferred settings. The full-file COPY intentionally bypasses
+  the base image's `/etc/makepkg.conf.d/{fortran,rust}.conf` snippets. To
+  switch compression (e.g. xz → zstd), edit the bind file's `PKGEXT` line
+  and re-run `make build` — no Containerfile edit required.
 - I-INFRA1: **Toolchain installer binaries are infrastructure, not
   `packages.toml` entries.** A tool whose sole purpose is to
   install/manage other tools (an installer-of-installers) and which

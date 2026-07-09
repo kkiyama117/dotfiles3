@@ -15,7 +15,7 @@ stage; within a stage, numbered **sub-layers** (`Layer N-M`) group related
 |---|---|---|---|---|
 | `manjarolinux/base:latest` | 0-1 | - | Base image | - |
 | `base` | 1-1 | `ARG` | Receive build-args. | `HOST_UID`, `HOST_GID`, `USERNAME` |
-| `base` | 1-2 | mirrorlist + `pacman -Syu` + `/etc/locale.gen` reset + `locale-gen` | Install Layer 1 pacman set with BuildKit cache, then generate exactly `ja_JP.UTF-8` and `en_US.UTF-8` for the `.zshenv` locale exports. | `bind/layer_1_files/pacman_mirrorlist`, `dependencies/layer_1/pacman.txt`, `/etc/locale.gen` |
+| `base` | 1-2 | makepkg.conf + mirrorlist + `pacman -Syu` + `/etc/locale.gen` reset + `locale-gen` | Install Layer 1 pacman set with BuildKit cache, then generate exactly `ja_JP.UTF-8` and `en_US.UTF-8` for the `.zshenv` locale exports. | `bind/layer_1_files/makepkg.conf`, `bind/layer_1_files/pacman_mirrorlist`, `dependencies/layer_1/pacman.txt`, `/etc/locale.gen` |
 | `base` | 1-3 | `groupmod` / `usermod` | Remap builder -> ${USERNAME} with host uid/gid; set zsh login. | build-args |
 | `base` | 1-4 | UID-collision fallback + sudoers + `USER ${USERNAME}` | Idempotent user provisioning; NOPASSWD sudoers; switch to non-root. | build-args |
 | `base` | 1-5 | `install -d -m 0755` for `~/.local/share/{cargo,rustup,mise,chezmoi}` | Owner-correct mountpoints for runtime binds/volumes. | build-args |
@@ -211,6 +211,7 @@ A new stage may land only when:
 21. After `make up`, `stat ~/.ssh` prints `0700` and is `${USERNAME}`-owned.
 22. `make down && make up` preserves key material written into `dotfiles_ssh` (test key).
 23. **Rollout:** existing deployments must run **`make build`** (Layer 1-7) before the first `make up` after this change; to reset SSH keys only use `podman volume rm dotfiles_ssh` (NOT `make clean` — also wipes `dotfiles_gnupg` / cargo / mise / rustup).
+24. After `make up`, `podman exec <container> zsh -ic 'grep -E "PKGEXT|COMPRESSZST" /etc/makepkg.conf'` outputs `PKGEXT='.pkg.tar.xz'` and `COMPRESSZST=(zstd -c -z -q -)`; `podman exec <container> zsh -ic 'makepkg --version'` exits 0; `stat -c '%a %U:%G' /etc/makepkg.conf` prints `644 root:root`. **Rollout:** existing deployments must run `make build` before the first `make up` after this change; the COPY is in Layer 1-2 so old image layers do not carry the file (parallel to SSH rollout #23).
 
 ## Open questions
 
