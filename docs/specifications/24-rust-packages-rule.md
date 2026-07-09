@@ -44,7 +44,7 @@ usual and are out of scope here.
   especially beta / latest / source-driven ones.
 - **Failure mode + recovery:** if a `layer = 3` cargo entry has no
   signed prebuilt source, `cargo binstall --only-signed -y` fails at
-  Layer 3-6 with a "no signed artifact found" error. Recovery: move the
+  Layer 3-7 with a "no signed artifact found" error. Recovery: move the
   entry to `layer = 6` (runtime-manual; install via `cargo install
   --locked` or `cargo binstall` without `--only-signed` at the
   operator's discretion). The generator cannot pre-validate

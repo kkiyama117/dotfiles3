@@ -9,7 +9,7 @@
 The Containerfile is a multi-stage build. Each `FROM ... AS <stage>` is a
 stage; within a stage, numbered **sub-layers** (`Layer N-M`) group related
 `RUN` / `ARG` / `USER` directives. The table below reflects the file as of
-2026-07-05.
+2026-07-08.
 
 | Stage (`FROM ... AS`) | Sub-layer | Directive(s) | Purpose | Inputs |
 |---|---|---|---|---|
@@ -22,12 +22,13 @@ stage; within a stage, numbered **sub-layers** (`Layer N-M`) group related
 | `base` | 1-6 | `install -d -m 0700` for `~/.local/share/gnupg` | Owner-correct `0700` mountpoint for the `dotfiles_gnupg` named volume (`GNUPGHOME`); empty at build time (no key baked). | build-args |
 | `base` | 1-7 | `install -d -m 0700` for `~/.ssh` | Owner-correct `0700` mountpoint for the `dotfiles_ssh` named volume; empty at build time (no key baked). | build-args |
 | `build-prepass` (`FROM base`) | 2 | `COPY --from=srcroot`; `BUILD_MODE=true chezmoi execute-template --init < /tmp/chezmoi-src/.chezmoi.toml.tmpl > ~/.config/chezmoi/chezmoi.toml` (`build_mode = true`); `chezmoi apply --destination /tmp/build-home` | Scratch render of ENV-bearing dotfiles with `build_mode = true`; secret-free. | `srcroot` named build-context, `.chezmoi.toml.tmpl` |
-| `toolchain` (`FROM build-prepass`) | 3 | Copy rendered Cargo config (3-2), `rustup-init` (3-3), mise-managed languages (3-4), `cargo-binstall` (3-5), cargo tools (3-6); cache mounts on `$CARGO_HOME/{registry,git}` (4-1/4-2 only; binstall uses the crates.io HTTP API) | Install the rendered Cargo config, then rustup, mise-managed languages, and cargo binaries under XDG-compliant paths. | `/tmp/build-home/.zshenv`, `/tmp/build-home/.local/share/cargo/config.toml`, `dependencies/layer_3/cargo.txt` |
+| `toolchain` (`FROM build-prepass`) | 3 | Copy rendered Cargo config (3-2), `rustup-init` (3-3), mise-managed languages (3-4), pi CLI npm install (3-5), `cargo-binstall` (3-6), cargo tools (3-7); cache mounts on `$CARGO_HOME/{registry,git}` (4-1/4-2 only; binstall uses the crates.io HTTP API) | Install the rendered Cargo config, then rustup, mise-managed languages, the pi coding agent CLI, and cargo binaries under XDG-compliant paths. | `/tmp/build-home/.zshenv`, `/tmp/build-home/.local/share/cargo/config.toml`, `dependencies/layer_3/cargo.txt` |
 | `toolchain` (`FROM build-prepass`) | 3-2 | Copy `/tmp/build-home/.local/share/cargo/config.toml` and `/tmp/build-home/.local/share/cargo/binstall.toml` under `$CARGO_HOME/` and `$CARGO_HOME/binstall.toml` | Install the rendered Cargo config before any Rust/cargo/AUR step can compile Rust code. | `/tmp/build-home/.zshenv`, `/tmp/build-home/.local/share/cargo/config.toml`, `dependencies/layer_3/cargo.txt` |
 | `toolchain` (`FROM build-prepass`) | 3-3 | `rustup-init` | Install stable Rust with `profile=minimal`. | `/tmp/build-home/.zshenv` |
-| `toolchain` (`FROM build-prepass`) | 3-4 | Copy `/tmp/build-home/.config/mise/config.toml` to `${XDG_CONFIG_HOME}/mise/config.toml`; `mise install --yes` with `~/.cache/mise` cache mount | Install mise-managed language defaults from the rendered mise config. | `/tmp/build-home/.zshenv`, [`dot_config/mise/config.toml`](../../dot_config/mise/config.toml) (rendered to `/tmp/build-home/.config/mise/config.toml`) |
-| `toolchain` (`FROM build-prepass`) | 3-5 | `curl` the pinned v1.20.1 `cargo-binstall-x86_64-unknown-linux-musl.tgz`; `sha256sum -c` against the hardcoded SHA256; single-file `tar` + `mv` to `$CARGO_HOME/bin` | Bootstrap `cargo-binstall` as infra (I-INFRA1 / I-CARGO1) — the installer for the rest of the cargo ecosystem. Not a `packages.toml` entry. No cache mount (binstall has no persistent download cache). | `/tmp/build-home/.zshenv`, `ARG CARGO_BINSTALL_VERSION`/`CARGO_BINSTALL_SHA256` |
-| `toolchain` (`FROM build-prepass`) | 3-6 | `COPY --from=deps layer_3/cargo.txt`; `cargo binstall --only-signed -y ${=pkgs}` | Install the Layer 3 build-time cargo tool set (currently `topgrade`) from the generated list (`manager = "cargo"`, `layer = 3` only) via signed prebuilt binaries. Per [`24-rust-packages-rule.md`](24-rust-packages-rule.md) §3, layer=3 entries MUST ship a signed prebuilt; unsigned-only/source-only tools are `layer = 6` (runtime-manual). No cache mount (binstall resolves via the crates.io HTTP API, not the registry/git index). | `/tmp/build-home/.zshenv`, `dependencies/layer_3/cargo.txt` |
+| `toolchain` (`FROM build-prepass`) | 3-4 | Copy `/tmp/build-home/.config/mise/config.toml` to `${XDG_CONFIG_HOME}/mise/config.toml`; `mise install --yes` with `~/.cache/mise` cache mount | Install mise-managed tool versions from the rendered mise config. Stable shell env/PATH defaults live in `.zshenv`, not mise `[env]`. | `/tmp/build-home/.zshenv`, [`dot_config/mise/config.toml`](../../dot_config/mise/config.toml) (rendered to `/tmp/build-home/.config/mise/config.toml`) |
+| `toolchain` (`FROM build-prepass`) | 3-5 | `mise exec node@latest -- npm install -g --ignore-scripts @earendil-works/pi-coding-agent`; `pi --version`; npm cache mount on `~/.cache/npm` | Install the pi coding agent CLI with lifecycle scripts disabled after mise-managed Node/npm is available. Declared as `manager = "custom"` in `packages.toml` (doc-only; no generated install list). | `/tmp/build-home/.zshenv`, rendered mise config from Layer 3-4 |
+| `toolchain` (`FROM build-prepass`) | 3-6 | `curl` the pinned v1.20.1 `cargo-binstall-x86_64-unknown-linux-musl.tgz`; `sha256sum -c` against the hardcoded SHA256; single-file `tar` + `mv` to `$CARGO_HOME/bin` | Bootstrap `cargo-binstall` as infra (I-INFRA1 / I-CARGO1) — the installer for the rest of the cargo ecosystem. Not a `packages.toml` entry. No cache mount (binstall has no persistent download cache). | `/tmp/build-home/.zshenv`, `ARG CARGO_BINSTALL_VERSION`/`CARGO_BINSTALL_SHA256` |
+| `toolchain` (`FROM build-prepass`) | 3-7 | `COPY --from=deps layer_3/cargo.txt`; `cargo binstall --only-signed -y ${=pkgs}` | Install the Layer 3 build-time cargo tool set (currently `topgrade`) from the generated list (`manager = "cargo"`, `layer = 3` only) via signed prebuilt binaries. Per [`24-rust-packages-rule.md`](24-rust-packages-rule.md) §3, layer=3 entries MUST ship a signed prebuilt; unsigned-only/source-only tools are `layer = 6` (runtime-manual). No cache mount (binstall resolves via the crates.io HTTP API, not the registry/git index). | `/tmp/build-home/.zshenv`, `dependencies/layer_3/cargo.txt` |
 | `aur` (`FROM toolchain`) | 4-1 | `git clone` paru PKGBUILD + `makepkg -si` (sources `/tmp/build-home/.zshenv`; cache mounts on `~/.cache/paru` + `/var/cache/pacman/pkg` + `$CARGO_HOME/{registry,git}`) | Bootstrap `paru` from the AUR as non-root `${USERNAME}`. | AUR `paru` PKGBUILD, Layer 1-4 sudoers |
 | `aur` (`FROM toolchain`) | 4-2 | `paru -S --noconfirm --needed` | Install the Layer 4 AUR package set from the generated list (`manager = "paru"` entries only). | `dependencies/layer_4/paru.txt` |
 | `runtime` (`FROM aur`) | 5-1 | `FROM aur AS runtime` | Runtime stage base (inherits the `aur` image). | - |
@@ -55,10 +56,20 @@ stage; within a stage, numbered **sub-layers** (`Layer N-M`) group related
 - The `toolchain` stage copies the rendered Cargo config from
   `/tmp/build-home/.local/share/cargo/config.toml` and
   `/tmp/build-home/.local/share/cargo/binstall.toml` under
-  `$CARGO_HOME/` before rustup, cargo-binstall, build-time cargo
-  tools, and the AUR stage. This keeps build-time Rust compilation aligned
-  with runtime `chezmoi apply`, which manages the same non-secret config file
-  in the `dotfiles_cargo` volume.
+  `$CARGO_HOME/` before rustup, the pi CLI npm install, cargo-binstall,
+  build-time cargo tools, and the AUR stage. This keeps build-time Rust
+  compilation aligned with runtime `chezmoi apply`, which manages the same
+  non-secret config file in the `dotfiles_cargo` volume.
+- Pi stable config is **not** baked into the image. `.chezmoiexternal.toml.tmpl`
+  fetches the pinned external repo to `~/.local/share/pi-config` only when
+  `build_mode = false` (runtime `chezmoi apply`). `.chezmoiscripts/run_after_configure-pi-agent.sh.tmpl`
+  then symlinks stable resources (`settings.json`, `prompts`, `skills`,
+  `extensions`, `themes`) into `~/.pi/agent`. Auth, sessions, trust, logs,
+  package checkouts, and caches under `~/.pi/agent` remain unmanaged. Override
+  the external source/ref with `PI_CONFIG_URL` / `PI_CONFIG_REF` (see
+  [`11-pre-required-env-values.md`](11-pre-required-env-values.md)); local
+  authoring uses `PI_CONFIG_URL=file:///data/pi-config` while the committed
+  default is `https://github.com/kkiyama117/pi-config.git`.
 - The `aur` stage (Layer 4) bootstraps `paru` from the AUR via
   `makepkg -si` as non-root `${USERNAME}`, then installs the Layer 4
   AUR package set from `dependencies/layer_4/paru.txt`. `paru` itself is
@@ -190,15 +201,16 @@ A new stage may land only when:
     volumes). No key material is baked into the image (the Layer 1-6
     directory is empty in the built image). See
     [`implementations/2026-07-01-gnupg-container-setup-design.md`](implementations/2026-07-01-gnupg-container-setup-design.md).
-14. After `make up`, `podman exec <container> zsh -ic 'go version; python --version; deno --version'` prints a version for each (mise shims active via `dot_zshenv.tmpl`); `make down && make up` preserves them (the `dotfiles_mise` named volume persists — analog of criterion #8 for cargo/rustup). Layer 3 installs mise-managed languages by copying `/tmp/build-home/.config/mise/config.toml` into the build user's `${XDG_CONFIG_HOME}/mise/config.toml` and running `mise install --yes`.
+14. After `make up`, `podman exec <container> zsh -ic 'go version; python --version; deno --version'` prints a version for each (mise shims active via `dot_zshenv.tmpl`); `podman exec <container> zsh -ic 'print -r -- $PNPM_HOME; print -rl -- $path | grep -Fx "$PNPM_HOME/bin"'` shows pnpm's XDG home bin directory is on PATH; `make down && make up` preserves mise-installed tools (the `dotfiles_mise` named volume persists — analog of criterion #8 for cargo/rustup). Layer 3 installs mise-managed tool versions by copying `/tmp/build-home/.config/mise/config.toml` into the build user's `${XDG_CONFIG_HOME}/mise/config.toml` and running `mise install --yes`; stable env/PATH values such as `PNPM_HOME` are owned by `.zshenv`.
 15. After `make up` (preceded by `podman volume rm dotfiles_cargo` on an existing `dotfiles_cargo` volume — see the rollout note in #17; do NOT use `make clean`, which also wipes `dotfiles_gnupg`/`dotfiles_mise`/`dotfiles_rustup`), `podman exec <container> zsh -ic 'cargo binstall -V'` prints a version and `podman exec <container> zsh -ic 'which topgrade'` resolves. `cargo-binstall` is infra (I-CARGO1), not a `packages.toml` entry.
-16. An empty `layer_3/cargo.txt` does not break the build (the Layer 3-6 `if [ -n "$pkgs" ]` guard + `(3, "cargo")` in `EXPECTED_EMPTY_FILES`).
+16. An empty `layer_3/cargo.txt` does not break the build (the Layer 3-7 `if [ -n "$pkgs" ]` guard + `(3, "cargo")` in `EXPECTED_EMPTY_FILES`).
 17. `make down && make up` preserves cargo / rustup binaries (the `dotfiles_cargo` / `dotfiles_rustup` named volumes persist — analog of criterion #8). **Rollout:** an existing `dotfiles_cargo` volume will NOT pick up new `$CARGO_HOME/bin` binaries on `make up`; run `podman volume rm dotfiles_cargo` (NOT `make clean` — `make clean` also removes the image and the `dotfiles_gnupg`/`dotfiles_mise`/`dotfiles_rustup` volumes) before the first `make up` after the cargo-binstall/topgrade change.
-18. A `layer = 3` cargo entry with no signed prebuilt fails `cargo binstall --only-signed -y` loudly at Layer 3-6 (recovery: move to `layer = 6` — see [`24-rust-packages-rule.md`](24-rust-packages-rule.md) §3).
-19. After `make up`, `podman exec <container> zsh -ic 'ssh -V'` succeeds.
-20. After `make up`, `stat ~/.ssh` prints `0700` and is `${USERNAME}`-owned.
-21. `make down && make up` preserves key material written into `dotfiles_ssh` (test key).
-22. **Rollout:** existing deployments must run **`make build`** (Layer 1-7) before the first `make up` after this change; to reset SSH keys only use `podman volume rm dotfiles_ssh` (NOT `make clean` — also wipes `dotfiles_gnupg` / cargo / mise / rustup).
+18. A `layer = 3` cargo entry with no signed prebuilt fails `cargo binstall --only-signed -y` loudly at Layer 3-7 (recovery: move to `layer = 6` — see [`24-rust-packages-rule.md`](24-rust-packages-rule.md) §3).
+19. After `make up`, `podman exec dotfiles-manjaro zsh -ic 'pi --version'` exits 0. Build mode does not fetch `~/.local/share/pi-config` or bake pi runtime state; runtime `chezmoi apply` may fetch the pinned external config into `~/.local/share/pi-config` and link stable resources into `~/.pi/agent`.
+20. After `make up`, `podman exec <container> zsh -ic 'ssh -V'` succeeds.
+21. After `make up`, `stat ~/.ssh` prints `0700` and is `${USERNAME}`-owned.
+22. `make down && make up` preserves key material written into `dotfiles_ssh` (test key).
+23. **Rollout:** existing deployments must run **`make build`** (Layer 1-7) before the first `make up` after this change; to reset SSH keys only use `podman volume rm dotfiles_ssh` (NOT `make clean` — also wipes `dotfiles_gnupg` / cargo / mise / rustup).
 
 ## Open questions
 

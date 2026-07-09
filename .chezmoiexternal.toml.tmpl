@@ -1,0 +1,9 @@
+{{- /* pi config external. Build mode must not fetch user config into image layers. */ -}}
+{{- if not .build_mode }}
+[".local/share/pi-config"]
+type = "git-repo"
+url = "{{ .pi_config_url }}"
+refreshPeriod = "0"
+clone.args = ["--depth", "1"]
+pull.args = ["--ff-only"]
+{{- end }}

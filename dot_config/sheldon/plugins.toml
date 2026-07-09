@@ -23,8 +23,11 @@ defer = "{{ hooks?.pre | nl }}{% for file in files %}zsh-defer source \"{{ file 
 #############################################################################
 # "defer"
 #############################################################################
+# H-3: zsh-defer does not cut release tags; pin with `rev`.
+# Bump only after reviewing upstream diffs.
 [plugins.zsh-defer]
 github = "romkatv/zsh-defer"
+rev = "53a26e287fbbe2dcebb3aa1801546c6de32416fa"
 apply = ['source']
 
 #############################################################################
@@ -97,3 +100,16 @@ apply = ["defer"]
 #[plugins.my_fpaths]
 #local="~/.config/zsh/.zfunc"
 #apply = ["fpath"]
+
+# load config deferred
+[plugins.my_conf_defered]
+local="~/.config/zsh"
+use=["{options}.zsh"]
+apply = ['defer']
+
+# Shell integration helpers (OSC 133, etc.)
+[plugins.my_functions]
+local="~/.config/zsh/rc/functions"
+use=["*.zsh"]
+# Synchronous load — precmd/preexec hooks must register before the first prompt.
+apply = ['source']

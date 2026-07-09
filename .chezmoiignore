@@ -11,6 +11,7 @@ container
 dependencies
 docs
 programs
+tests
 .env.example
 AGENTS.md
 Makefile
@@ -72,4 +73,5 @@ README.md
 # ============================================================
 .agents
 .claude
+.pi
 .superpowers

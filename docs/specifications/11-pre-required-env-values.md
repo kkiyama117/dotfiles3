@@ -60,10 +60,20 @@
 | `BW_CLIENTSECRET` | no (runtime, via `podman secret bw_clientsecret`) | — | `bw login --apikey`; read from `/run/secrets/bw_clientsecret` by the entrypoint (Tier 1) |
 | `BW_PASSWORD`     | no (runtime, via `podman secret bw_password`)   | — | master password for `bw unlock --passwordfile`; never enters an env (Tier 1) |
 | `BW_SESSION`      | no (derived) | — | derived in the entrypoint via `bw unlock --passwordfile --raw`; consumed by `bitwarden*` templates during `chezmoi apply`; scrubbed before `exec` |
+| `PI_CONFIG_URL` | no | `https://github.com/kkiyama117/pi-config.git` | Optional chezmoi external source override for stable pi config |
+| `PI_CONFIG_REF` | no | `pi-config-v2026-07-08-1` | Optional chezmoi external ref override for stable pi config |
+| `PI_COMMIT_PROMPT_FILE` | no | — | Optional host-only override for the chezmoi pi auto-commit prompt |
 
 > The `BW_*` variables are **runtime shell env only** — never in `.env`,
 > the repo, or the image. See [`13`](13-secret-management.md) §2 (two-tier)
 > and §6 I-S2/I-S3.
+
+Pi provider credentials, OAuth artifacts, sessions, trust decisions, package
+checkouts, and logs are runtime state under `~/.pi/agent`; they must not be
+stored in `.env`, `.chezmoidata`, `/data/pi-config`, or this repository.
+The default stable pi config source is the GitHub repo above; `/data/pi-config`
+is a local authoring checkout override via `PI_CONFIG_URL=file:///data/pi-config`
+only.
 
 ## Container-build envs
 
