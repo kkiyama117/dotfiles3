@@ -77,6 +77,12 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | name | manager | configs | description |
 |---|---|---|---|
 | `X11` | migrated | yes | X11 config |
+| `aria2` | migrated | yes | download files concurrently |
+| `fcitx5` | migrated | yes | download files concurrently |
+| `gtk` | migrated | yes | GTK |
+| `herdr` | migrated | yes | multiplexer with AI agents |
+| `kitty` | migrated | yes | Terminal emulator |
+| `rofi` | migrated | yes | display and focus switcher |
 
 #### Layer 0 — already in the base image
 
@@ -123,6 +129,7 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `rsync` | pacman | no |  |
 | `bat` | paru | no | Alternative `cat` |
 | `fd` | paru | no | Alternative `find` |
+| `github-cli` | paru | yes | Github commands |
 | `lazygit` | paru | yes | TUI for git |
 | `neovim-git` | paru | no | neovim built from upstream git master (AUR); first concrete AUR package |
 | `pastel` | paru | no | color utility |

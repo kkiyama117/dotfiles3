@@ -11,7 +11,21 @@ For details, see the [chezmoi documentation](https://www.chezmoi.io/docs/).
 | `chezmoi edit <path>` | Edit a managed file via its source representation. |
 | `chezmoi cd` | Open a shell in the source directory. |
 | `chezmoi update` | `git pull` the source and `chezmoi apply` in one step. |
+| `chezmoi apply --refresh-externals=always` | Apply dotfiles and clone/update git externals (pi-config, nvim). |
 
+## External config repos (pi + nvim)
+
+Stable tool configs live in separate git repos; dotfiles3 only pins URL/ref in
+`.chezmoiexternal.toml.tmpl`. Config changes are committed with normal git in
+the external checkout — not via `chezmoi add`.
+
+| Tool | External target | Git root | Edit path |
+|---|---|---|---|
+| pi | `~/.local/share/pi-config` | `~/.local/share/pi-config` | `~/.pi/agent/...` (symlinks) |
+| nvim | `~/.config/nvim` | `~/.config/nvim` | `~/.config/nvim` (direct) |
+
+After changing URL/pin in dotfiles3, run `chezmoi apply --refresh-externals=always`.
+Externals are skipped when `BUILD_MODE=true` (container image build).
 
 ## Auto-commit via pi CLI hooks
 

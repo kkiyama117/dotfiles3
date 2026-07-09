@@ -51,6 +51,7 @@ the map of which top-level path serves which concern.
 ├── container/          # Podman build context (BUILD_CTX in Makefile)
 │   └── bind/           # bind-mounted sources/scripts (full rules: `20-container-rules.md`)
 │       ├── layer_1_files/
+│       │   ├── makepkg.conf       # Layer 1 makepkg.conf (Stage 1-2 → /etc/makepkg.conf; AUR/pacman compression)
 │       │   └── pacman_mirrorlist  # Layer 1 pacman mirrorlist (Stage 1-2)
 │       └── layer_5_files/
 │           └── entrypoint.sh  # runtime chezmoi-apply entrypoint (Stage 5-4; see 21-...md)
