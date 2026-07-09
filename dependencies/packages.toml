@@ -12,14 +12,18 @@
 # [[tool]]
 # name = "base-devel"
 ## Allowed `manager` values: pacman, paru, nix, uv, cargo, custom, migrated.
-## `cargo` entries land in layer 3 (Containerfile `toolchain` stage).
-## `migrated` entries use `layer = -1` (doc-only: config from old dotfiles, no install).
 ## Mise-managed tool versions live in dot_config/mise/config.toml, not here.
+## Current default layer of installing packages is; 
+## `pacman`: layer 1
+## `cargo`: layer 3
+## `paru`: layer 4
+## `nix`: not used in the user global env.
+## `uv`: not used now.
+## `migrated` entries use `layer = -1` (doc-only: config from old dotfiles, no install).
 # manager = "pacman"
 # layer = 1
 # has_configs = false
 # description = "base meta-package: gcc, make, binutils, etc."
-#
 
 schema = 1
 
@@ -442,6 +446,14 @@ description = "runtime-manual cargo tool; build & publish Rust-Python extensions
 
 # Layer -1: Configs only for migration with the old dotfiles.
 #           These programs may be moved to a different layer in the future.
+[[tool]]
+name = "aria2"
+manager = "migrated" # "pacman" if it used
+layer = -1
+## `~/.config/aria2/aria2.toml`
+has_configs = true
+description = "download files concurrently"
+
 [[tool]]
 name = "X11"
 manager = "migrated" # "pacman" if it used
