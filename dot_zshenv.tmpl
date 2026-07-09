@@ -159,8 +159,10 @@
     path=($CARGO_HOME/bin(N-/) $path)
   }
   : "Go" && {
-    export GOPATH="${GOPATH:-$MISE_DATA_DIR/installs/go/latest/packages}"
-    export GOROOT="${GOROOT:-$MISE_DATA_DIR/installs/go/latest}"
+    # GOROOT is NOT set here — mise shims resolve it per invocation. Exporting
+    # GOROOT from .zshenv breaks `mise install` post-install checks when the
+    # versioned install path does not exist yet.
+    export GOPATH="${GOPATH:-$XDG_DATA_HOME/go}"
   }
   : "Python" && {
     # cargo-dist 系インストーラ (uv 等) が rc ファイルを書き換えるのを抑止
