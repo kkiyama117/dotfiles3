@@ -11,10 +11,14 @@
 # Common
 #############################################################################
 
+# cat
+abbr "cat"="bat -p --paging=never"
 # cp
 abbr "cp"="cp -irf"
 # df
 abbr "df"="df -h"
+# find
+abbr "find"="fd"
 # free
 abbr "free"="free -m"
 # git
