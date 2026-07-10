@@ -13,7 +13,7 @@
 # name = "base-devel"
 ## Allowed `manager` values: pacman, paru, nix, uv, cargo, custom, migrated.
 ## Mise-managed tool versions live in dot_config/mise/config.toml, not here.
-## Current default layer of installing packages is; 
+## Current default layer of installing packages is;
 ## `pacman`: layer 1
 ## `cargo`: layer 3
 ## `paru`: layer 4
@@ -283,7 +283,7 @@ description = "grep alternative"
 
 [[tool]]
 name = "rsync"
-manager = "pacman"
+manager = "paru"
 layer = 4
 has_configs = false
 
@@ -316,6 +316,55 @@ manager = "paru"
 layer = 4
 has_configs = false
 description = "tmux multiplexer"
+
+# tree-sitter grammar packages: runtime deps of nvim's default ftplugins
+# (vim.treesitter.start). The official `neovim` pacman package depends on
+# these, but `neovim-git` (AUR) does not and ships an empty parser dir,
+# so we declare them explicitly (official repo packages installed via
+# paru at Layer 4, alongside neovim-git; Layer 1 pacman stays minimal). Issue:
+# docs/issues/2026-07-10-nvim-treesitter-parsers.md
+
+[[tool]]
+name = "tree-sitter-c"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "tree-sitter C grammar; required by nvim built-in c ftplugin"
+
+[[tool]]
+name = "tree-sitter-lua"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "tree-sitter Lua grammar; required by nvim built-in lua ftplugin"
+
+[[tool]]
+name = "tree-sitter-markdown"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "tree-sitter Markdown grammar; required by nvim built-in markdown ftplugin"
+
+[[tool]]
+name = "tree-sitter-query"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "tree-sitter query grammar; required by nvim treesitter query editing"
+
+[[tool]]
+name = "tree-sitter-vim"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "tree-sitter Vimscript grammar; required by nvim built-in vim ftplugin"
+
+[[tool]]
+name = "tree-sitter-vimdoc"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "tree-sitter vimdoc grammar; required by nvim :help highlighting"
 
 [[tool]]
 name = "wired"

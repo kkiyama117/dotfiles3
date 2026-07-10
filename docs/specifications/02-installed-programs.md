@@ -34,7 +34,11 @@ not in mise `[env]`.
 ## manager rules
 
 - `pacman`: use to install packages to build container.
-- `paru`: install all packages from AUR package, that isn't included in `pacman` installed list.
+- `paru`: install all Layer 4 packages — AUR packages not in the `pacman`
+  (Layer 1) list, plus official-repo packages that belong to Layer 4
+  (paru resolves repo packages too, e.g. `rsync`, `tree-sitter-*`).
+  `pacman` entries install at Layer 1 only; a `layer_4/pacman.txt` must
+  never exist.
 - `nix`: Now we use `nix` only for apply `flake.nix`
 - `uv`: installed via `uv` (Python package manager)
 - `cargo`: build-time cargo tools (`layer = 3`) are installed via
@@ -126,7 +130,6 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | name | manager | configs | description |
 |---|---|---|---|
 | `paru` | custom | no | AUR helper; bootstrapped via makepkg in the aur stage (custom install path, not in paru.txt) |
-| `rsync` | pacman | no |  |
 | `bat` | paru | no | Alternative `cat` |
 | `fd` | paru | no | Alternative `find` |
 | `github-cli` | paru | yes | Github commands |
@@ -135,10 +138,17 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `pastel` | paru | no | color utility |
 | `pueue` | paru | yes | task queue daemon |
 | `ripgrep` | paru | no | grep alternative |
+| `rsync` | paru | no |  |
 | `skim` | paru | no | fzf alternative written in Rust |
 | `starship` | paru | yes | zsh prompt theme manager |
 | `tealdeer` | paru | yes | tldr alternative |
 | `tmux` | paru | no | tmux multiplexer |
+| `tree-sitter-c` | paru | no | tree-sitter C grammar; required by nvim built-in c ftplugin |
+| `tree-sitter-lua` | paru | no | tree-sitter Lua grammar; required by nvim built-in lua ftplugin |
+| `tree-sitter-markdown` | paru | no | tree-sitter Markdown grammar; required by nvim built-in markdown ftplugin |
+| `tree-sitter-query` | paru | no | tree-sitter query grammar; required by nvim treesitter query editing |
+| `tree-sitter-vim` | paru | no | tree-sitter Vimscript grammar; required by nvim built-in vim ftplugin |
+| `tree-sitter-vimdoc` | paru | no | tree-sitter vimdoc grammar; required by nvim :help highlighting |
 | `wired` | paru | yes | notification daemon |
 | `zoxide` | paru | no | Enhanced cd command |
 
