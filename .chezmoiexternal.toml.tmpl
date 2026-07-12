@@ -4,7 +4,7 @@
 type = "git-repo"
 url = "{{ .pi_config_url }}"
 refreshPeriod = "0"
-clone.args = ["--branch", "{{ .pi_config_ref }}", "--depth", "1"]
+clone.args = ["--branch", "{{ .pi_config_ref }}", "--depth", "1", "--no-single-branch"]
 pull.args = ["--ff-only"]
 {{- end }}
 
@@ -14,6 +14,6 @@ pull.args = ["--ff-only"]
 type = "git-repo"
 url = "{{ .nvim_config_url }}"
 refreshPeriod = "0"
-clone.args = ["--branch", "{{ .nvim_config_ref }}", "--depth", "1"]
+clone.args = ["--branch", "{{ .nvim_config_ref }}", "--depth", "1", "--no-single-branch"]
 pull.args = ["--ff-only"]
 {{- end }}

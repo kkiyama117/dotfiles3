@@ -131,7 +131,7 @@ def test_pi_config_external_is_build_mode_gated_and_pinned() -> None:
     assert 'type = "git-repo"' in external
     assert 'url = "{{ .pi_config_url }}"' in external
     assert 'refreshPeriod = "0"' in external
-    assert 'clone.args = ["--branch", "{{ .pi_config_ref }}", "--depth", "1"]' in external
+    assert 'clone.args = ["--branch", "{{ .pi_config_ref }}", "--depth", "1", "--no-single-branch"]' in external
     assert "file:///data/pi-config" not in external
 
 
@@ -148,7 +148,7 @@ def test_nvim_config_external_is_build_mode_gated_and_pinned() -> None:
 
     assert '[".config/nvim"]' in external
     assert 'url = "{{ .nvim_config_url }}"' in external
-    assert 'clone.args = ["--branch", "{{ .nvim_config_ref }}", "--depth", "1"]' in external
+    assert 'clone.args = ["--branch", "{{ .nvim_config_ref }}", "--depth", "1", "--no-single-branch"]' in external
     assert "file:///data/nvim_config" not in external
 
 

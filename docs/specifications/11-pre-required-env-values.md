@@ -93,7 +93,9 @@ The default stable pi config source is the GitHub repo above; `/data/pi-config`
 is a local authoring checkout override via `PI_CONFIG_URL=file:///data/pi-config`
 only. The default nvim config source is `git@github.com:kkiyama117/nvim_config.git` on branch `main`;
 `/data/nvim_config` is a local authoring checkout override via
-`NVIM_CONFIG_URL=file:///data/nvim_config` only.
+`NVIM_CONFIG_URL=file:///data/nvim_config` only. Chezmoi externals clone with
+`--depth 1 --no-single-branch` so the default checkout stays shallow on `main`
+while other remote branches (e.g. `origin/develop`) remain fetchable.
 
 ## Container-build envs
 
