@@ -65,6 +65,8 @@ remains operator-deferred before issue close.
 - Issue stays **open** until runtime checks evidenced in result-log.
 
 ## Open questions (non-blocking)
+
+- Q1 (B): Is `~/.config/zsh/rc/` single-user only, or should the directory
   also be `private_`?
 - Q2 (B): Document all-or-nothing `chezmoi apply` blast radius when one
   placeholder item ID remains?
