@@ -55,6 +55,13 @@ tiers:
 - `bitwardenSecrets` (Bitwarden Secrets Manager / `bws`) is a **separate
   product** and is not used here.
 
+**Template consumers (runtime Bitwarden-bound dotfiles):**
+
+- `.chezmoiscripts/run_after_install-ssh-keys.sh.tmpl` — `bitwardenAttachment`
+  for SSH key import (`.chezmoidata/ssh_keys.yaml`).
+- `dot_config/zsh/rc/secrets.zsh.tmpl` — `bitwardenFields` / `bitwarden`
+  for API provider env exports (`.chezmoidata/api_secrets.yaml`).
+
 ## §4 Authentication flow (runtime, automatic)
 
 The runtime entrypoint authenticates `bw` automatically when the three
@@ -209,9 +216,10 @@ I4 self-enforcing.
 
 ## §8 Open questions
 
-- **Q1:** The exact Bitwarden item IDs consumed by templates must be
-  enumerated in [`11`](11-pre-required-env-values.md) once the host secret
-  survey is reconciled with the chezmoi source tree.
+- **Q1:** Remaining host secret survey entries must be reconciled in
+  [`11`](11-pre-required-env-values.md). API provider and SSH import
+  consumers are enumerated; operator must fill Bitwarden item IDs in
+  `.chezmoidata/api_secrets.yaml` before runtime apply succeeds.
 - **Q2: Resolved.** `BW_SESSION` is **not** persisted in a keyring. It is
   ephemeral: re-derived each `make up` via `bw unlock --passwordfile
   /run/secrets/bw_password --raw`, used only for the entrypoint's

@@ -41,14 +41,14 @@
 | `completion.zsh` | |
 | `for_development.zsh` | |
 | `options.zsh` | |
-| `secrets.zsh` ⚠ | 機密。テンプレ化必須 |
+| `secrets.zsh` ⚠ | 機密。chezmoi 移植先: `dot_config/zsh/rc/secrets.zsh.tmpl` |
 
 ### 関数 (`~/.config/zsh/rc/functions/`)
 
 | Target | Note |
 |---|---|
 | `branch-out.zsh` | |
-| `bw_session.zsh` ⚠ | Bitwarden セッション取得関数。新側 rbw → bitwarden 移行と整合確認 |
+| `bw_session.zsh` ⚠ | Bitwarden セッション取得関数。chezmoi 移植先: `dot_config/zsh/rc/functions/bw_session.zsh` |
 | `osc_133.zsh` | |
 
 ### ツール統合 (`~/.config/zsh/rc/integrations/`) — 17 ファイル

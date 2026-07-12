@@ -38,17 +38,17 @@
 
 ## Bitwarden items
 
-> TODO: enumerate the item ID → consumer mapping. Until the host secret
-> survey under `host_config_list.md` is reconciled with `dot_zshenv`, this
-> stays a TBD list. Acceptance criterion: every chezmoi template invocation
-> of `bitwarden*` resolves to one of the entries in this table. See
-> [`13-secret-management.md`](13-secret-management.md) §3 for the template
-> functions.
+> TODO: reconcile any remaining host secret survey entries under
+> `host_config_list.md` with this table. API provider items are enumerated
+> above; SSH import item is listed separately.
 
 | Item ID env / template var | Consumer | Required at | Notes |
 |---|---|---|---|
 | `.ssh_keys[].item` in `.chezmoidata/ssh_keys.yaml` | `.chezmoiscripts/run_after_install-ssh-keys.sh.tmpl` | container runtime apply only | Optional until `ssh_import_enabled: true`; stores a Bitwarden item ID or stable item name only. Private/public key bytes live in Bitwarden attachments named by `.ssh_keys[].private_attachment` / `.ssh_keys[].public_attachment`, never in this repo. |
-| _(TBD)_ | _(TBD)_ | apply / build | Broader host secret survey remains pending. |
+| `.api_secrets[].item` in `.chezmoidata/api_secrets.yaml` (`GH_TOKEN`) | `dot_config/zsh/rc/secrets.zsh.tmpl` | runtime apply (host + container) | Bitwarden custom field `api_key` on login/secure-note item |
+| `.api_secrets[].item` (`OPENROUTER_API_KEY`) | `secrets.zsh.tmpl` | runtime apply | custom field `api_key` |
+| `.api_secrets[].item` (`MOONSHOT_API_KEY`) | `secrets.zsh.tmpl` | runtime apply | custom field `api_key` |
+| `.api_secrets[].item` (`OLLAMA_API_KEY`) | `secrets.zsh.tmpl` | runtime apply | Ollama Cloud API key; custom field `api_key` |
 
 ## Local environment variables
 
@@ -65,6 +65,18 @@
 | `NVIM_CONFIG_URL` | no | `git@github.com:kkiyama117/nvim_config.git` | Optional chezmoi external source override for nvim config |
 | `NVIM_CONFIG_REF` | no | `main` | Optional chezmoi external ref override for nvim config |
 | `PI_COMMIT_PROMPT_FILE` | no | — | Optional host-only override for the chezmoi pi auto-commit prompt |
+
+### API provider env vars (runtime, from `secrets.zsh`)
+
+| Variable | Required | Source | Used by |
+|---|---|---|---|
+| `GH_TOKEN` | no (derived at shell startup) | `~/.config/zsh/rc/secrets.zsh` | `gh`, GitHub API |
+| `OPENROUTER_API_KEY` | no | `secrets.zsh` | pi, OpenRouter clients |
+| `MOONSHOT_API_KEY` | no | `secrets.zsh` | pi, Kimi / Moonshot API |
+| `OLLAMA_API_KEY` | no | `secrets.zsh` | pi, Ollama Cloud API |
+
+> Values are resolved at `chezmoi apply` from Bitwarden and written to
+> `secrets.zsh` (mode 0600). They are not in `podman inspect` env.
 
 > The `BW_*` variables are **runtime shell env only** — never in `.env`,
 > the repo, or the image. See [`13`](13-secret-management.md) §2 (two-tier)
