@@ -1,6 +1,6 @@
 # API provider secrets as environment variables — Design
 
-**Status:** in-review
+**Status:** Approved
 **Date opened:** 2026-07-11
 **Issue:** [`../../issues/2026-07-11-api-secrets-env-management.md`](../../issues/2026-07-11-api-secrets-env-management.md)
 **Author:** kiyama
@@ -351,7 +351,8 @@ Required letters (09-review §2.2):
 - Aggregate: [`../../reviews/2026-07-11-api-secrets-env-management-review-pass1.md`](../../reviews/2026-07-11-api-secrets-env-management-review-pass1.md)
 
 > Implementation landed on `develop` before pass-1 reviews completed;
-> reviewers MUST evaluate both design and committed artifacts.
+> reviewers evaluated both design and committed artifacts. Pass 1 closed
+> 2026-07-12 after AB-F1 fix (`e6b01db`); runtime verification deferred.
 
 ## §13 Meta-prompt for implementation planner
 
