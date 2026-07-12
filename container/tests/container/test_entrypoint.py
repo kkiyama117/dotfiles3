@@ -109,6 +109,12 @@ def test_zshenv_owns_pnpm_bootstrap_env() -> None:
     assert "path=($PNPM_HOME/bin $path)" in zshenv
 
 
+def test_chezmoi_config_enables_bitwarden_unlock_auto() -> None:
+    text = CHEZMOI_CONFIG.read_text()
+    assert "[bitwarden]" in text
+    assert 'unlock = "auto"' in text
+
+
 def test_pi_config_external_is_build_mode_gated_and_pinned() -> None:
     config = CHEZMOI_CONFIG.read_text()
     external = CHEZMOI_EXTERNAL.read_text()

@@ -73,3 +73,13 @@ def test_bw_session_helper_exists() -> None:
     assert "bw_session()" in text
     assert "/run/secrets/bw_password" in text
     assert "bw unlock --raw" in text
+
+
+CHEZMOI_APPLY = ROOT / "dot_config" / "zsh" / "rc" / "functions" / "chezmoi_apply.zsh"
+
+
+def test_chezmoi_apply_helper_unlocks_before_apply() -> None:
+    text = CHEZMOI_APPLY.read_text()
+    assert "chezmoi_apply()" in text
+    assert "bw_session" in text
+    assert 'chezmoi apply "$@"' in text

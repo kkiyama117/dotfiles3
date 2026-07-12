@@ -54,6 +54,13 @@ tiers:
   - `bitwardenAttachment` / `bitwardenAttachmentByRef` → attachments (e.g. SSH keys)
 - `bitwardenSecrets` (Bitwarden Secrets Manager / `bws`) is a **separate
   product** and is not used here.
+- chezmoi config (`.chezmoi.toml.tmpl` → `~/.config/chezmoi/chezmoi.toml`)
+  sets `[bitwarden] unlock = "auto"`. When the vault is locked and
+  `BW_SESSION` is absent, chezmoi prompts **once** for the master password
+  and passes `--session` to all `bitwarden*` calls in that run. Use
+  `"auto"`, not `true`: `true` runs `bw lock` on chezmoi exit and would
+  invalidate other sessions. When `BW_SESSION` is already set (container
+  entrypoint), this is a no-op.
 
 **Template consumers (runtime Bitwarden-bound dotfiles):**
 
@@ -113,6 +120,30 @@ One-time operator setup (host; see
 
 Rotate by `podman secret rm <name>` then the create above. A `make
 bw-secrets` helper is a follow-up (not implemented).
+
+### Manual apply runbook (`podman exec`, host shell)
+
+The entrypoint scrubs `BW_SESSION` before `exec "$@"`, so a `podman exec`
+shell starts with no Bitwarden session. Each `bitwarden*` template call
+would otherwise prompt separately (one per vault item).
+
+**Container (`podman exec`):**
+
+    chezmoi_apply          # unlocks via /run/secrets/bw_password, then apply
+    # or: bw_session && chezmoi apply
+
+With podman secrets mounted, unlock is **non-interactive**.
+
+**Host (manual `chezmoi apply`):**
+
+    chezmoi_apply
+    # or: bw_session && chezmoi apply
+    # or: rely on [bitwarden] unlock = "auto" (one master-password prompt)
+
+Helper: `chezmoi_apply()` in
+`dot_config/zsh/rc/functions/chezmoi_apply.zsh` (loaded by sheldon
+`[plugins.my_functions]`). Hooks and `run_before_` scripts cannot export
+`BW_SESSION` into the chezmoi parent process.
 
 ## §5 — Apply phases
 
@@ -226,9 +257,10 @@ I4 self-enforcing.
   `chezmoi apply`, then scrubbed before `exec "$@"`. The podman secrets
   (client id/secret/master password) persist in the podman store across
   restarts, so re-auth is automatic and non-interactive. Interactive
-  re-unlock inside a `podman exec` shell, if ever needed, reuses the
-  mounted secret: `bw unlock --passwordfile /run/secrets/bw_password
-  --raw`.
+  re-unlock inside a `podman exec` shell uses `bw_session()` or
+  `chezmoi_apply()` (see §4 manual apply runbook); with podman secrets
+  mounted, unlock is non-interactive via
+  `bw unlock --passwordfile /run/secrets/bw_password --raw`.
 - **Q3: Resolved (I-S6).** Phase-conditional chezmoi content uses the
   in-template `{{ if (not) .build_mode }}` guard convention, not
   `.chezmoiignore` template rules. First use is the non-secret toolchain

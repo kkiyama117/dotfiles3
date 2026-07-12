@@ -1,8 +1,9 @@
 # Interactive Bitwarden session helper.
 #
 # Entrypoint auth (spec 13 §4) already unlocks bw for runtime chezmoi apply.
-# Use bw_session() only when you need BW_SESSION in the current shell
-# (e.g. podman exec, manual chezmoi apply, debugging).
+# Use bw_session() when you need BW_SESSION in the current shell
+# (e.g. podman exec, manual chezmoi apply, debugging). Prefer
+# chezmoi_apply() for apply — it calls bw_session then chezmoi apply.
 #
 # Does NOT persist BW_SESSION to a keyring.
 
