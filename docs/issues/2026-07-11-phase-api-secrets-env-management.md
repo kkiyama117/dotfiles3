@@ -11,7 +11,7 @@
 | 1 | fd7f4f3 | Add api_secrets data and secrets.zsh chezmoi template. |
 | 2 | 83e1ade | Wire secrets.zsh into sheldon and add bw_session helper. |
 | 3 | 7163b34 | Add static tests for API secrets env management. |
-| 4 | (pending) | Document API secrets env management and record phase result-log. |
+| 4 | cdec48e | Document API secrets env management and record phase result-log. |
 
 ## Evidence
 
