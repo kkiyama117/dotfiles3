@@ -59,7 +59,7 @@ tiers:
 
 - `.chezmoiscripts/run_after_install-ssh-keys.sh.tmpl` — `bitwardenAttachment`
   for SSH key import (`.chezmoidata/ssh_keys.yaml`).
-- `dot_config/zsh/rc/secrets.zsh.tmpl` — `bitwardenFields` / `bitwarden`
+- `dot_config/zsh/rc/private_secrets.zsh.tmpl` — `bitwardenFields` / `bitwarden`
   for API provider env exports (`.chezmoidata/api_secrets.yaml`).
 
 ## §4 Authentication flow (runtime, automatic)

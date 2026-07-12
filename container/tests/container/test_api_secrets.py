@@ -2,7 +2,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 API_SECRETS_DATA = ROOT / ".chezmoidata" / "api_secrets.yaml"
-SECRETS_TMPL = ROOT / "dot_config" / "zsh" / "rc" / "secrets.zsh.tmpl"
+SECRETS_TMPL = ROOT / "dot_config" / "zsh" / "rc" / "private_secrets.zsh.tmpl"
+LEGACY_SECRETS_TMPL = ROOT / "dot_config" / "zsh" / "rc" / "secrets.zsh.tmpl"
 SHELDON = ROOT / "dot_config" / "sheldon" / "plugins.toml"
 BW_SESSION = ROOT / "dot_config" / "zsh" / "rc" / "functions" / "bw_session.zsh"
 
@@ -21,9 +22,14 @@ def test_api_secrets_data_lists_v1_providers() -> None:
     assert "OLLAMA_HOST" not in text
 
 
+def test_secrets_template_uses_private_source_for_mode_0600() -> None:
+    assert SECRETS_TMPL.is_file()
+    assert SECRETS_TMPL.name.startswith("private_")
+    assert not LEGACY_SECRETS_TMPL.exists()
+
+
 def test_secrets_template_build_mode_guard() -> None:
     text = SECRETS_TMPL.read_text()
-    assert "# chezmoi:mode=600" in text
     assert "{{- if not .build_mode -}}" in text
     guard_start = text.index("{{- if not .build_mode")
     guard_end = text.index("{{- end -}}")

@@ -41,7 +41,7 @@
 | `completion.zsh` | |
 | `for_development.zsh` | |
 | `options.zsh` | |
-| `secrets.zsh` ⚠ | 機密。chezmoi 移植先: `dot_config/zsh/rc/secrets.zsh.tmpl` |
+| `secrets.zsh` ⚠ | 機密。chezmoi 移植先: `dot_config/zsh/rc/private_secrets.zsh.tmpl` |
 
 ### 関数 (`~/.config/zsh/rc/functions/`)
 

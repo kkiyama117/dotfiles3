@@ -20,7 +20,7 @@
 | `make test-container` | PASS (20 passed) |
 | Build-mode guard in template | PASS (static test) |
 | sheldon `[plugins.my_secrets]` sync source | PASS (static test) |
-| `# chezmoi:mode=600` in template | PASS (static test) |
+| `private_` source for mode 0600 | PASS (static test) |
 | Runtime `secrets.zsh` mode 0600 | DEFERRED — operator must fill Bitwarden item IDs and run `make up` |
 | `podman inspect` no API keys | DEFERRED — requires container runtime verify |
 | Interactive `printenv GH_TOKEN` | DEFERRED — requires real vault items |

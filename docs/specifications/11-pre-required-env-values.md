@@ -45,10 +45,10 @@
 | Item ID env / template var | Consumer | Required at | Notes |
 |---|---|---|---|
 | `.ssh_keys[].item` in `.chezmoidata/ssh_keys.yaml` | `.chezmoiscripts/run_after_install-ssh-keys.sh.tmpl` | container runtime apply only | Optional until `ssh_import_enabled: true`; stores a Bitwarden item ID or stable item name only. Private/public key bytes live in Bitwarden attachments named by `.ssh_keys[].private_attachment` / `.ssh_keys[].public_attachment`, never in this repo. |
-| `.api_secrets[].item` in `.chezmoidata/api_secrets.yaml` (`GH_TOKEN`) | `dot_config/zsh/rc/secrets.zsh.tmpl` | runtime apply (host + container) | Bitwarden custom field `api_key` on login/secure-note item |
-| `.api_secrets[].item` (`OPENROUTER_API_KEY`) | `secrets.zsh.tmpl` | runtime apply | custom field `api_key` |
-| `.api_secrets[].item` (`MOONSHOT_API_KEY`) | `secrets.zsh.tmpl` | runtime apply | custom field `api_key` |
-| `.api_secrets[].item` (`OLLAMA_API_KEY`) | `secrets.zsh.tmpl` | runtime apply | Ollama Cloud API key; custom field `api_key` |
+| `.api_secrets[].item` in `.chezmoidata/api_secrets.yaml` (`GH_TOKEN`) | `dot_config/zsh/rc/private_secrets.zsh.tmpl` | runtime apply (host + container) | Bitwarden custom field `api_key` on login/secure-note item |
+| `.api_secrets[].item` (`OPENROUTER_API_KEY`) | `private_secrets.zsh.tmpl` | runtime apply | custom field `api_key` |
+| `.api_secrets[].item` (`MOONSHOT_API_KEY`) | `private_secrets.zsh.tmpl` | runtime apply | custom field `api_key` |
+| `.api_secrets[].item` (`OLLAMA_API_KEY`) | `private_secrets.zsh.tmpl` | runtime apply | Ollama Cloud API key; custom field `api_key` |
 
 ## Local environment variables
 

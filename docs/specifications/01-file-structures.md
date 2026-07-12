@@ -34,7 +34,7 @@ the map of which top-level path serves which concern.
 │       ├── dot_zprofile     # chezmoi-managed ~/.config/zsh/.zprofile (QT/browser env)
 │       ├── dot_zfunc/       # chezmoi-managed ~/.config/zsh/.zfunc/ (fpath autoload completions: _chezmoi/_sheldon/_mise)
 │       ├── rc/
-│       │   ├── secrets.zsh.tmpl   # runtime API key env exports (Bitwarden; mode 0600)
+│       │   ├── private_secrets.zsh.tmpl   # runtime API key env exports (Bitwarden; private_ → mode 0600)
 │       │   └── functions/bw_session.zsh  # interactive bw unlock helper
 │       └── sheldon_hooks/   # chezmoi-managed ~/.config/zsh/sheldon_hooks/ (sheldon hook scripts, e.g. skim-based zoxide `zi`)
 ├── dot_local/          # chezmoi-managed ~/.local/ (XDG data/state, rare static configs only)

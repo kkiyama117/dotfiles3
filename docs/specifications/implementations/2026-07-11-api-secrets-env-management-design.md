@@ -343,8 +343,12 @@ Implementation must demonstrate:
 Required letters (09-review §2.2):
 
 - Pass 1-A — correctness / regressions (build-mode guard, sheldon order).
+  [`../../reviews/2026-07-11-api-secrets-env-management-review-pass1-A-factual.md`](../../reviews/2026-07-11-api-secrets-env-management-review-pass1-A-factual.md)
 - Pass 1-B — security (file perms, no inspect leak, scrub boundary).
+  [`../../reviews/2026-07-11-api-secrets-env-management-review-pass1-B-security.md`](../../reviews/2026-07-11-api-secrets-env-management-review-pass1-B-security.md)
 - Pass 1-D — cross-spec consistency (11, 13, host inventory).
+  [`../../reviews/2026-07-11-api-secrets-env-management-review-pass1-D-consistency.md`](../../reviews/2026-07-11-api-secrets-env-management-review-pass1-D-consistency.md)
+- Aggregate: [`../../reviews/2026-07-11-api-secrets-env-management-review-pass1.md`](../../reviews/2026-07-11-api-secrets-env-management-review-pass1.md)
 
 > Implementation landed on `develop` before pass-1 reviews completed;
 > reviewers MUST evaluate both design and committed artifacts.
