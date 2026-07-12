@@ -107,6 +107,12 @@ local="~/.config/zsh"
 use=["{options}.zsh"]
 apply = ['defer']
 
+# API provider env (synchronous — child processes must inherit exports)
+[plugins.my_secrets]
+local = "~/.config/zsh/rc"
+use = ["secrets.zsh"]
+apply = ["source"]
+
 # Shell integration helpers (OSC 133, etc.)
 [plugins.my_functions]
 local="~/.config/zsh/rc/functions"
