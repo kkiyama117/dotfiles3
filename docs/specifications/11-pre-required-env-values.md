@@ -45,10 +45,11 @@
 | Item ID env / template var | Consumer | Required at | Notes |
 |---|---|---|---|
 | `.ssh_keys[].item` in `.chezmoidata/ssh_keys.yaml` | `.chezmoiscripts/run_after_install-ssh-keys.sh.tmpl` | container runtime apply only | Optional until `ssh_import_enabled: true`; stores a Bitwarden item ID or stable item name only. Private/public key bytes live in Bitwarden attachments named by `.ssh_keys[].private_attachment` / `.ssh_keys[].public_attachment`, never in this repo. |
-| `.api_secrets[].item` in `.chezmoidata/api_secrets.yaml` (`GH_TOKEN`) | `dot_config/zsh/rc/private_secrets.zsh.tmpl` | runtime apply (host + container) | Bitwarden custom field `api_key` on login/secure-note item |
-| `.api_secrets[].item` (`OPENROUTER_API_KEY`) | `private_secrets.zsh.tmpl` | runtime apply | custom field `api_key` |
-| `.api_secrets[].item` (`MOONSHOT_API_KEY`) | `private_secrets.zsh.tmpl` | runtime apply | custom field `api_key` |
-| `.api_secrets[].item` (`OLLAMA_API_KEY`) | `private_secrets.zsh.tmpl` | runtime apply | Ollama Cloud API key; custom field `api_key` |
+| `.api_secrets[].item` (`GH_TOKEN`) | `dot_config/zsh/rc/private_secrets.zsh.tmpl` | runtime apply (host + container) | `github_cli` item; custom field `main_token` |
+| `.api_secrets[].item` (`GITHUB_API_TOKEN`) | `private_secrets.zsh.tmpl` | runtime apply | `GitHub` item; custom field `gh_main` |
+| `.api_secrets[].item` (`OPENROUTER_API_KEY`) | `private_secrets.zsh.tmpl` | runtime apply | `openrouter` item; custom field `CODEX` |
+| `.api_secrets[].item` (`MOONSHOT_API_KEY`) | `private_secrets.zsh.tmpl` | runtime apply | `platform.kimi.ai` item; custom field `main` |
+| `.api_secrets[].item` (`OLLAMA_API_KEY`) | `private_secrets.zsh.tmpl` | runtime apply | `ollama.com` item; custom field `main` |
 
 ## Local environment variables
 
@@ -70,7 +71,8 @@
 
 | Variable | Required | Source | Used by |
 |---|---|---|---|
-| `GH_TOKEN` | no (derived at shell startup) | `~/.config/zsh/rc/secrets.zsh` | `gh`, GitHub API |
+| `GH_TOKEN` | no (derived at shell startup) | `~/.config/zsh/rc/secrets.zsh` | `gh` CLI |
+| `GITHUB_API_TOKEN` | no | `secrets.zsh` | GitHub API (general) |
 | `OPENROUTER_API_KEY` | no | `secrets.zsh` | pi, OpenRouter clients |
 | `MOONSHOT_API_KEY` | no | `secrets.zsh` | pi, Kimi / Moonshot API |
 | `OLLAMA_API_KEY` | no | `secrets.zsh` | pi, Ollama Cloud API |

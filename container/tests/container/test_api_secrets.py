@@ -12,12 +12,15 @@ def test_api_secrets_data_lists_v1_providers() -> None:
     text = API_SECRETS_DATA.read_text()
     for env in (
         "GH_TOKEN",
+        "GITHUB_API_TOKEN",
         "OPENROUTER_API_KEY",
         "MOONSHOT_API_KEY",
         "OLLAMA_API_KEY",
     ):
         assert f"env: {env}" in text
-    assert "field: api_key" in text
+    for field in ("main_token", "gh_main", "CODEX", "main"):
+        assert f"field: {field}" in text
+    assert "REPLACE_WITH_BITWARDEN_ITEM_ID" not in text
     assert "enabled:" not in text
     assert "OLLAMA_HOST" not in text
 
