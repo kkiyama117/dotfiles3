@@ -16,6 +16,7 @@ def test_api_secrets_data_lists_v1_providers() -> None:
         "OPENROUTER_API_KEY",
         "MOONSHOT_API_KEY",
         "OLLAMA_API_KEY",
+        "CURSOR_API_KEY",
     ):
         assert f"env: {env}" in text
     for field in ("main_token", "gh_main", "CODEX", "main"):

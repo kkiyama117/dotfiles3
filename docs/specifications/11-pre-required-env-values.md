@@ -50,6 +50,7 @@
 | `.api_secrets[].item` (`OPENROUTER_API_KEY`) | `private_secrets.zsh.tmpl` | runtime apply | `openrouter` item; custom field `CODEX` |
 | `.api_secrets[].item` (`MOONSHOT_API_KEY`) | `private_secrets.zsh.tmpl` | runtime apply | `platform.kimi.ai` item; custom field `main` |
 | `.api_secrets[].item` (`OLLAMA_API_KEY`) | `private_secrets.zsh.tmpl` | runtime apply | `ollama.com` item; custom field `main` |
+| `.api_secrets[].item` (`CURSOR_API_KEY`) | `private_secrets.zsh.tmpl` | runtime apply | `cursor.com` item; custom field `main` |
 
 ## Local environment variables
 
@@ -76,6 +77,7 @@
 | `OPENROUTER_API_KEY` | no | `secrets.zsh` | pi, OpenRouter clients |
 | `MOONSHOT_API_KEY` | no | `secrets.zsh` | pi, Kimi / Moonshot API |
 | `OLLAMA_API_KEY` | no | `secrets.zsh` | pi, Ollama Cloud API |
+| `CURSOR_API_KEY` | no | `secrets.zsh` | Cursor API / SDK |
 
 > Values are resolved at `chezmoi apply` from Bitwarden and written to
 > `secrets.zsh` (mode 0600). They are not in `podman inspect` env.
