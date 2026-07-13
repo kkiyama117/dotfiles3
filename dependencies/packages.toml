@@ -317,54 +317,18 @@ layer = 4
 has_configs = false
 description = "tmux multiplexer"
 
-# tree-sitter grammar packages: runtime deps of nvim's default ftplugins
-# (vim.treesitter.start). The official `neovim` pacman package depends on
-# these, but `neovim-git` (AUR) does not and ships an empty parser dir,
-# so we declare them explicitly (official repo packages installed via
-# paru at Layer 4, alongside neovim-git; Layer 1 pacman stays minimal). Issue:
-# docs/issues/2026-07-10-nvim-treesitter-parsers.md
-
 [[tool]]
-name = "tree-sitter-c"
+name = "tree-sitter"
 manager = "paru"
 layer = 4
 has_configs = false
-description = "tree-sitter C grammar; required by nvim built-in c ftplugin"
 
 [[tool]]
-name = "tree-sitter-lua"
+name = "tree-sitter-cli"
 manager = "paru"
 layer = 4
 has_configs = false
-description = "tree-sitter Lua grammar; required by nvim built-in lua ftplugin"
-
-[[tool]]
-name = "tree-sitter-markdown"
-manager = "paru"
-layer = 4
-has_configs = false
-description = "tree-sitter Markdown grammar; required by nvim built-in markdown ftplugin"
-
-[[tool]]
-name = "tree-sitter-query"
-manager = "paru"
-layer = 4
-has_configs = false
-description = "tree-sitter query grammar; required by nvim treesitter query editing"
-
-[[tool]]
-name = "tree-sitter-vim"
-manager = "paru"
-layer = 4
-has_configs = false
-description = "tree-sitter Vimscript grammar; required by nvim built-in vim ftplugin"
-
-[[tool]]
-name = "tree-sitter-vimdoc"
-manager = "paru"
-layer = 4
-has_configs = false
-description = "tree-sitter vimdoc grammar; required by nvim :help highlighting"
+description = "tree-sitter command; that is used by `tree-sitter-manager.nvim`"
 
 [[tool]]
 name = "wired"

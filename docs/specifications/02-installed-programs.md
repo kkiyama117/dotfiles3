@@ -143,12 +143,8 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `starship` | paru | yes | zsh prompt theme manager |
 | `tealdeer` | paru | yes | tldr alternative |
 | `tmux` | paru | no | tmux multiplexer |
-| `tree-sitter-c` | paru | no | tree-sitter C grammar; required by nvim built-in c ftplugin |
-| `tree-sitter-lua` | paru | no | tree-sitter Lua grammar; required by nvim built-in lua ftplugin |
-| `tree-sitter-markdown` | paru | no | tree-sitter Markdown grammar; required by nvim built-in markdown ftplugin |
-| `tree-sitter-query` | paru | no | tree-sitter query grammar; required by nvim treesitter query editing |
-| `tree-sitter-vim` | paru | no | tree-sitter Vimscript grammar; required by nvim built-in vim ftplugin |
-| `tree-sitter-vimdoc` | paru | no | tree-sitter vimdoc grammar; required by nvim :help highlighting |
+| `tree-sitter` | paru | no |  |
+| `tree-sitter-cli` | paru | no | tree-sitter command; that is used by `tree-sitter-manager.nvim` |
 | `wired` | paru | yes | notification daemon |
 | `zoxide` | paru | no | Enhanced cd command |
 
