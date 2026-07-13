@@ -230,6 +230,13 @@ has_configs = false
 description = "Alternative `cat`"
 
 [[tool]]
+name = "chawan"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "TUI browser; cli name is `cha` and `mancha`"
+
+[[tool]]
 name = "fd"
 manager = "paru"
 layer = 4
