@@ -134,6 +134,7 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `fd` | paru | no | Alternative `find` |
 | `github-cli` | paru | yes | Github commands |
 | `lazygit` | paru | yes | TUI for git |
+| `man-db` | paru | no | man command |
 | `neovim-git` | paru | no | neovim built from upstream git master (AUR); first concrete AUR package |
 | `pastel` | paru | no | color utility |
 | `pueue` | paru | yes | task queue daemon |

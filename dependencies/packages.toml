@@ -253,6 +253,13 @@ has_configs = true
 description = "TUI for git"
 
 [[tool]]
+name = "man-db"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "man command"
+
+[[tool]]
 name = "neovim-git"
 manager = "paru"
 layer = 4
@@ -288,6 +295,13 @@ layer = 4
 has_configs = false
 
 [[tool]]
+name = "skim"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "fzf alternative written in Rust"
+
+[[tool]]
 name = "starship"
 manager = "paru"
 layer = 4
@@ -302,13 +316,6 @@ layer = 4
 # `~/.config/tealdeer/config.toml`
 has_configs = true
 description = "tldr alternative"
-
-[[tool]]
-name = "skim"
-manager = "paru"
-layer = 4
-has_configs = false
-description = "fzf alternative written in Rust"
 
 [[tool]]
 name = "tmux"
