@@ -1,8 +1,26 @@
+# github
 Host github.com
     HostName github.com
     User git
     IdentityFile ~/.ssh/main
     IdentitiesOnly yes
+
+# KUDPC super computer
+Host sp
+  HostName camphor.kudpc.kyoto-u.ac.jp
+  Port 22
+  User b39027
+  #IdentityFile ~/.ssh/services/super
+  IdentityFile ~/.ssh/main
+  ServerAliveInterval 120
+
+Host sp_B
+  HostName laurel.kudpc.kyoto-u.ac.jp
+  Port 22
+  User b39027
+  #IdentityFile ~/.ssh/services/super
+  IdentityFile ~/.ssh/main
+  ServerAliveInterval 120
 
 # Include local SSH configs (especially for containers)
 Include ~/.ssh/config.d/local/*
