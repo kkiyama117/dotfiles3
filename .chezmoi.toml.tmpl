@@ -16,6 +16,9 @@ pi_config_ref = {{ env "PI_CONFIG_REF" | default "pi-config-v2026-07-08-1" | quo
 nvim_config_url = {{ env "NVIM_CONFIG_URL" | default "git@github.com:kkiyama117/nvim_config.git" | quote }}
 nvim_config_ref = {{ env "NVIM_CONFIG_REF" | default "main" | quote }}
 
+[bitwarden]
+    unlock = "auto"
+
 {{- /* Git auto-commit via pi CLI hooks — host runtime only.
    The [git] and [hooks] sections are omitted entirely when running
    inside the container (DOTFILES_RUNTIME=container) or during the

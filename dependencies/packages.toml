@@ -13,7 +13,7 @@
 # name = "base-devel"
 ## Allowed `manager` values: pacman, paru, nix, uv, cargo, custom, migrated.
 ## Mise-managed tool versions live in dot_config/mise/config.toml, not here.
-## Current default layer of installing packages is; 
+## Current default layer of installing packages is;
 ## `pacman`: layer 1
 ## `cargo`: layer 3
 ## `paru`: layer 4
@@ -230,6 +230,13 @@ has_configs = false
 description = "Alternative `cat`"
 
 [[tool]]
+name = "chawan"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "TUI browser; cli name is `cha` and `mancha`"
+
+[[tool]]
 name = "fd"
 manager = "paru"
 layer = 4
@@ -251,6 +258,13 @@ layer = 4
 # `~/.config/lazygit/config.toml`. depends on `neovim` and `git-delta`.
 has_configs = true
 description = "TUI for git"
+
+[[tool]]
+name = "man-db"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "man command"
 
 [[tool]]
 name = "neovim-git"
@@ -283,9 +297,16 @@ description = "grep alternative"
 
 [[tool]]
 name = "rsync"
-manager = "pacman"
+manager = "paru"
 layer = 4
 has_configs = false
+
+[[tool]]
+name = "skim"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "fzf alternative written in Rust"
 
 [[tool]]
 name = "starship"
@@ -304,18 +325,24 @@ has_configs = true
 description = "tldr alternative"
 
 [[tool]]
-name = "skim"
-manager = "paru"
-layer = 4
-has_configs = false
-description = "fzf alternative written in Rust"
-
-[[tool]]
 name = "tmux"
 manager = "paru"
 layer = 4
 has_configs = false
 description = "tmux multiplexer"
+
+[[tool]]
+name = "tree-sitter"
+manager = "paru"
+layer = 4
+has_configs = false
+
+[[tool]]
+name = "tree-sitter-cli"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "tree-sitter command; that is used by `tree-sitter-manager.nvim`"
 
 [[tool]]
 name = "wired"

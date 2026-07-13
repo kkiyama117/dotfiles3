@@ -16,6 +16,7 @@
 | bitwarden auth | manual | `bw login --apikey` + `bw unlock --raw` (shell) | `BW_CLIENTID`/`BW_CLIENTSECRET` (shell env) | `BW_SESSION` in shell env |
 | chezmoi deploy (host) | manual | `chezmoi apply` | repo source + Bitwarden secrets via `bw` | `~` files |
 | chezmoi deploy (container) | planned | `make apply` (runtime, not build) | repo source + runtime `BW_SESSION` | `$HOME` files in bind mount (image secret-free) |
+| API provider env export | active | runtime `chezmoi apply` + interactive zsh | Bitwarden items in `.chezmoidata/api_secrets.yaml` + `BW_SESSION` | `~/.config/zsh/rc/secrets.zsh` → shell env via sheldon |
 
 ## Acceptance contracts
 

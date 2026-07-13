@@ -34,7 +34,11 @@ not in mise `[env]`.
 ## manager rules
 
 - `pacman`: use to install packages to build container.
-- `paru`: install all packages from AUR package, that isn't included in `pacman` installed list.
+- `paru`: install all Layer 4 packages — AUR packages not in the `pacman`
+  (Layer 1) list, plus official-repo packages that belong to Layer 4
+  (paru resolves repo packages too, e.g. `rsync`, `tree-sitter-*`).
+  `pacman` entries install at Layer 1 only; a `layer_4/pacman.txt` must
+  never exist.
 - `nix`: Now we use `nix` only for apply `flake.nix`
 - `uv`: installed via `uv` (Python package manager)
 - `cargo`: build-time cargo tools (`layer = 3`) are installed via
@@ -126,19 +130,22 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | name | manager | configs | description |
 |---|---|---|---|
 | `paru` | custom | no | AUR helper; bootstrapped via makepkg in the aur stage (custom install path, not in paru.txt) |
-| `rsync` | pacman | no |  |
 | `bat` | paru | no | Alternative `cat` |
 | `fd` | paru | no | Alternative `find` |
 | `github-cli` | paru | yes | Github commands |
 | `lazygit` | paru | yes | TUI for git |
+| `man-db` | paru | no | man command |
 | `neovim-git` | paru | no | neovim built from upstream git master (AUR); first concrete AUR package |
 | `pastel` | paru | no | color utility |
 | `pueue` | paru | yes | task queue daemon |
 | `ripgrep` | paru | no | grep alternative |
+| `rsync` | paru | no |  |
 | `skim` | paru | no | fzf alternative written in Rust |
 | `starship` | paru | yes | zsh prompt theme manager |
 | `tealdeer` | paru | yes | tldr alternative |
 | `tmux` | paru | no | tmux multiplexer |
+| `tree-sitter` | paru | no |  |
+| `tree-sitter-cli` | paru | no | tree-sitter command; that is used by `tree-sitter-manager.nvim` |
 | `wired` | paru | yes | notification daemon |
 | `zoxide` | paru | no | Enhanced cd command |
 

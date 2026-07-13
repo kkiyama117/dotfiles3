@@ -38,17 +38,19 @@
 
 ## Bitwarden items
 
-> TODO: enumerate the item ID → consumer mapping. Until the host secret
-> survey under `host_config_list.md` is reconciled with `dot_zshenv`, this
-> stays a TBD list. Acceptance criterion: every chezmoi template invocation
-> of `bitwarden*` resolves to one of the entries in this table. See
-> [`13-secret-management.md`](13-secret-management.md) §3 for the template
-> functions.
+> TODO: reconcile any remaining host secret survey entries under
+> `host_config_list.md` with this table. API provider items are enumerated
+> above; SSH import item is listed separately.
 
 | Item ID env / template var | Consumer | Required at | Notes |
 |---|---|---|---|
 | `.ssh_keys[].item` in `.chezmoidata/ssh_keys.yaml` | `.chezmoiscripts/run_after_install-ssh-keys.sh.tmpl` | container runtime apply only | Optional until `ssh_import_enabled: true`; stores a Bitwarden item ID or stable item name only. Private/public key bytes live in Bitwarden attachments named by `.ssh_keys[].private_attachment` / `.ssh_keys[].public_attachment`, never in this repo. |
-| _(TBD)_ | _(TBD)_ | apply / build | Broader host secret survey remains pending. |
+| `.api_secrets[].item` (`GH_TOKEN`) | `dot_config/zsh/rc/private_secrets.zsh.tmpl` | runtime apply (host + container) | `github_cli` item; custom field `main_token` |
+| `.api_secrets[].item` (`GITHUB_API_TOKEN`) | `private_secrets.zsh.tmpl` | runtime apply | `GitHub` item; custom field `gh_main` |
+| `.api_secrets[].item` (`OPENROUTER_API_KEY`) | `private_secrets.zsh.tmpl` | runtime apply | `openrouter` item; custom field `CODEX` |
+| `.api_secrets[].item` (`MOONSHOT_API_KEY`) | `private_secrets.zsh.tmpl` | runtime apply | `platform.kimi.ai` item; custom field `main` |
+| `.api_secrets[].item` (`OLLAMA_API_KEY`) | `private_secrets.zsh.tmpl` | runtime apply | `ollama.com` item; custom field `main` |
+| `.api_secrets[].item` (`CURSOR_API_KEY`) | `private_secrets.zsh.tmpl` | runtime apply | `cursor.com` item; custom field `main` |
 
 ## Local environment variables
 
@@ -66,6 +68,20 @@
 | `NVIM_CONFIG_REF` | no | `main` | Optional chezmoi external ref override for nvim config |
 | `PI_COMMIT_PROMPT_FILE` | no | — | Optional host-only override for the chezmoi pi auto-commit prompt |
 
+### API provider env vars (runtime, from `secrets.zsh`)
+
+| Variable | Required | Source | Used by |
+|---|---|---|---|
+| `GH_TOKEN` | no (derived at shell startup) | `~/.config/zsh/rc/secrets.zsh` | `gh` CLI |
+| `GITHUB_API_TOKEN` | no | `secrets.zsh` | GitHub API (general) |
+| `OPENROUTER_API_KEY` | no | `secrets.zsh` | pi, OpenRouter clients |
+| `MOONSHOT_API_KEY` | no | `secrets.zsh` | pi, Kimi / Moonshot API |
+| `OLLAMA_API_KEY` | no | `secrets.zsh` | pi, Ollama Cloud API |
+| `CURSOR_API_KEY` | no | `secrets.zsh` | Cursor API / SDK |
+
+> Values are resolved at `chezmoi apply` from Bitwarden and written to
+> `secrets.zsh` (mode 0600). They are not in `podman inspect` env.
+
 > The `BW_*` variables are **runtime shell env only** — never in `.env`,
 > the repo, or the image. See [`13`](13-secret-management.md) §2 (two-tier)
 > and §6 I-S2/I-S3.
@@ -77,7 +93,9 @@ The default stable pi config source is the GitHub repo above; `/data/pi-config`
 is a local authoring checkout override via `PI_CONFIG_URL=file:///data/pi-config`
 only. The default nvim config source is `git@github.com:kkiyama117/nvim_config.git` on branch `main`;
 `/data/nvim_config` is a local authoring checkout override via
-`NVIM_CONFIG_URL=file:///data/nvim_config` only.
+`NVIM_CONFIG_URL=file:///data/nvim_config` only. Chezmoi externals clone with
+`--depth 1 --no-single-branch` so the default checkout stays shallow on `main`
+while other remote branches (e.g. `origin/develop`) remain fetchable.
 
 ## Container-build envs
 

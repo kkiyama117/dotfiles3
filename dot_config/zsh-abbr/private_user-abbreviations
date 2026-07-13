@@ -11,18 +11,24 @@
 # Common
 #############################################################################
 
+# cat
+abbr "cat"="bat -p --paging=never"
 # cp
 abbr "cp"="cp -irf"
 # df
 abbr "df"="df -h"
+# find
+abbr "find"="fd"
 # free
 abbr "free"="free -m"
 # git
 abbr "ga"="git add"
 abbr "gaA"="git add -A"
+abbr "ga."="git add ."
 abbr "gb"="git branch"
 abbr "gc"="git commit"
 abbr "gca"="git commit -a"
+abbr "gc."="git commit ."
 abbr "gf"="git fetch"
 abbr "gp"="git pull"
 abbr "gP"="git push"

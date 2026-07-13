@@ -33,6 +33,9 @@ the map of which top-level path serves which concern.
 │       ├── dot_zshrc        # chezmoi-managed ~/.config/zsh/.zshrc (sheldon boot; runtime toolchain block)
 │       ├── dot_zprofile     # chezmoi-managed ~/.config/zsh/.zprofile (QT/browser env)
 │       ├── dot_zfunc/       # chezmoi-managed ~/.config/zsh/.zfunc/ (fpath autoload completions: _chezmoi/_sheldon/_mise)
+│       ├── rc/
+│       │   ├── private_secrets.zsh.tmpl   # runtime API key env exports (Bitwarden; private_ → mode 0600)
+│       │   └── functions/bw_session.zsh  # interactive bw unlock helper
 │       └── sheldon_hooks/   # chezmoi-managed ~/.config/zsh/sheldon_hooks/ (sheldon hook scripts, e.g. skim-based zoxide `zi`)
 ├── dot_local/          # chezmoi-managed ~/.local/ (XDG data/state, rare static configs only)
 │   ├── share/cargo/config.toml    # chezmoi-managed ~/.local/share/cargo/config.toml
@@ -40,8 +43,8 @@ the map of which top-level path serves which concern.
 ├── (Other dotfiles)    # chezmoi-managed ~/(other dotfiles)
 ├── .chezmoiignore      # chezmoi ignore rules
 ├── .chezmoi.toml.tmpl  # chezmoi config template (build_mode via BUILD_MODE env; rendered by `chezmoi execute-template --init`)
-├── .chezmoidata/       # chezmoi data dir (kept under VCS): git_config.yaml — git identity_default (name/email/signingkey); see chezmoi docs
-├── .chezmoiscripts/    # chezmoi run-once scripts dir (kept under VCS; currently `.gitkeep` only)
+├── .chezmoidata/       # chezmoi data dir (kept under VCS): git_config.yaml, ssh_keys.yaml, api_secrets.yaml
+├── .chezmoiscripts/    # chezmoi run-once scripts dir (kept under VCS)
 ├── .containerignore    # srcroot build-context exclusions; applied to the `srcroot` named context in Makefile `build` (renamed from `.dockerignore`)
 ├── .env                # gitignored, per-machine (USERNAME=...); see 22-...md
 ├── .env.example        # committed example of .env
