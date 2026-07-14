@@ -7,7 +7,6 @@ MISE_CONFIG = ROOT / "dot_config" / "mise" / "config.toml"
 ZSHENV = ROOT / "dot_zshenv.tmpl"
 CHEZMOI_CONFIG = ROOT / ".chezmoi.toml.tmpl"
 CHEZMOI_EXTERNAL = ROOT / ".chezmoiexternal.toml.tmpl"
-PI_LINK_SCRIPT = ROOT / ".chezmoiscripts" / "run_after_configure-pi-agent.sh.tmpl"
 PI_COMMIT_HOOK = ROOT / "programs" / "chezmoi_pi_commit.sh"
 PACKAGES = ROOT / "dependencies" / "packages.toml"
 CONTAINERFILE = ROOT / "container" / "Containerfile"
@@ -124,15 +123,15 @@ def test_pi_config_external_is_build_mode_gated_and_pinned() -> None:
     assert "https://github.com/kkiyama117/pi-config.git" in config
     assert "pi_config_ref" in config
     assert "PI_CONFIG_REF" in config
-    assert "pi-config-v2026-07-14-1" in config
+    assert "pi-config-v2026-07-14-2" in config
 
-    assert "{{- if not .build_mode }}" in external
-    assert '[".local/share/pi-config"]' in external
+    assert "{{- if and (not .build_mode) (eq .runtime \"container\") }}" in external
+    assert 'eq .runtime "container"' in external
+    assert '[".pi"]' in external
     assert 'type = "git-repo"' in external
     assert 'url = "{{ .pi_config_url }}"' in external
     assert 'refreshPeriod = "0"' in external
     assert 'clone.args = ["--branch", "{{ .pi_config_ref }}", "--depth", "1", "--no-single-branch"]' in external
-    assert "file:///data/pi-config" not in external
 
 
 def test_nvim_config_external_is_build_mode_gated_and_pinned() -> None:
@@ -152,58 +151,12 @@ def test_nvim_config_external_is_build_mode_gated_and_pinned() -> None:
     assert "file:///data/nvim_config" not in external
 
 
-def test_pi_link_script_manages_only_stable_resources() -> None:
-    text = PI_LINK_SCRIPT.read_text()
-
-    assert "{{- if not .build_mode }}" in text
-    assert ".local/share/pi-config/agent" in text
-    assert ".pi/agent" in text
-    # agent-level file/dir resources (link_resource -> ~/.pi/agent/<name>)
-    for name in (
-        "settings.json",
-        "models.json",
-        "ollama-cloud.json",
-        "cursor-sdk.json",
-        "cursor-sdk-context-windows.json",
-        "prompts",
-        "skills",
-        "extensions",
-        "themes",
-    ):
-        assert f'link_resource "{name}"' in text
-
-    # pi-root-level resource (link_pi_root_resource -> ~/.pi/<name>)
-    assert 'link_pi_root_resource "providers"' in text
-    # the new helper must target ~/.pi (pi_root), not ~/.pi/agent — assert on
-    # the var assignment and the helper's resolved target so the check is not
-    # satisfied trivially by pi_agent_dir="${HOME}/.pi/agent".
-    assert 'pi_root="${HOME}/.pi"' in text
-    assert 'target="${pi_root}/${name}"' in text
-
-    # generated cache + runtime state must never be linked
-    forbidden = (
-        "auth.json",
-        "trust.json",
-        "sessions",
-        "transcripts",
-        "npm",
-        "git",
-        "logs",
-        "cache",
-        "run-history.jsonl",
-        "cursor-sdk-model-list.json",
-    )
-    for name in forbidden:
-        assert f'link_resource "{name}"' not in text
-        assert f'link_pi_root_resource "{name}"' not in text
-
-
 def test_pi_commit_hook_uses_external_prompt_precedence() -> None:
     text = PI_COMMIT_HOOK.read_text()
 
     assert "PI_COMMIT_PROMPT_FILE" in text
     assert "$HOME/.pi/agent/prompts/commit.md" in text
-    assert "$HOME/.local/share/pi-config/agent/prompts/commit.md" in text
+    assert "$HOME/.local/share/pi-config/agent/prompts/commit.md" not in text
     assert '$src_dir/.pi/prompts/commit.md' not in text
 
 

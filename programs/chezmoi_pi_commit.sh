@@ -24,7 +24,6 @@ fi
 prompt_candidates=(
   "${PI_COMMIT_PROMPT_FILE:-}"
   "$HOME/.pi/agent/prompts/commit.md"
-  "$HOME/.local/share/pi-config/agent/prompts/commit.md"
 )
 
 prompt_file=""

@@ -64,7 +64,7 @@
 | `BW_PASSWORD`     | no (runtime, via `podman secret bw_password`)   | — | master password for `bw unlock --passwordfile`; never enters an env (Tier 1) |
 | `BW_SESSION`      | no (derived) | — | derived in the entrypoint via `bw unlock --passwordfile --raw`; consumed by `bitwarden*` templates during `chezmoi apply`; scrubbed before `exec` |
 | `PI_CONFIG_URL` | no | `https://github.com/kkiyama117/pi-config.git` | Optional chezmoi external source override for stable pi config |
-| `PI_CONFIG_REF` | no | `pi-config-v2026-07-14-1` | Optional chezmoi external ref override for stable pi config |
+| `PI_CONFIG_REF` | no | `pi-config-v2026-07-14-2` | Optional chezmoi external ref override for stable pi config |
 | `NVIM_CONFIG_URL` | no | `git@github.com:kkiyama117/nvim_config.git` | Optional chezmoi external source override for nvim config |
 | `NVIM_CONFIG_REF` | no | `main` | Optional chezmoi external ref override for nvim config |
 | `PI_COMMIT_PROMPT_FILE` | no | — | Optional host-only override for the chezmoi pi auto-commit prompt |

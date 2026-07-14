@@ -1,6 +1,6 @@
-{{- /* pi config external. Build mode must not fetch user config into image layers. */ -}}
-{{- if not .build_mode }}
-[".local/share/pi-config"]
+{{- /* pi config external — container runtime only. Host ~/.pi is PI_harness (R1). */ -}}
+{{- if and (not .build_mode) (eq .runtime "container") }}
+[".pi"]
 type = "git-repo"
 url = "{{ .pi_config_url }}"
 refreshPeriod = "0"

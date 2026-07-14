@@ -12,7 +12,7 @@
 build_mode = {{ if eq (env "BUILD_MODE" | default "false") "true" }}true{{ else }}false{{ end }}
 runtime = {{ env "DOTFILES_RUNTIME" | default "host" | quote }}
 pi_config_url = {{ env "PI_CONFIG_URL" | default "https://github.com/kkiyama117/pi-config.git" | quote }}
-pi_config_ref = {{ env "PI_CONFIG_REF" | default "pi-config-v2026-07-14-1" | quote }}
+pi_config_ref = {{ env "PI_CONFIG_REF" | default "pi-config-v2026-07-14-2" | quote }}
 nvim_config_url = {{ env "NVIM_CONFIG_URL" | default "git@github.com:kkiyama117/nvim_config.git" | quote }}
 nvim_config_ref = {{ env "NVIM_CONFIG_REF" | default "main" | quote }}
 
