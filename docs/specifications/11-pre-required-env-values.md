@@ -51,6 +51,7 @@
 | `.api_secrets[].item` (`MOONSHOT_API_KEY`) | `private_secrets.zsh.tmpl` | runtime apply | `platform.kimi.ai` item; custom field `main` |
 | `.api_secrets[].item` (`OLLAMA_API_KEY`) | `private_secrets.zsh.tmpl` | runtime apply | `ollama.com` item; custom field `main` |
 | `.api_secrets[].item` (`CURSOR_API_KEY`) | `private_secrets.zsh.tmpl` | runtime apply | `cursor.com` item; custom field `main` |
+| `.api_secrets[].item` (`DEEPSEEK_API_KEY`) | `private_secrets.zsh.tmpl` | runtime apply | `Deepseek` item (`https://deepseek.com/`); custom field `API` |
 
 ## Local environment variables
 
@@ -63,7 +64,7 @@
 | `BW_PASSWORD`     | no (runtime, via `podman secret bw_password`)   | — | master password for `bw unlock --passwordfile`; never enters an env (Tier 1) |
 | `BW_SESSION`      | no (derived) | — | derived in the entrypoint via `bw unlock --passwordfile --raw`; consumed by `bitwarden*` templates during `chezmoi apply`; scrubbed before `exec` |
 | `PI_CONFIG_URL` | no | `https://github.com/kkiyama117/pi-config.git` | Optional chezmoi external source override for stable pi config |
-| `PI_CONFIG_REF` | no | `pi-config-v2026-07-08-1` | Optional chezmoi external ref override for stable pi config |
+| `PI_CONFIG_REF` | no | `pi-config-v2026-07-14-2` | Optional chezmoi external ref override for stable pi config |
 | `NVIM_CONFIG_URL` | no | `git@github.com:kkiyama117/nvim_config.git` | Optional chezmoi external source override for nvim config |
 | `NVIM_CONFIG_REF` | no | `main` | Optional chezmoi external ref override for nvim config |
 | `PI_COMMIT_PROMPT_FILE` | no | — | Optional host-only override for the chezmoi pi auto-commit prompt |
@@ -78,6 +79,7 @@
 | `MOONSHOT_API_KEY` | no | `secrets.zsh` | pi, Kimi / Moonshot API |
 | `OLLAMA_API_KEY` | no | `secrets.zsh` | pi, Ollama Cloud API |
 | `CURSOR_API_KEY` | no | `secrets.zsh` | Cursor API / SDK |
+| `DEEPSEEK_API_KEY` | no | `secrets.zsh` | pi, DeepSeek API |
 
 > Values are resolved at `chezmoi apply` from Bitwarden and written to
 > `secrets.zsh` (mode 0600). They are not in `podman inspect` env.
@@ -88,7 +90,13 @@
 
 Pi provider credentials, OAuth artifacts, sessions, trust decisions, package
 checkouts, and logs are runtime state under `~/.pi/agent`; they must not be
-stored in `.env`, `.chezmoidata`, `/data/pi-config`, or this repository.
+stored in `.env`, `.chezmoidata`, `/data/pi-config`, this repository,
+or any host `~/.pi` git repo (notably `PI_harness.git` /
+`git@github.com:kkiyama117/PI_harness.git`). See
+[`2026-07-14-pi-provider-config-managed-design.md`](implementations/2026-07-14-pi-provider-config-managed-design.md)
+§3 I9 for the rationale (the host's `~/.pi` was a pre-2026-07-08 blind
+spot).
+
 The default stable pi config source is the GitHub repo above; `/data/pi-config`
 is a local authoring checkout override via `PI_CONFIG_URL=file:///data/pi-config`
 only. The default nvim config source is `git@github.com:kkiyama117/nvim_config.git` on branch `main`;
