@@ -34,7 +34,12 @@ tiers:
   `podman secret create`). `BW_SESSION` is derived at runtime from
   `bw unlock --passwordfile` and is process-local. Every other sensitive
   value is a vault item retrieved via chezmoi templates, never stored in
-  the repo / `.env` / image.
+  the repo / `.env` / image. The forbidden-location list in
+  [`11`](11-pre-required-env-values.md) (pi provider credentials paragraph)
+  is extended to also name any host `~/.pi` git repo (notably
+  `PI_harness.git`) — see
+  [`2026-07-14-pi-provider-config-managed-design.md`](implementations/2026-07-14-pi-provider-config-managed-design.md)
+  §3 I9.
 - **Tier 2 — non-secret env (not picky).** `USERNAME`, `HOST_UID` /
   `HOST_GID`, `JOBS`, etc. These carry no secret value and live in
   `.env` (gitignored) or chezmoi data. Plain text is acceptable.

@@ -4,6 +4,8 @@ set -euo pipefail
 
 pi_config_dir="${HOME}/.local/share/pi-config/agent"
 pi_agent_dir="${HOME}/.pi/agent"
+pi_config_root="${HOME}/.local/share/pi-config"
+pi_root="${HOME}/.pi"
 
 if [ ! -d "$pi_config_dir" ]; then
   echo "pi-config: ${pi_config_dir} is missing; skipping pi resource links." >&2
@@ -11,6 +13,7 @@ if [ ! -d "$pi_config_dir" ]; then
 fi
 
 mkdir -p "$pi_agent_dir"
+mkdir -p "$pi_root"
 
 backup_existing() {
   local target="$1"
@@ -42,11 +45,37 @@ link_resource() {
   ln -s "$source" "$target"
 }
 
+link_pi_root_resource() {
+  local name="$1"
+  local source="${pi_config_root}/${name}"
+  local target="${pi_root}/${name}"
+
+  if [ ! -e "$source" ] && [ ! -L "$source" ]; then
+    return 0
+  fi
+
+  if [ -L "$target" ]; then
+    if [ "$(readlink "$target")" = "$source" ]; then
+      return 0
+    fi
+    rm "$target"
+  elif [ -e "$target" ]; then
+    backup_existing "$target"
+  fi
+
+  ln -s "$source" "$target"
+}
+
 link_resource "settings.json"
+link_resource "models.json"
+link_resource "ollama-cloud.json"
+link_resource "cursor-sdk.json"
+link_resource "cursor-sdk-context-windows.json"
 link_resource "prompts"
 link_resource "skills"
 link_resource "extensions"
 link_resource "themes"
+link_pi_root_resource "providers"
 {{- else }}
 exit 0
 {{- end }}
