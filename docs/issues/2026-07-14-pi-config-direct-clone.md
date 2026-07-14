@@ -1,7 +1,7 @@
 # Align pi-config management to nvim_config direct-clone style
 
 **Date:** 2026-07-14
-**Status:** open
+**Status:** closed (Phases 1-5 done; commit at develop HEAD; awaiting push authorization)
 **Related:** [pi-provider-config-managed](./2026-07-14-pi-provider-config-managed.md), [design](../specifications/implementations/2026-07-14-pi-config-direct-clone-design.md), [spec 11](../specifications/11-pre-required-env-values.md)
 
 ## Motivation
