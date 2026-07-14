@@ -64,6 +64,7 @@ julia = "latest"
 node = "latest"
 pnpm = "latest"
 usage = "latest" # This is only for `mise completion`
+"npm:@earendil-works/pi-coding-agent" = "latest" # `PI` agent
 
 [settings.npm]
 package_manager = "pnpm"
