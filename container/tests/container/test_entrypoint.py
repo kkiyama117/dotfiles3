@@ -1,7 +1,9 @@
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 ENTRYPOINT = ROOT / "container" / "bind" / "layer_5_files" / "entrypoint.sh"
+SSH_KEY_IMPORT = ROOT / ".chezmoiscripts" / "run_after_install-ssh-keys.sh.tmpl"
 MAKEFILE = ROOT / "Makefile"
 MISE_CONFIG = ROOT / "dot_config" / "mise" / "config.toml"
 ZSHENV = ROOT / "dot_zshenv.tmpl"
@@ -19,6 +21,54 @@ def test_entrypoint_forwards_stop_signal_during_startup_work() -> None:
     assert "trap terminate TERM INT" in text
     assert "chezmoi execute-template --init" in text
     assert "run_interruptible chezmoi apply --no-tty --force" in text
+
+
+def test_entrypoint_propagates_failed_child_status() -> None:
+    """A failed chezmoi child must stop the entrypoint before readiness."""
+    text = ENTRYPOINT.read_text()
+    start = text.index("run_interruptible() {")
+    end = text.index("\n}\n", start) + len("\n}\n")
+    function = text[start:end]
+
+    result = subprocess.run(
+        ["zsh", "-fc", f"set -e\n{function}\nrun_interruptible false\n"],
+        check=False,
+    )
+
+    assert result.returncode != 0
+
+
+def test_entrypoint_bootstraps_externals_without_changing_git_remotes() -> None:
+    """Startup may bootstrap over HTTPS but must not rewrite Git remotes."""
+    text = ENTRYPOINT.read_text()
+
+    assert 'PI_CONFIG_BOOTSTRAP_URL="https://github.com/kkiyama117/pi-config.git"' in text
+    assert 'NVIM_CONFIG_BOOTSTRAP_URL="https://github.com/kkiyama117/nvim_config.git"' in text
+    assert "remote set-url" not in text
+    assert "switch_external_remote_to_ssh" not in text
+
+    apply_idx = text.index("run_interruptible chezmoi apply --no-tty --force")
+    ready_idx = text.index('touch "$READINESS_SENTINEL"')
+    assert apply_idx < ready_idx
+
+
+def test_ssh_key_normalization_does_not_require_perl(tmp_path: Path) -> None:
+    """The runtime image has zsh but not Perl."""
+    text = SSH_KEY_IMPORT.read_text()
+    start = text.index("normalize_key_file() {")
+    end = text.index("\n}\n", start) + len("\n}\n")
+    function = text[start:end]
+    key_file = tmp_path / "key"
+    key_file.write_bytes(b"line1\r\nline2\rline3")
+
+    result = subprocess.run(
+        ["zsh", "-fc", f'{function}\nnormalize_key_file "$1"', "zsh", str(key_file)],
+        check=False,
+    )
+
+    assert result.returncode == 0
+    assert key_file.read_bytes() == b"line1\nline2\nline3\n"
+    assert "perl" not in function
 
 
 def test_make_up_uses_init_for_steady_state_signal_forwarding() -> None:
@@ -120,10 +170,10 @@ def test_pi_config_external_is_build_mode_gated_and_pinned() -> None:
 
     assert "pi_config_url" in config
     assert "PI_CONFIG_URL" in config
-    assert "https://github.com/kkiyama117/pi-config.git" in config
+    assert "git@github.com:kkiyama117/pi-config.git" in config
     assert "pi_config_ref" in config
     assert "PI_CONFIG_REF" in config
-    assert "pi-config-v2026-07-14-2" in config
+    assert 'pi_config_ref = {{ env "PI_CONFIG_REF" | default "main" | quote }}' in config
 
     assert "{{- if and (not .build_mode) (eq .runtime \"container\") }}" in external
     assert 'eq .runtime "container"' in external
@@ -149,6 +199,15 @@ def test_nvim_config_external_is_build_mode_gated_and_pinned() -> None:
     assert 'url = "{{ .nvim_config_url }}"' in external
     assert 'clone.args = ["--branch", "{{ .nvim_config_ref }}", "--depth", "1", "--no-single-branch"]' in external
     assert "file:///data/nvim_config" not in external
+
+
+def test_containerfile_arg_comments_are_not_inline() -> None:
+    """Podman parses words after ARG as more argument names, even after #."""
+    arg_lines = [
+        line for line in CONTAINERFILE.read_text().splitlines() if line.startswith("ARG ")
+    ]
+
+    assert all(" #" not in line for line in arg_lines)
 
 
 def test_pi_commit_hook_uses_external_prompt_precedence() -> None:

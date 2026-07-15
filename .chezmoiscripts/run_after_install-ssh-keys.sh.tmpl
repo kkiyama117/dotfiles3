@@ -48,8 +48,15 @@ fetch_attachment_file() {
 
 normalize_key_file() {
   local path="$1"
+  local content
+  local crlf=$'\r\n'
+  local cr=$'\r'
+  local lf=$'\n'
 
-  perl -0pi -e 's/\r\n/\n/g; s/\r/\n/g' "$path"
+  content="$(<"$path")"
+  content="${content//$crlf/$lf}"
+  content="${content//$cr/$lf}"
+  print -r -- "$content" > "$path"
 }
 
 {{- if .ssh_import_enabled }}

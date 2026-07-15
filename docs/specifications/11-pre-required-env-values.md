@@ -63,8 +63,8 @@
 | `BW_CLIENTSECRET` | no (runtime, via `podman secret bw_clientsecret`) | — | `bw login --apikey`; read from `/run/secrets/bw_clientsecret` by the entrypoint (Tier 1) |
 | `BW_PASSWORD`     | no (runtime, via `podman secret bw_password`)   | — | master password for `bw unlock --passwordfile`; never enters an env (Tier 1) |
 | `BW_SESSION`      | no (derived) | — | derived in the entrypoint via `bw unlock --passwordfile --raw`; consumed by `bitwarden*` templates during `chezmoi apply`; scrubbed before `exec` |
-| `PI_CONFIG_URL` | no | `https://github.com/kkiyama117/pi-config.git` | Optional chezmoi external source override for stable pi config |
-| `PI_CONFIG_REF` | no | `pi-config-v2026-07-14-2` | Optional chezmoi external ref override for stable pi config |
+| `PI_CONFIG_URL` | no | `git@github.com:kkiyama117/pi-config.git` | Optional chezmoi external source override for pi config |
+| `PI_CONFIG_REF` | no | `main` | Optional chezmoi external ref override for pi config |
 | `NVIM_CONFIG_URL` | no | `git@github.com:kkiyama117/nvim_config.git` | Optional chezmoi external source override for nvim config |
 | `NVIM_CONFIG_REF` | no | `main` | Optional chezmoi external ref override for nvim config |
 | `PI_COMMIT_PROMPT_FILE` | no | — | Optional host-only override for the chezmoi pi auto-commit prompt |
@@ -97,13 +97,19 @@ or any host `~/.pi` git repo (notably `PI_harness.git` /
 §3 I9 for the rationale (the host's `~/.pi` was a pre-2026-07-08 blind
 spot).
 
-The default stable pi config source is the GitHub repo above; `/data/pi-config`
+The default pi config source is the GitHub SSH repo above; `/data/pi-config`
 is a local authoring checkout override via `PI_CONFIG_URL=file:///data/pi-config`
 only. The default nvim config source is `git@github.com:kkiyama117/nvim_config.git` on branch `main`;
 `/data/nvim_config` is a local authoring checkout override via
 `NVIM_CONFIG_URL=file:///data/nvim_config` only. Chezmoi externals clone with
 `--depth 1 --no-single-branch` so the default checkout stays shallow on `main`
 while other remote branches (e.g. `origin/develop`) remain fetchable.
+
+At container startup, the entrypoint temporarily renders these two URLs as
+public HTTPS URLs for the first `chezmoi apply`, because externals are resolved
+before the runtime SSH config and Bitwarden-backed key are installed. The
+entrypoint does not rewrite Git remotes; any remote URL change is an explicit
+operator action.
 
 ## Container-build envs
 

@@ -21,6 +21,8 @@ set -euo pipefail
 
 CHEZMOI_SOURCE="${HOME}/.local/share/chezmoi"
 RUNTIME_CONFIG="${HOME}/.config/chezmoi/chezmoi.toml"
+PI_CONFIG_BOOTSTRAP_URL="https://github.com/kkiyama117/pi-config.git"
+NVIM_CONFIG_BOOTSTRAP_URL="https://github.com/kkiyama117/nvim_config.git"
 # Readiness sentinel for `make up`'s wait loop. Written ONLY after
 # `chezmoi apply` succeeds (so any `make exec` started after the sentinel
 # exists is guaranteed a fully applied $HOME: ~/.zshrc, sheldon, starship,
@@ -44,11 +46,12 @@ terminate() {
 run_interruptible() {
   "$@" &
   child_pid=$!
+  local rc
   if wait "$child_pid"; then
-    child_pid=""
-    return 0
+    rc=0
+  else
+    rc=$?
   fi
-  local rc=$?
   child_pid=""
   return "$rc"
 }
@@ -118,6 +121,11 @@ fi
 export DOTFILES_RUNTIME=container
 # Keep this render in the foreground: background jobs in non-interactive shell
 # read redirected stdin from /dev/null, which would create an empty config.
+# Chezmoi resolves git externals before its run_after SSH-key import script.
+# Use public HTTPS only for this bootstrap render so the first apply can create
+# ~/.ssh/config and import ~/.ssh/main without an SSH dependency cycle.
+PI_CONFIG_URL="$PI_CONFIG_BOOTSTRAP_URL" \
+NVIM_CONFIG_URL="$NVIM_CONFIG_BOOTSTRAP_URL" \
 chezmoi execute-template --init \
   < "$CONFIG_TEMPLATE" \
   > "$RUNTIME_CONFIG"
@@ -159,6 +167,7 @@ if [ -f /run/secrets/bw_password ]; then
 fi
 
 run_interruptible chezmoi apply --no-tty --force
+
 seed_zoxide_paths
 
 # `chezmoi apply` succeeded: publish the readiness sentinel so `make up`

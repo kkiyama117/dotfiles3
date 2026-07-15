@@ -16,9 +16,10 @@ LABEL org.opencontainers.image.title="dotfiles-manjaro"
 LABEL org.opencontainers.image.description="Manjaro base image for testing dotfiles"
 
 # Layer 1-1: Get arguments from Outer ENV values
-ARG HOST_UID # GIVEN BY `Makefile` as a default
-ARG HOST_GID # GIVEN BY `Makefile` as a default
-ARG USERNAME # GIVEN BY `.env` (required; build fails if not set)
+# HOST_UID and HOST_GID are supplied by Makefile; USERNAME is required in .env.
+ARG HOST_UID
+ARG HOST_GID
+ARG USERNAME
 
 # Layer 1-2: seed makepkg.conf + a Japan-optimized pacman mirrorlist, install
 # the Layer 1 pacman package set from dependencies/layer_1/pacman.txt, then
