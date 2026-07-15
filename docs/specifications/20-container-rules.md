@@ -236,6 +236,37 @@ labels directly.
   (signed prebuilt only — see [`24-rust-packages-rule.md`](24-rust-packages-rule.md)
   §3). `cargo-binstall` has no persistent download cache (per-run tempdir in
   `$CARGO_HOME`), so there is no BuildKit cache mount for binstall downloads.
+- I-HERDR1: **`herdr` is installed only through mise.** It is declared as
+  `"aqua:ogulcancelik/herdr" = "latest"` in `dot_config/mise/config.toml`
+  (explicit aqua backend required by `disable_default_registry = true`). Layer
+  3-4 installs it under `$MISE_DATA_DIR` during the build via `mise install
+  --yes`. There is no `packages.toml` entry, no Containerfile curl bootstrap,
+  and no `herdr update` or image-rebuild path for routine upgrades — operators
+  use `mise upgrade aqua:ogulcancelik/herdr` on host or inside the container.
+  The `"latest"` policy matches other mise-managed globals: the exact version
+  resolved at install/upgrade time is intentionally non-reproducible at the
+  config layer.
+- I-HERDR2: **`herdr` is on PATH via mise shims, persisted in
+  `dotfiles_mise`.** `dot_zshenv.tmpl` activates mise shims; `which herdr`
+  resolves under `$MISE_DATA_DIR/shims`, not `~/.local/bin/herdr`. Layer 3-4
+  installs `herdr` into `$MISE_DATA_DIR` inside the image. On the **first**
+  `make up` with an empty `dotfiles_mise` volume, Podman copy-on-first-mount
+  seeds the volume from the image tree (same pattern as spec 21 acceptance
+  #14). If `dotfiles_mise` already exists from before this migration, it will
+  **not** gain the aqua install on `make up` alone — operators must run a
+  one-time `podman volume rm dotfiles_mise` (see spec 21 acceptance #25;
+  `make clean` is broader and also removes the image and other volumes).
+  After the aqua install is present, `make down && make up` preserves `herdr`
+  across restarts via the named volume.
+- I-HERDR3: **No herdr runtime state in the image; chezmoi owns config with
+  update checks disabled.** The build never launches a herdr server or
+  client; runtime state (sockets, logs, `session.json`, `sessions/`,
+  release-note cache) is created at runtime only. Config files under
+  `~/.config/herdr/` remain chezmoi's domain (runtime `chezmoi apply`,
+  `dot_config/herdr/`); the `[update]` section sets `channel = "stable"`,
+  `version_check = false`, and `manifest_check = false` so Herdr does not
+  prompt for or apply self-updates. Extends the spec 20 I4 secret-free
+  property trivially (herdr ships no credentials).
 
 > NOTE on `git safe.directory`: an earlier draft mandated registering
 > `/var/lib/chezmoi-source` via `git config --global --add safe.directory`.

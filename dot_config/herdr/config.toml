@@ -3,7 +3,7 @@
 onboarding = false
 
 [theme]
-auto_switch = true
+auto_switch = false
 dark_name = "terminal"
 light_name = "catppuccin-latte"
 
@@ -15,6 +15,7 @@ light_name = "catppuccin-latte"
 # red = "#ff6188"
 # green = "#a6e3a1"
 
+name = "terminal"
 [terminal]
 # Empty means $SHELL, then /bin/sh.
 # default_shell = ""
@@ -124,6 +125,7 @@ sidebar_min_width = 30
 # accent = "cyan"
 
 # Background notification popup delivery
+agent_panel_sort = "spaces"
 [ui.toast]
 # off = disable pop-up notifications
 # herdr = show in-app toasts
@@ -196,4 +198,3 @@ pane_history = false
 # Maximum scrollback buffer size in bytes retained per pane terminal.
 # Matches Ghostty's default scrollback-limit behavior.
 # scrollback_limit_bytes = 10000000
-

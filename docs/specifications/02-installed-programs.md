@@ -19,7 +19,10 @@
 entries belong there only — never edit the AUTO-GEN block by hand. New global
 mise-managed tool versions belong in `dot_config/mise/config.toml`, not in
 `packages.toml`; stable shell env/PATH defaults belong in `dot_zshenv.tmpl`,
-not in mise `[env]`.
+not in mise `[env]`. `herdr` is managed the same way — as an explicit aqua
+backend entry (`"aqua:ogulcancelik/herdr" = "latest"`) in
+`dot_config/mise/config.toml`, not via `packages.toml` or a bespoke
+Containerfile install.
 
 ## Contract
 
@@ -84,7 +87,6 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `aria2` | migrated | yes | download files concurrently |
 | `fcitx5` | migrated | yes | download files concurrently |
 | `gtk` | migrated | yes | GTK |
-| `herdr` | migrated | yes | multiplexer with AI agents |
 | `kitty` | migrated | yes | Terminal emulator |
 | `rofi` | migrated | yes | display and focus switcher |
 
@@ -131,6 +133,7 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 |---|---|---|---|
 | `paru` | custom | no | AUR helper; bootstrapped via makepkg in the aur stage (custom install path, not in paru.txt) |
 | `bat` | paru | no | Alternative `cat` |
+| `chawan` | paru | no | TUI browser; cli name is `cha` and `mancha` |
 | `fd` | paru | no | Alternative `find` |
 | `github-cli` | paru | yes | Github commands |
 | `lazygit` | paru | yes | TUI for git |
