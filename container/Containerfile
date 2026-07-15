@@ -279,28 +279,6 @@ RUN zsh -c 'set -eo pipefail; \
       fi; \
     '
 
-# Layer 3-8: Install herdr (pinned prebuilt binary — packages.toml `custom`).
-#
-# herdr is a user-facing terminal workspace manager distributed as a
-# single-file static-pie binary per GitHub release (no tarball). Same
-# integrity gate as cargo-binstall (Layer 3-6): pin version + verify a
-# hardcoded SHA256 before install (I-HERDR1). Installed to
-# ~/.local/bin/herdr (already on PATH via .zshenv; I-HERDR2). Declared
-# in packages.toml as manager="custom", layer=3 (doc-only entry, spec 20
-# I5) — NOT I-INFRA1 infra, because herdr is not an installer.
-# No cache mount: single small artifact (~18 MB), re-fetched only when
-# the ARGs change. Runs as ${USERNAME}; no root needed.
-ARG HERDR_VERSION=0.7.3
-ARG HERDR_SHA256=043ef43ecbabda28465dcff1eec3184518150d567b8b8f20cda9c6c88770641d
-RUN zsh -c 'set -eo pipefail; \
-      curl -L --proto "=https" --tlsv1.2 -sSf -o /tmp/herdr \
-        https://github.com/ogulcancelik/herdr/releases/download/v${HERDR_VERSION}/herdr-linux-x86_64; \
-      printf "%s  /tmp/herdr\n" "${HERDR_SHA256}" | sha256sum -c -; \
-      install -D -m 0755 /tmp/herdr "$HOME/.local/bin/herdr"; \
-      rm -f /tmp/herdr; \
-      "$HOME/.local/bin/herdr" --version; \
-    '
-
 # ---------------------------------------------------------------------------
 # Stage 4: aur
 #

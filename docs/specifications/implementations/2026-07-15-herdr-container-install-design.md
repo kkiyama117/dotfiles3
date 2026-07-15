@@ -1,8 +1,9 @@
 # Install `herdr` during the container build (pinned prebuilt binary) — Design
 
-**Status:** DRAFT
+**Status:** superseded
 **Date opened:** 2026-07-15
 **Issue:** [`../../issues/2026-07-15-herdr-container-install.md`](../../issues/2026-07-15-herdr-container-install.md)
+**Superseded by:** [`2026-07-15-herdr-mise-management-design.md`](2026-07-15-herdr-mise-management-design.md)
 **Author:** kiyama
 
 ## §1 Context & success criteria

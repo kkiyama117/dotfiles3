@@ -19,7 +19,10 @@
 entries belong there only — never edit the AUTO-GEN block by hand. New global
 mise-managed tool versions belong in `dot_config/mise/config.toml`, not in
 `packages.toml`; stable shell env/PATH defaults belong in `dot_zshenv.tmpl`,
-not in mise `[env]`.
+not in mise `[env]`. `herdr` is managed the same way — as an explicit aqua
+backend entry (`"aqua:ogulcancelik/herdr" = "latest"`) in
+`dot_config/mise/config.toml`, not via `packages.toml` or a bespoke
+Containerfile install.
 
 ## Contract
 
@@ -122,7 +125,6 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `cargo-outdated` | cargo | no | Detect outdated Rust crate dependencies |
 | `topgrade` | cargo | yes | multi-package-manager updater; build-time cargo tool (signed prebuilt via cargo-binstall --only-signed) |
 | `cargo-binstall` | custom | no | Install binaries |
-| `herdr` | custom | yes | terminal workspace manager for AI coding agents; pinned prebuilt binary to ~/.local/bin (custom install path) |
 | `pi-coding-agent` | custom | yes | pi coding agent CLI (`@earendil-works/pi-coding-agent`); installed with npm --ignore-scripts after mise-managed Node |
 
 #### Layer 4 — install list

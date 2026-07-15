@@ -1,7 +1,8 @@
 # `herdr` in the container (prebuilt binary in toolchain stage) — Implementation Plan
 
-**Status:** pending
+**Status:** executed
 **Spec:** [`docs/specifications/implementations/2026-07-15-herdr-container-install-design.md`](../specifications/implementations/2026-07-15-herdr-container-install-design.md)
+**Successor:** [`docs/specifications/implementations/2026-07-15-herdr-mise-management-design.md`](../specifications/implementations/2026-07-15-herdr-mise-management-design.md)
 **Parent issue:** [`docs/issues/2026-07-15-herdr-container-install.md`](../issues/2026-07-15-herdr-container-install.md)
 **Review trail:** conversational approval 2026-07-15 (lightweight path; no spec-09 letter pass — the change installs a prebuilt binary with SHA256 pinning, introduces no new secret transport, and follows the established I-INFRA1 curl-bootstrap pattern)
 
@@ -166,24 +167,22 @@ Insert the following Layer 3-8 block **between** the Layer 3-7 `RUN` and the `St
 ARG HERDR_VERSION=0.7.3
 ARG HERDR_SHA256=043ef43ecbabda28465dcff1eec3184518150d567b8b8f20cda9c6c88770641d
 RUN zsh -c 'set -eo pipefail; \
-      source /tmp/build-home/.zshenv; \
       curl -L --proto "=https" --tlsv1.2 -sSf -o /tmp/herdr \
         https://github.com/ogulcancelik/herdr/releases/download/v${HERDR_VERSION}/herdr-linux-x86_64; \
       printf "%s  /tmp/herdr\n" "${HERDR_SHA256}" | sha256sum -c -; \
-      chmod 0755 /tmp/herdr; \
-      install -d "$HOME/.local/bin"; \
-      mv /tmp/herdr "$HOME/.local/bin/herdr"; \
-      herdr --version; \
+      install -D -m 0755 /tmp/herdr "$HOME/.local/bin/herdr"; \
+      rm -f /tmp/herdr; \
+      "$HOME/.local/bin/herdr" --version; \
     '
 ```
 
 Key design points:
 - **Position**: after Layer 3-7 (the last toolchain install), before the `aur` stage. This keeps all toolchain binary installs in Stage 3; the `aur` stage inherits herdr via the stage chain.
-- **`source /tmp/build-home/.zshenv`**: each `RUN` in the toolchain stage is a fresh shell; sourcing the rendered `.zshenv` materializes `PATH` (including `~/.local/bin`) so `herdr --version` can resolve at the end of the `RUN`.
-- **`install -d "$HOME/.local/bin"`**: ensures the directory exists before `mv` (it should already exist from the Stage 2 `chezmoi apply` render, but this is a safety net).
-- **`chmod 0755 /tmp/herdr`**: the downloaded binary may not have execute permission; set it before `mv`.
+- **No `.zshenv` sourcing inside the `RUN`**: the `RUN` does not rely on dotfile-derived `PATH` for Herdr. `install -D` writes to an explicit destination (`$HOME/.local/bin/herdr`) and the verification invokes the installed binary by absolute path (`"$HOME/.local/bin/herdr" --version`); therefore no `source /tmp/build-home/.zshenv` is needed.
+- **`install -D -m 0755 /tmp/herdr "$HOME/.local/bin/herdr"`**: creates the destination parent directory if necessary and atomically sets mode `0755` in one step, avoiding a separate `install -d` + `chmod` + `mv` sequence.
+- **`rm -f /tmp/herdr`**: removes the temporary downloaded artifact after placement so it is not left in the image layer.
+- **Absolute-path version check**: `"$HOME/.local/bin/herdr" --version` verifies the installed binary directly, avoiding any missing-directory `PATH` glob or stale `/tmp/herdr` resolution issue.
 - **No `--mount=type=cache`**: one-shot download, no persistent cache (same as cargo-binstall Layer 3-6).
-- **`herdr --version` at the end**: build-time verification that the binary is functional; fails the build if the binary is corrupt despite the SHA match (defense in depth).
 
 - [ ] **Step 2.2: Verify the Containerfile parses (dry-run)**
 

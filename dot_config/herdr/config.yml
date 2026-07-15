@@ -29,10 +29,9 @@ light_name = "catppuccin-latte"
 # new_cwd = "follow"
 
 [update]
-channel = "preview" # or `stable`
-
-version_check = true
-manifest_check = true
+channel = "stable"
+version_check = false
+manifest_check = false
 
 [keys]
 # TODO: setup

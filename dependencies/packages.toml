@@ -506,15 +506,6 @@ has_configs = true
 description = "GTK"
 
 [[tool]]
-name = "herdr"
-manager = "custom"
-layer = 3
-# `~/.config/herdr`; installed by Containerfile Layer 3-8 (pinned prebuilt
-# binary, SHA256-gated) — custom install path, not in any generated list
-has_configs = true
-description = "terminal workspace manager for AI coding agents; pinned prebuilt binary to ~/.local/bin (custom install path)"
-
-[[tool]]
 name = "rofi"
 manager = "migrated" # "paru" if it used
 layer = -1
