@@ -236,6 +236,37 @@ labels directly.
   (signed prebuilt only — see [`24-rust-packages-rule.md`](24-rust-packages-rule.md)
   §3). `cargo-binstall` has no persistent download cache (per-run tempdir in
   `$CARGO_HOME`), so there is no BuildKit cache mount for binstall downloads.
+- I-HERDR1: **`herdr` is a `custom` Layer 3 prebuilt binary, not an
+  installer-of-installers.** Unlike `rustup` / `cargo-binstall` (which are
+  infra — I-INFRA1), `herdr` is an end-user tool (a terminal workspace
+  manager for AI coding agents). It is curl-bootstrapped at Layer 3-8 from
+  a version-pinned (v0.7.3) + SHA256-gated
+  (`043ef43ecbabda28465dcff1eec3184518150d567b8b8f20cda9c6c88770641d`)
+  prebuilt static-pie ELF binary, placed at `~/.local/bin/herdr` (on `PATH`
+  via `dot_zshenv.tmpl`). It is declared `manager = "custom"`, `layer = 3`
+  in `packages.toml` (doc-only; not in any `layer_<N>/<manager>.txt` — the
+  Containerfile install is bespoke, parallel to `pi-coding-agent`). The
+  stable manifest (`https://herdr.dev/latest.json`) does not publish SHA256
+  checksums (unlike the preview manifest), so the SHA is hardcoded in the
+  `ARG` — the same approach as `cargo-binstall` (I-CARGO1). No BuildKit
+  cache mount (one-shot download, no persistent cache). Config at
+  `~/.config/herdr/` is chezmoi-managed (`has_configs = true`); the
+  `herdr update` self-update mechanism remains functional at runtime for
+  version bumps after the initial bake.
+- I-HERDR2: **Install destination is `~/.local/bin/herdr`** (`0755`,
+  `${USERNAME}`-owned), on PATH via the shared `.zshenv`. `~/.local/bin` is
+  **image content, not a volume mountpoint** — the binary survives
+  `make down && make up` because it is baked, not because it is persisted.
+  A runtime self-update (`herdr update`) rewrites the binary only in the
+  container overlay and is **lost on container replacement**; the supported
+  version-bump path is editing `HERDR_VERSION` / `HERDR_SHA256` in the
+  Containerfile and re-running `make build`.
+- I-HERDR3: **No herdr runtime state in the image.** The build never
+  launches a herdr server or client; `~/.config/herdr` state (sockets, logs,
+  `session.json`, `sessions/`, release-note cache) is created at runtime
+  only. Config files under `~/.config/herdr/` are chezmoi's domain (runtime
+  `chezmoi apply`, `dot_config/herdr/`), never baked by Layer 3-8. Extends
+  the spec 20 I4 secret-free property trivially (herdr ships no credentials).
 
 > NOTE on `git safe.directory`: an earlier draft mandated registering
 > `/var/lib/chezmoi-source` via `git config --global --add safe.directory`.
