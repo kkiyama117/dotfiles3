@@ -167,17 +167,15 @@ labels directly.
   by `{{ if and (not .build_mode) (eq .runtime "host") }}`. The container
   has no keyring daemon (I-GPG9); writing the line there would be a broken
   reference. The build-time pre-pass (`build_mode = true`) also omits it.
-- I-GIT4: `commit.gpgsign = true`, `gpg.format = openpgp`, and
-  `user.signingkey` render in all modes (build + host runtime + container
-  runtime). Signing is NOT gated by `runtime`: once the GPG key is
-  imported into the `dotfiles_gnupg` volume (deferred Bitwarden import),
-  the container signs automatically. Gating signing off in the container
-  would silently disable it even after the key arrives.
+- I-GIT4: `commit.gpgsign = true`, `gpg.format = ssh`, and
+  `user.signingkey = ~/.ssh/main` render in all modes (build + host runtime
+  + container runtime). Signing is NOT gated by `runtime`; the host and
+  container use the same Git configuration and their independently
+  persisted copies of the same SSH file key.
 - I-GIT5: No secret is baked into any image layer. `user.email` and
-  `user.signingkey` (a public GPG subkey ID) are acceptable plain text
-  (spec 13 §2 Tier 2) and are already public in the committed data file.
-  The GPG secret key is never baked (it lives only in the runtime
-  `dotfiles_gnupg` volume — I-GPG4). Extends I4 / spec 13 I-S4.
+  `user.signingkey` (a path, not key material) are acceptable plain text.
+  The SSH private key is never baked; the container obtains it at runtime
+  in `dotfiles_ssh` (I-SSH1/I-SSH3). Extends I4 / spec 13 I-S4.
 - I-GIT6: `delta` is provided by the `git-delta` Arch `extra` package
   (Layer 1, `packages.toml`), so `core.pager=delta` / `pager.*=delta` work
   identically in host and container. No gating needed for delta.

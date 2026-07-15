@@ -1,6 +1,6 @@
 # 25 — Container SSH key management
 
-> Spec status: **active** (delivered baseline + manual flow); §4+
+> Spec status: **active** (delivered baseline + manual flow); §6
 > (future work) is **deferred** to
 > [`../issues/2026-07-03-ssh-container-config-setup.md`](../issues/2026-07-03-ssh-container-config-setup.md).
 > Normative spec for how an SSH file key enters, lives in, and is used
@@ -17,10 +17,9 @@
 
 - **In scope:** the operator-driven flow for getting SSH file keys into
   the container's persisted keyring; persistence and backup lifecycle;
-  the wiring between the keyring and the SSH client (`ssh -i`,
-  `IdentityFile`); and the deferred future-work items (chezmoi-managed
-  `~/.ssh/config`, GPG-agent SSH auth, automated Bitwarden/alternative
-  import).
+  the wiring between the keyring, the SSH client (`ssh -i`,
+  `IdentityFile`), and Git SSH commit signing; and the deferred
+  future-work items.
 - **Out of scope (normative elsewhere):** installing `openssh`
   ([`20-container-rules.md`](20-container-rules.md) I-SSH1,
   [`02-installed-programs.md`](02-installed-programs.md)); baking the
@@ -123,7 +122,21 @@ the maintainer fills `.ssh_keys[].item` with the intended Bitwarden item ID or
 stable item name, confirms the attachment names, and sets
 `ssh_import_enabled: true`.
 
-## 5. Future work (deferred)
+## 5. Git commit signing
+
+The shared chezmoi-managed Git config uses the same SSH signing setup on
+host and container:
+
+- `commit.gpgsign = true`
+- `gpg.format = ssh`
+- `user.signingkey = ~/.ssh/main`
+
+The host and container keep independent copies of the same key; the
+container copy is imported into `dotfiles_ssh` by §4. GitHub must have
+`~/.ssh/main.pub` registered as an SSH **signing key** for commits to show
+as verified.
+
+## 6. Future work (deferred)
 
 Tracked in
 [`../issues/2026-07-03-ssh-container-config-setup.md`](../issues/2026-07-03-ssh-container-config-setup.md)

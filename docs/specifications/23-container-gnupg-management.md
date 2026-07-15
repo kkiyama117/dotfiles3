@@ -16,8 +16,7 @@
 
 - **In scope:** the operator-driven flow for getting a GPG key into the
   container's persisted keyring; the primary-vs-subkey posture;
-  persistence and backup lifecycle; the wiring between the keyring and
-  git commit signing (`gpgsign`); and the open future-work items
+  persistence and backup lifecycle; and the open future-work items
   (automated Bitwarden/alternative import, real primary-key import).
 - **Out of scope (normative elsewhere):** installing `gnupg` /
   `pinentry` ([`20-container-rules.md`](20-container-rules.md) I-GPG3,
@@ -148,26 +147,16 @@ keep this posture is an open decision (§7 Q2).
   ([`13-secret-management.md`](13-secret-management.md) §2 Tier 1), and
   GPG key backup-to-Bitwarden is part of the deferred work (§7).
 
-## 6. gpgsign wiring (current state)
+## 6. Relationship to Git commit signing
 
-Git commit signing is already wired structurally; it activates once the
-key is present in the volume:
-
-- [`20-container-rules.md`](20-container-rules.md) **I-GIT4** renders
-  `commit.gpgsign = true`, `gpg.format = openpgp`, and
-  `user.signingkey` in **all** modes (build + host runtime + container
-  runtime) — signing is **not** gated by `runtime`, so the container
-  signs automatically once the key is imported into `dotfiles_gnupg`.
-- `user.signingkey` is the `[S]` subkey ID (a public value, spec 13 §2
-  Tier 2), sourced from the chezmoi-managed `dot_config/git/config.tmpl`
-  + `.chezmoidata/git_config.yaml` (I-GIT1). No secret is baked (I-GIT5).
-- **Requirement for the container to actually sign:** the `[S]`
-  subkey's secret material must be present in `dotfiles_gnupg` (the
-  subkeys-only posture of §4 satisfies this). With the key imported,
-  `git commit -S` in the container prompts via the default pinentry
-  (`/usr/bin/pinentry`) for the key passphrase — or runs non-
-  interactively if a loopback pinentry / cached passphrase is arranged
-  (§7 Q3).
+Git commit signing uses the SSH file key at `~/.ssh/main`, not this GPG
+keyring. The shared chezmoi-managed Git config renders
+`commit.gpgsign = true`, `gpg.format = ssh`, and
+`user.signingkey = ~/.ssh/main` for both host and container; see
+[`20-container-rules.md`](20-container-rules.md) I-GIT4 and
+[`25-container-ssh-management.md`](25-container-ssh-management.md).
+The `dotfiles_gnupg` volume remains available for non-Git OpenPGP
+operations and is independent of commit signing.
 
 ## 7. Future work (prospective — open/deferred issues)
 
@@ -203,11 +192,10 @@ convention (`{{ if not .build_mode }}` guard around every
   (`sec#`) and documents it as such. The 2026-07-02 manual state is
   subkeys-only; see the
   [host-key-import result-log](../issues/2026-07-02-phase-gnupg-host-key-import.md).
-- **F4 — gpgsign configuration ownership.** Confirm `user.signingkey`
-  (the `[S]` subkey) and `commit.gpgsign` are owned by the chezmoi-
-  managed `dot_config/git` (I-GIT1/I-GIT4) rather than by any GPG
-  automation, so the signing config is one source of truth (already
-  true today; this item closes the loop with F1).
+- **F4 — Git signing configuration ownership (resolved).**
+  `user.signingkey`, `commit.gpgsign`, and `gpg.format = ssh` are owned
+  by the chezmoi-managed `dot_config/git`; GPG import automation does not
+  modify Git configuration.
 - **F5 — Non-interactive pinentry for automation.** If F1 needs
   unattended import/signing, decide whether a `gpg-agent.conf`
   (`pinentry-program` / loopback) is baked by chezmoi — which would flip
