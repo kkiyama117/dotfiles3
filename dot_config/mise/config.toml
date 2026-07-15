@@ -47,8 +47,6 @@ paranoid = true
 # see Tasks Runner for more information
 task_output = "prefix"
 
-# path to the shorthands file, see `MISE_SHORTHANDS_FILE`
-shorthands_file = '~/.config/mise/shorthands.toml'
 disable_default_registry = true
 # disable specific tools, generally used to turn off core tools
 disable_tools = ['rust']
@@ -66,6 +64,7 @@ julia = "latest"
 node = "latest"
 pnpm = "latest"
 usage = "latest" # This is only for `mise completion`
+"npm:@earendil-works/pi-coding-agent" = "latest" # `PI` agent
 
 [settings.npm]
 package_manager = "pnpm"
