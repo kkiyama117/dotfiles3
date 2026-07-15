@@ -84,7 +84,6 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `aria2` | migrated | yes | download files concurrently |
 | `fcitx5` | migrated | yes | download files concurrently |
 | `gtk` | migrated | yes | GTK |
-| `herdr` | migrated | yes | multiplexer with AI agents |
 | `kitty` | migrated | yes | Terminal emulator |
 | `rofi` | migrated | yes | display and focus switcher |
 
@@ -123,6 +122,7 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `cargo-outdated` | cargo | no | Detect outdated Rust crate dependencies |
 | `topgrade` | cargo | yes | multi-package-manager updater; build-time cargo tool (signed prebuilt via cargo-binstall --only-signed) |
 | `cargo-binstall` | custom | no | Install binaries |
+| `herdr` | custom | yes | terminal workspace manager for AI coding agents; pinned prebuilt binary to ~/.local/bin (custom install path) |
 | `pi-coding-agent` | custom | yes | pi coding agent CLI (`@earendil-works/pi-coding-agent`); installed with npm --ignore-scripts after mise-managed Node |
 
 #### Layer 4 — install list
@@ -131,6 +131,7 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 |---|---|---|---|
 | `paru` | custom | no | AUR helper; bootstrapped via makepkg in the aur stage (custom install path, not in paru.txt) |
 | `bat` | paru | no | Alternative `cat` |
+| `chawan` | paru | no | TUI browser; cli name is `cha` and `mancha` |
 | `fd` | paru | no | Alternative `find` |
 | `github-cli` | paru | yes | Github commands |
 | `lazygit` | paru | yes | TUI for git |
