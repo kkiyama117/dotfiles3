@@ -6,6 +6,8 @@ ENTRYPOINT = ROOT / "container" / "bind" / "layer_5_files" / "entrypoint.sh"
 SSH_KEY_IMPORT = ROOT / ".chezmoiscripts" / "run_after_install-ssh-keys.sh.tmpl"
 MAKEFILE = ROOT / "Makefile"
 MISE_CONFIG = ROOT / "dot_config" / "mise" / "config.toml"
+GIT_CONFIG = ROOT / "dot_config" / "git" / "config.tmpl"
+GIT_DATA = ROOT / ".chezmoidata" / "git_config.yaml"
 ZSHENV = ROOT / "dot_zshenv.tmpl"
 CHEZMOI_CONFIG = ROOT / ".chezmoi.toml.tmpl"
 CHEZMOI_EXTERNAL = ROOT / ".chezmoiexternal.toml.tmpl"
@@ -162,6 +164,17 @@ def test_chezmoi_config_enables_bitwarden_unlock_auto() -> None:
     text = CHEZMOI_CONFIG.read_text()
     assert "[bitwarden]" in text
     assert 'unlock = "auto"' in text
+
+
+def test_git_uses_shared_ssh_commit_signing() -> None:
+    config = GIT_CONFIG.read_text()
+    data = GIT_DATA.read_text()
+
+    assert "gpgsign = true" in config
+    assert "format = ssh" in config
+    assert "format = openpgp" not in config
+    assert "signingkey: ~/.ssh/main" in data
+    assert "A1E4E20240EA5BAA" not in data
 
 
 def test_pi_config_external_is_build_mode_gated_and_pinned() -> None:

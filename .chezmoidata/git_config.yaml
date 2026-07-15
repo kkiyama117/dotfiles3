@@ -3,5 +3,5 @@ git:
     identity_default:
         name: kkiyama117
         email: k.kiyama117@gmail.com
-        signingkey: A1E4E20240EA5BAA
+        signingkey: ~/.ssh/main
     identities: {}

@@ -27,7 +27,7 @@ the map of which top-level path serves which concern.
 ├── dot_zshenv.tmpl     # chezmoi-managed ~/.zshenv (template; XDG/PATH/toolchain env)
 ├── dot_config/         # chezmoi-managed ~/.config/ (XDG configs)
 │   ├── git/
-│   │   ├── config.tmpl  # chezmoi-managed ~/.config/git/config (identity from .chezmoidata; credential.helper host-only via `runtime`; GPG signing)
+│   │   ├── config.tmpl  # chezmoi-managed ~/.config/git/config (identity from .chezmoidata; credential.helper host-only via `runtime`; SSH signing)
 │   │   └── ignore       # chezmoi-managed ~/.config/git/ignore (global gitignore; static, generic toptal patterns)
 │   └── zsh/
 │       ├── dot_zshrc        # chezmoi-managed ~/.config/zsh/.zshrc (sheldon boot; runtime toolchain block)
