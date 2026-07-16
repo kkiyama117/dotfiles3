@@ -353,6 +353,13 @@ has_configs = true
 description = "notification daemon"
 
 [[tool]]
+name = "xsel"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "clipboard"
+
+[[tool]]
 name = "zoxide"
 manager = "paru"
 layer = 4
