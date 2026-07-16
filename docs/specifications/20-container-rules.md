@@ -265,6 +265,30 @@ labels directly.
   `version_check = false`, and `manifest_check = false` so Herdr does not
   prompt for or apply self-updates. Extends the spec 20 I4 secret-free
   property trivially (herdr ships no credentials).
+- I-KAKEHASHI1: **`kakehashi` is installed only at image build time.**
+  It is a user-facing `manager = "custom"`, `layer = 3` tool whose sole
+  install authority is Containerfile Layer 3-8. The entrypoint and runtime
+  `chezmoi apply` never install or update it.
+- I-KAKEHASHI2: **The binary path is `$HOME/.local/bin/kakehashi`.**
+  Layer 3-8 runs as `${USERNAME}`, installs mode `0755`, and creates the
+  parent directory with `install -D`. `dot_zshenv.tmpl` already adds this
+  directory to PATH; no named volume overlays it.
+- I-KAKEHASHI3: **Latest means latest when Layer 3-8 executes.** Normal
+  container caching may retain an older release. Immediate refresh requires
+  the documented full `podman build --no-cache` command; there is no
+  entrypoint update and no automatic cache-bust argument.
+- I-KAKEHASHI4: **The release contract is x86_64 GNU/Linux and one regular
+  file.** The archive must contain exactly one member named `kakehashi`; its
+  tar type and extracted form must both be regular and non-symlink before
+  installation.
+- I-KAKEHASHI5: **The moving release trusts GitHub/upstream control.** Both
+  requests require HTTPS and HTTPS-only redirects with TLS 1.2 minimum. The
+  asset repository prefix is hardcoded and only a validated stable tag is
+  interpolated. No repository-pinned digest exists, so shape and version
+  checks are not a cryptographic identity guarantee.
+- I-KAKEHASHI6: **No runtime state or secret is baked.** The build invokes
+  only the installed binary's `--version`; it starts no bridge service,
+  creates no configuration, and reads no secret.
 
 > NOTE on `git safe.directory`: an earlier draft mandated registering
 > `/var/lib/chezmoi-source` via `git config --global --add safe.directory`.

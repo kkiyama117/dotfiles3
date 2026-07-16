@@ -255,3 +255,34 @@ def test_makepkg_conf_baked_into_layer_1_2() -> None:
     mirror_idx = containerfile.index("COPY bind/layer_1_files/pacman_mirrorlist")
     syu_idx = containerfile.index("pacman -Syu --noconfirm")
     assert copy_idx < mirror_idx < syu_idx
+
+
+def test_kakehashi_inventory_and_container_install() -> None:
+    packages = PACKAGES.read_text()
+    containerfile = CONTAINERFILE.read_text()
+    entrypoint = ENTRYPOINT.read_text()
+
+    assert 'name = "kakehashi"' in packages
+    assert 'manager = "custom"' in packages
+    assert 'layer = 3' in packages
+
+    start = containerfile.index("# Layer 3-8: Install kakehashi")
+    end = containerfile.index("# Stage 4: aur", start)
+    block = containerfile[start:end]
+
+    assert containerfile.index("# Layer 3-7:") < start < end
+    assert "releases/latest" in block
+    assert '%{url_effective}' in block
+    assert "v<->.<->.<->" in block
+    assert "--proto-redir \"=https\"" in block
+    assert "https://github.com/atusy/kakehashi/releases/download/" in block
+    assert "x86_64-unknown-linux-gnu.tar.gz" in block
+    assert "mktemp -d" in block
+    assert "trap " in block
+    assert "tar -tzf" in block
+    assert "tar -tvzf" in block
+    assert "--no-same-owner --no-same-permissions" in block
+    assert '! -L "$staging/kakehashi"' in block
+    assert 'install -D -m 0755' in block
+    assert '"$HOME/.local/bin/kakehashi" --version' in block
+    assert "kakehashi" not in entrypoint
