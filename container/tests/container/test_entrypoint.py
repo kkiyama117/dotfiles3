@@ -361,6 +361,21 @@ def test_set_external_remote_url_fails_without_origin(tmp_path: Path) -> None:
     assert result.returncode != 0
 
 
+def test_set_external_remote_url_runs_before_apply() -> None:
+    """Existing-checkout origin migration must happen after selection/render but before chezmoi apply."""
+    text = ENTRYPOINT.read_text()
+
+    select_pi = text.index('select_external_url "${PI_CONFIG_URL:-}"')
+    # The header comment also contains the render command; find the actual render call.
+    render_idx = text.index("chezmoi execute-template --init \\")
+    apply_idx = text.index("run_interruptible chezmoi apply --no-tty --force")
+    pi_remote_idx = text.index('\nset_external_remote_url "$HOME/.pi"')
+    nvim_remote_idx = text.index('\nset_external_remote_url "$HOME/.config/nvim"')
+
+    assert select_pi < render_idx < pi_remote_idx < apply_idx
+    assert select_pi < render_idx < nvim_remote_idx < apply_idx
+
+
 def test_render_boundary_exports_mixed_ssh_https_selection(tmp_path: Path) -> None:
     """The selected URLs are forwarded to chezmoi execute-template as env vars."""
     text = ENTRYPOINT.read_text()

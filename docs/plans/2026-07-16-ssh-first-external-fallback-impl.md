@@ -5,7 +5,7 @@
 > superpowers:executing-plans to implement this plan task-by-task. Steps use
 > checkbox (`- [ ]`) syntax for tracking.
 
-**Status:** pending
+**Status:** executed
 **Spec:** [SSH-first external repository fallback design](../specifications/implementations/2026-07-16-ssh-first-external-fallback-design.md)
 **Parent issue:** [Use SSH first for managed external repositories](../issues/2026-07-16-ssh-first-external-fallback.md)
 **Review trail:** [Aggregate pass 1](../reviews/2026-07-16-ssh-first-external-fallback-review-pass1.md)
@@ -49,7 +49,7 @@ templates, Podman Make targets, pytest.
 - Produces: regression coverage for selector behavior, timeout/TERM handling,
   remote migration, Makefile forwarding, and external-template quoting.
 
-- [ ] **Step 1: Replace the unconditional-HTTPS assertion with failing
+- [x] **Step 1: Replace the unconditional-HTTPS assertion with failing
   selector behavior tests**
 
 Add a reusable extractor and runner:
@@ -77,7 +77,7 @@ assert selected_nvim == "https://github.com/kkiyama117/nvim_config.git"
 Also assert a non-empty `file:///data/nvim_config` override bypasses the fake
 probe, while an empty override probes normally.
 
-- [ ] **Step 2: Add failing validation, timeout, and signal tests**
+- [x] **Step 2: Add failing validation, timeout, and signal tests**
 
 Use a fake `git` that traps or ignores `TERM`. Assert the selector command
 contains and behavior enforces:
@@ -100,7 +100,7 @@ fixed HTTPS fallback within 13 seconds.
 Assert `https://token@github.com/owner/repo.git` is rejected, the captured
 stderr does not contain `token`, and no fake Git call occurs.
 
-- [ ] **Step 3: Add failing remote migration and render-boundary tests**
+- [x] **Step 3: Add failing remote migration and render-boundary tests**
 
 Extract `set_external_remote_url`, initialize temporary Git repositories with
 an `origin`, run the function, and assert:
@@ -116,7 +116,7 @@ Assert a Git checkout without `origin` returns non-zero. Use fake `git` and
 fake `chezmoi` executables to record the `PI_CONFIG_URL` and
 `NVIM_CONFIG_URL` seen at the render boundary for a mixed SSH/HTTPS result.
 
-- [ ] **Step 4: Add failing Makefile and final-sink quoting tests**
+- [x] **Step 4: Add failing Makefile and final-sink quoting tests**
 
 Assert the `up` recipe forwards:
 
@@ -163,7 +163,7 @@ assert parsed[".config/nvim"]["clone"]["args"][1] == 'branch-"quoted"'
 The temporary chezmoi config supplies the quoted URL/ref test values under
 `[data]`, with `build_mode = false` and `runtime = "container"`.
 
-- [ ] **Step 5: Run focused tests and verify RED**
+- [x] **Step 5: Run focused tests and verify RED**
 
 Run:
 
@@ -194,7 +194,7 @@ or syntax error.
   `SELECTED_EXTERNAL_URL`, and
   `set_external_remote_url CHECKOUT SELECTED_URL`.
 
-- [ ] **Step 1: Add constants and URL validation**
+- [x] **Step 1: Add constants and URL validation**
 
 Replace unconditional bootstrap constants with paired transport constants:
 
@@ -220,7 +220,7 @@ validate_external_url() {
 }
 ```
 
-- [ ] **Step 2: Add parent-shell URL selection**
+- [x] **Step 2: Add parent-shell URL selection**
 
 Add:
 
@@ -257,7 +257,7 @@ select_external_url "${NVIM_CONFIG_URL:-}" "$NVIM_CONFIG_SSH_URL" "$NVIM_CONFIG_
 selected_nvim_config_url="$SELECTED_EXTERNAL_URL"
 ```
 
-- [ ] **Step 3: Render selected URLs and enforce existing remotes**
+- [x] **Step 3: Render selected URLs and enforce existing remotes**
 
 Render with:
 
@@ -288,7 +288,7 @@ set_external_remote_url "$HOME/.pi" "$selected_pi_config_url"
 set_external_remote_url "$HOME/.config/nvim" "$selected_nvim_config_url"
 ```
 
-- [ ] **Step 4: Forward optional values through `make up`**
+- [x] **Step 4: Forward optional values through `make up`**
 
 Add these Podman arguments before the volume arguments:
 
@@ -299,7 +299,7 @@ Add these Podman arguments before the volume arguments:
 		--env NVIM_CONFIG_REF \
 ```
 
-- [ ] **Step 5: Quote values at the external TOML sink**
+- [x] **Step 5: Quote values at the external TOML sink**
 
 Use:
 
@@ -315,7 +315,7 @@ url = {{ .nvim_config_url | quote }}
 clone.args = ["--branch", {{ .nvim_config_ref | quote }}, "--depth", "1", "--no-single-branch"]
 ```
 
-- [ ] **Step 6: Run focused tests and verify GREEN**
+- [x] **Step 6: Run focused tests and verify GREEN**
 
 Run:
 
@@ -349,19 +349,19 @@ values with `git -C "$HOME/.pi" remote set-url origin "$old_pi_url"` and
 - Consumes: verified implementation and test output.
 - Produces: normative SSH-first behavior and a result log.
 
-- [ ] **Step 1: Update spec 11**
+- [x] **Step 1: Update spec 11**
 
 Replace unconditional bootstrap HTTPS text with the exact SSH-first,
 independent fallback, override-forwarding, non-secret override, bounded probe,
 and existing-remote migration behavior.
 
-- [ ] **Step 2: Update spec 21**
+- [x] **Step 2: Update spec 21**
 
 Update Stage 5-4, lines 63–72, and acceptance criterion 19 to describe direct
 `~/.pi` cloning, direct `~/.config/nvim` cloning, SSH defaults, independent
 HTTPS fallback, and existing-remote enforcement.
 
-- [ ] **Step 3: Run full relevant verification**
+- [x] **Step 3: Run full relevant verification**
 
 Run:
 
@@ -373,7 +373,7 @@ git diff --check
 
 Expected: all tests pass, zsh exits 0, and `git diff --check` emits no errors.
 
-- [ ] **Step 4: Record result evidence and lifecycle status**
+- [x] **Step 4: Record result evidence and lifecycle status**
 
 Create the result log with the commands, exit codes, and test count. Mark this
 plan `executed`, the parent issue `closed`, and retain links to the design,

@@ -10,13 +10,16 @@
 #      (build_mode = false; BUILD_MODE unset at runtime). The build-prepass
 #      toml is stripped in the runtime cleanup (Layer 5-3), so this creates
 #      it fresh as ${USERNAME}.
-#   3. Authenticates Bitwarden when the bw_* podman secrets are mounted
+#   3. Migrates any existing managed external checkouts (`~/.pi`,
+#      `~/.config/nvim`) to the selected transport URL so this startup's
+#      `chezmoi apply` pulls over the same transport.
+#   4. Authenticates Bitwarden when the bw_* podman secrets are mounted
 #      (login-if-needed + `bw unlock --passwordfile`), then runs
 #      `chezmoi apply --no-tty --force` so the real $HOME picks up the
 #      latest dotfiles and resolves `bitwarden*` templates. Skipped
 #      when /run/secrets/bw_password is absent (no-secret startup).
-#   4. Seeds zoxide with first-run container paths.
-#   5. Execs CMD.
+#   5. Seeds zoxide with first-run container paths.
+#   6. Execs CMD.
 set -euo pipefail
 
 CHEZMOI_SOURCE="${HOME}/.local/share/chezmoi"
@@ -183,6 +186,12 @@ chezmoi execute-template --init \
   < "$CONFIG_TEMPLATE" \
   > "$RUNTIME_CONFIG"
 
+# Ensure existing managed externals already point at the selected transport
+# URL before this startup's `chezmoi apply` pulls them. Migration failure is
+# fatal so the operator cannot silently stay on the old transport.
+set_external_remote_url "$HOME/.pi" "$selected_pi_config_url"
+set_external_remote_url "$HOME/.config/nvim" "$selected_nvim_config_url"
+
 # Bitwarden auto-auth (optional). When the three podman secrets are
 # mounted (make up mounts each only if it exists), log in with the API
 # key and unlock the vault so `chezmoi apply` can resolve `bitwarden*`
@@ -220,10 +229,6 @@ if [ -f /run/secrets/bw_password ]; then
 fi
 
 run_interruptible chezmoi apply --no-tty --force
-
-# Ensure existing managed externals point at the selected transport URL.
-set_external_remote_url "$HOME/.pi" "$selected_pi_config_url"
-set_external_remote_url "$HOME/.config/nvim" "$selected_nvim_config_url"
 
 seed_zoxide_paths
 

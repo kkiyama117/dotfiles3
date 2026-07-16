@@ -34,7 +34,7 @@ stage; within a stage, numbered **sub-layers** (`Layer N-M`) group related
 | `runtime` (`FROM aur`) | 5-1 | `FROM aur AS runtime` | Runtime stage base (inherits the `aur` image). | - |
 | `runtime` (`FROM aur`) | 5-2 | bake minimum home: `cp /tmp/build-home/.zshenv` -> `~/.zshenv`; `install -d ~/.config/chezmoi`; `chown` home; `install -d /run/user/$UID` (as root) | Bake a wizard-free / PATH-equipped minimum `$HOME` so the image boots into a working shell independent of the runtime entrypoint (covers `make exec` racing the entrypoint apply, and entrypoint-bypassed `podman run`). Only `~/.zshenv` is baked — **no `chezmoi.toml` is baked** (the build-prepass toml is stripped in 5-3; the entrypoint creates it fresh). | `/tmp/build-home/.zshenv` (from Stage 2 render) |
 | `runtime` (`FROM aur`) | 5-3 | strip build artifacts + `/etc/skel` bash remnants: `rm -rf /tmp/build-home /tmp/chezmoi-src`; `rm -f ~/.config/chezmoi/chezmoi.toml` (the root-owned build-prepass toml that rode the Stage chain); `rm -f ~/.{bashrc,bash_profile,bash_logout,profile}` (as root) | Drop Stage 2/3/4 scratch so neither tree rides the final layer (acceptance #5); strip the carried-forward build-prepass `chezmoi.toml` so the entrypoint (as `${USERNAME}`) can create the runtime one; remove the non-chezmoi-managed bash remnants. | - |
-| `runtime` (`FROM aur`) | 5-4 | `COPY entrypoint.sh` + `chmod` + `USER`/`WORKDIR`/`ENTRYPOINT`/`CMD` | Install the runtime chezmoi-apply entrypoint (authenticates `bw` from the mounted `bw_*` podman secrets → `BW_SESSION` → `chezmoi apply`, then scrubs BW_* env before `exec`; see [`13-secret-management.md`](13-secret-management.md) §4) and set the final user/entrypoint. Final image: entrypoint re-applies chezmoi against the host bind. | `container/bind/layer_5_files/entrypoint.sh` |
+| `runtime` (`FROM aur`) | 5-4 | `COPY entrypoint.sh` + `chmod` + `USER`/`WORKDIR`/`ENTRYPOINT`/`CMD` | Install the runtime chezmoi-apply entrypoint. Sequence: (1) independently probe the SSH URL of each managed external (`git@github.com:kkiyama117/pi-config.git` and `git@github.com:kkiyama117/nvim_config.git`) with `BatchMode=yes`, `ConnectTimeout=5`, a 10 s outer `timeout`, and 2 s forced-kill grace; SSH success selects the SSH URL, SSH failure selects the fixed public HTTPS fallback. Explicit non-empty `PI_CONFIG_URL` / `NVIM_CONFIG_URL` overrides bypass the probe (HTTP(S) userinfo rejected); empty overrides fall through to the probe. (2) Render `~/.config/chezmoi/chezmoi.toml` via `chezmoi execute-template --init` with the selected URLs exported as `PI_CONFIG_URL` / `NVIM_CONFIG_URL`. (3) Rewrite existing checkouts at `~/.pi` and `~/.config/nvim` to the selected URL **before** `chezmoi apply` (failure if a checkout exists but has no `origin`). (4) Authenticate `bw` from the mounted `bw_*` podman secrets → `BW_SESSION` → `chezmoi apply`. (5) Scrub BW_* env before `exec`; see [`13-secret-management.md`](13-secret-management.md) §4. Final image: entrypoint re-applies chezmoi against the host bind. | `container/bind/layer_5_files/entrypoint.sh` |
 
 ### Notes on the current state
 
@@ -60,16 +60,20 @@ stage; within a stage, numbered **sub-layers** (`Layer N-M`) group related
   build-time cargo tools, and the AUR stage. This keeps build-time Rust
   compilation aligned with runtime `chezmoi apply`, which manages the same
   non-secret config file in the `dotfiles_cargo` volume.
-- Pi stable config is **not** baked into the image. `.chezmoiexternal.toml.tmpl`
-  fetches the pinned external repo to `~/.local/share/pi-config` only when
-  `build_mode = false` (runtime `chezmoi apply`). `.chezmoiscripts/run_after_configure-pi-agent.sh.tmpl`
-  then symlinks stable resources (`settings.json`, `prompts`, `skills`,
-  `extensions`, `themes`) into `~/.pi/agent`. Auth, sessions, trust, logs,
-  package checkouts, and caches under `~/.pi/agent` remain unmanaged. Override
-  the external source/ref with `PI_CONFIG_URL` / `PI_CONFIG_REF` (see
+- Pi stable config and nvim config are **not** baked into the image.
+  `.chezmoiexternal.toml.tmpl` fetches the pinned external repos directly into
+  `~/.pi` and `~/.config/nvim` only when `build_mode = false` (runtime
+  `chezmoi apply`). Auth, sessions, trust, logs, package checkouts, and caches
+  under `~/.pi/agent` remain unmanaged. The entrypoint selects the transport
+  for each external independently: it probes the SSH URL
+  (`git@github.com:kkiyama117/pi-config.git` / `git@github.com:kkiyama117/nvim_config.git`)
+  and falls back to the public HTTPS URL only when the probe fails. Override
+  the external source/ref with `PI_CONFIG_URL` / `PI_CONFIG_REF` and
+  `NVIM_CONFIG_URL` / `NVIM_CONFIG_REF` (see
   [`11-pre-required-env-values.md`](11-pre-required-env-values.md)); local
-  authoring uses `PI_CONFIG_URL=file:///data/pi-config` while the committed
-  default is `https://github.com/kkiyama117/pi-config.git`.
+  authoring uses `PI_CONFIG_URL=file:///data/pi-config` or
+  `NVIM_CONFIG_URL=file:///data/nvim_config` while the committed defaults are
+  the SSH URLs above.
 - The `aur` stage (Layer 4) bootstraps `paru` from the AUR via
   `makepkg -si` as non-root `${USERNAME}`, then installs the Layer 4
   AUR package set from `dependencies/layer_4/paru.txt`. `paru` itself is
@@ -206,7 +210,7 @@ A new stage may land only when:
 16. An empty `layer_3/cargo.txt` does not break the build (the Layer 3-7 `if [ -n "$pkgs" ]` guard + `(3, "cargo")` in `EXPECTED_EMPTY_FILES`).
 17. `make down && make up` preserves cargo / rustup binaries (the `dotfiles_cargo` / `dotfiles_rustup` named volumes persist — analog of criterion #8). **Rollout:** an existing `dotfiles_cargo` volume will NOT pick up new `$CARGO_HOME/bin` binaries on `make up`; run `podman volume rm dotfiles_cargo` (NOT `make clean` — `make clean` also removes the image and the `dotfiles_gnupg`/`dotfiles_mise`/`dotfiles_rustup` volumes) before the first `make up` after the cargo-binstall/topgrade change.
 18. A `layer = 3` cargo entry with no signed prebuilt fails `cargo binstall --only-signed -y` loudly at Layer 3-7 (recovery: move to `layer = 6` — see [`24-rust-packages-rule.md`](24-rust-packages-rule.md) §3).
-19. After `make up`, `podman exec dotfiles-manjaro zsh -ic 'pi --version'` exits 0 and resolves the standalone `aqua:earendil-works/pi` installation under `$MISE_DATA_DIR`, with no dependency on `$PNPM_HOME/store`. Build mode does not fetch `~/.local/share/pi-config` or bake pi runtime state; runtime `chezmoi apply` may fetch the pinned external config into `~/.local/share/pi-config` and link stable resources into `~/.pi/agent`. **Rollout:** an existing `dotfiles_mise` volume can retain the old npm-backed install; after rebuilding the image, recreate only that volume with `make down && podman volume rm dotfiles_mise && make up`.
+19. After `make up`, `podman exec dotfiles-manjaro zsh -ic 'pi --version'` exits 0 and resolves the standalone `aqua:earendil-works/pi` installation under `$MISE_DATA_DIR`, with no dependency on `$PNPM_HOME/store`. Build mode does not fetch `~/.pi` or `~/.config/nvim` or bake pi runtime state. At runtime, the entrypoint independently probes the SSH URL of each managed external (`git@github.com:kkiyama117/pi-config.git` and `git@github.com:kkiyama117/nvim_config.git`) with `BatchMode=yes`, `ConnectTimeout=5`, a 10 s outer `timeout`, and 2 s forced-kill grace; SSH success selects the SSH URL, SSH failure selects the fixed public HTTPS fallback. Explicit non-empty `PI_CONFIG_URL` / `NVIM_CONFIG_URL` overrides bypass the probe (HTTP(S) userinfo rejected); empty overrides fall through to the probe. Runtime `chezmoi apply` may fetch the pinned external configs directly into `~/.pi` and `~/.config/nvim`. Existing checkouts at `~/.pi` and `~/.config/nvim` have their `origin` remote rewritten to the selected URL **before** `chezmoi apply` runs (failure if a checkout exists but has no `origin`). **Rollout:** an existing `dotfiles_mise` volume can retain the old npm-backed install; after rebuilding the image, recreate only that volume with `make down && podman volume rm dotfiles_mise && make up`.
 20. After `make up`, `podman exec <container> zsh -ic 'ssh -V'` succeeds.
 21. After `make up`, `stat ~/.ssh` prints `0700` and is `${USERNAME}`-owned.
 22. `make down && make up` preserves key material written into `dotfiles_ssh` (test key).
