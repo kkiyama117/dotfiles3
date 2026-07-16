@@ -190,7 +190,8 @@ def test_select_external_url_rejects_http_userinfo(tmp_path: Path) -> None:
         {validate_fn}
         {run_fn}
         {select_fn}
-        select_external_url "https://token@github.com/owner/repo.git" "git@github.com:owner/repo.git" "https://github.com/owner/repo.git" || true
+        select_external_url "https://token@github.com/owner/repo.git" "git@github.com:owner/repo.git" "https://github.com/owner/repo.git"
+        printf '%s\\n' "$SELECTED_EXTERNAL_URL"
     """
     result = subprocess.run(
         ["zsh", "-fc", script],
@@ -199,8 +200,9 @@ def test_select_external_url_rejects_http_userinfo(tmp_path: Path) -> None:
         text=True,
     )
 
-    assert result.returncode == 0
+    assert result.returncode != 0, "credential-bearing URL should be rejected"
     assert "token" not in result.stderr
+    assert result.stdout.strip() == ""
     assert not calls.exists() or calls.read_text() == ""
 
 
