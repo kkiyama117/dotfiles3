@@ -63,9 +63,9 @@
 | `BW_CLIENTSECRET` | no (runtime, via `podman secret bw_clientsecret`) | — | `bw login --apikey`; read from `/run/secrets/bw_clientsecret` by the entrypoint (Tier 1) |
 | `BW_PASSWORD`     | no (runtime, via `podman secret bw_password`)   | — | master password for `bw unlock --passwordfile`; never enters an env (Tier 1) |
 | `BW_SESSION`      | no (derived) | — | derived in the entrypoint via `bw unlock --passwordfile --raw`; consumed by `bitwarden*` templates during `chezmoi apply`; scrubbed before `exec` |
-| `PI_CONFIG_URL` | no | `git@github.com:kkiyama117/pi-config.git` | Optional chezmoi external source override for pi config |
+| `PI_CONFIG_URL` | no | `git@github.com:kkiyama117/pi-config.git` | Optional chezmoi external source override for pi config. Non-empty values bypass the SSH probe; empty values fall through to SSH-first/HTTPS-fallback selection. |
 | `PI_CONFIG_REF` | no | `main` | Optional chezmoi external ref override for pi config |
-| `NVIM_CONFIG_URL` | no | `git@github.com:kkiyama117/nvim_config.git` | Optional chezmoi external source override for nvim config |
+| `NVIM_CONFIG_URL` | no | `git@github.com:kkiyama117/nvim_config.git` | Optional chezmoi external source override for nvim config. Non-empty values bypass the SSH probe; empty values fall through to SSH-first/HTTPS-fallback selection. |
 | `NVIM_CONFIG_REF` | no | `main` | Optional chezmoi external ref override for nvim config |
 | `PI_COMMIT_PROMPT_FILE` | no | — | Optional host-only override for the chezmoi pi auto-commit prompt |
 
@@ -105,11 +105,23 @@ only. The default nvim config source is `git@github.com:kkiyama117/nvim_config.g
 `--depth 1 --no-single-branch` so the default checkout stays shallow on `main`
 while other remote branches (e.g. `origin/develop`) remain fetchable.
 
-At container startup, the entrypoint temporarily renders these two URLs as
-public HTTPS URLs for the first `chezmoi apply`, because externals are resolved
-before the runtime SSH config and Bitwarden-backed key are installed. The
-entrypoint does not rewrite Git remotes; any remote URL change is an explicit
-operator action.
+At container runtime, the entrypoint selects the transport for each managed external
+**independently** before rendering `~/.config/chezmoi/chezmoi.toml`:
+
+- If `PI_CONFIG_URL` / `NVIM_CONFIG_URL` is set to a non-empty value, that override is used verbatim and the SSH probe is skipped. Empty values fall through to the probe.
+- Non-empty overrides are validated: URLs containing HTTP(S) userinfo (`http://*@*` or `https://*@*`) are rejected without logging the URL, so credentials cannot leak to logs or subprocesses.
+- Without an override, the entrypoint probes the SSH URL for that repository:
+  - `PI_CONFIG_SSH_URL="git@github.com:kkiyama117/pi-config.git"`
+  - `NVIM_CONFIG_SSH_URL="git@github.com:kkiyama117/nvim_config.git"`
+  - Probe command: `env GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND="ssh -o BatchMode=yes -o ConnectTimeout=5 -o ConnectionAttempts=1" git ls-remote "$ssh_url" HEAD`.
+  - The probe is wrapped in `timeout --signal=TERM --kill-after=2s 10s` and runs inside the entrypoint's `run_interruptible` helper so `SIGTERM`/`SIGINT` forwarded by `--init` terminate the probe and the entrypoint exits 143.
+- If the SSH probe succeeds, the SSH URL is selected; otherwise a fixed public HTTPS fallback is selected:
+  - `PI_CONFIG_HTTPS_URL="https://github.com/kkiyama117/pi-config.git"`
+  - `NVIM_CONFIG_HTTPS_URL="https://github.com/kkiyama117/nvim_config.git"`
+- The selected URL for each repository is exported as `PI_CONFIG_URL` / `NVIM_CONFIG_URL` when `chezmoi execute-template --init` renders the runtime config.
+- After rendering the runtime config, the entrypoint rewrites any existing managed checkout at `~/.pi` or `~/.config/nvim` to the selected URL **before** `chezmoi apply` runs, so the same startup's external pull uses the selected transport. A checkout that exists but has no `origin` remote is an error.
+- The `make up` recipe forwards `PI_CONFIG_URL`, `PI_CONFIG_REF`, `NVIM_CONFIG_URL`, and `NVIM_CONFIG_REF` into the container with `--env <VAR>` (empty host values are forwarded as empty and treated as unset by the entrypoint).
+- The final TOML sink (`.chezmoiexternal.toml.tmpl`) quotes the rendered URL and ref values with the chezmoi `quote` filter.
 
 ## Container-build envs
 

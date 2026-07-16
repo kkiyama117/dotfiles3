@@ -1,8 +1,8 @@
 # Use SSH first for managed external repositories
 
 **Date:** 2026-07-16
-**Status:** in-progress
-**Related:** [design](../specifications/implementations/2026-07-16-ssh-first-external-fallback-design.md), [plan](../plans/2026-07-16-ssh-first-external-fallback-impl.md), [reviews](../reviews/2026-07-16-ssh-first-external-fallback-review-pass1.md), [pre-required environment values](../specifications/11-pre-required-env-values.md)
+**Status:** closed
+**Related:** [design](../specifications/implementations/2026-07-16-ssh-first-external-fallback-design.md), [plan](../plans/2026-07-16-ssh-first-external-fallback-impl.md), [reviews](../reviews/2026-07-16-ssh-first-external-fallback-review-pass1.md), [pre-required environment values](../specifications/11-pre-required-env-values.md), [result log](../issues/2026-07-16-phase-ssh-first-external-fallback.md)
 
 ## Context
 
