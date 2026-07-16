@@ -1,0 +1,21 @@
+#!/bin/bash
+# clip - xsel-like clipboard for herdr/terminal environment
+#   clip -i | -c   : copy from stdin (OSC 52 + file)
+#   clip -o | -p   : paste to stdout (from file)
+
+CLIP_FILE="${XDG_CACHE_HOME:-$HOME/.cache}/clipboard"
+
+case "${1:--o}" in
+  -i|-c)
+    data=$(cat)
+    printf '%s' "$data" > "$CLIP_FILE"
+    printf '\e]52;c;%s\a' "$(printf '%s' "$data" | base64 -w0)" 2>/dev/null
+    ;;
+  -o|-p)
+    [ -f "$CLIP_FILE" ] && cat "$CLIP_FILE"
+    ;;
+  *)
+    echo "Usage: clip [-i|-c] (copy) | [-o|-p] (paste)" >&2
+    exit 1
+    ;;
+esac
