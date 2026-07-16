@@ -2,9 +2,9 @@
 {{- if and (not .build_mode) (eq .runtime "container") }}
 [".pi"]
 type = "git-repo"
-url = "{{ .pi_config_url }}"
+url = {{ .pi_config_url | quote }}
 refreshPeriod = "0"
-clone.args = ["--branch", "{{ .pi_config_ref }}", "--depth", "1", "--no-single-branch"]
+clone.args = ["--branch", {{ .pi_config_ref | quote }}, "--depth", "1", "--no-single-branch"]
 pull.args = ["--ff-only"]
 {{- end }}
 
@@ -12,8 +12,8 @@ pull.args = ["--ff-only"]
 {{- if not .build_mode }}
 [".config/nvim"]
 type = "git-repo"
-url = "{{ .nvim_config_url }}"
+url = {{ .nvim_config_url | quote }}
 refreshPeriod = "0"
-clone.args = ["--branch", "{{ .nvim_config_ref }}", "--depth", "1", "--no-single-branch"]
+clone.args = ["--branch", {{ .nvim_config_ref | quote }}, "--depth", "1", "--no-single-branch"]
 pull.args = ["--ff-only"]
 {{- end }}

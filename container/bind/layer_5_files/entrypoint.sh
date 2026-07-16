@@ -21,8 +21,11 @@ set -euo pipefail
 
 CHEZMOI_SOURCE="${HOME}/.local/share/chezmoi"
 RUNTIME_CONFIG="${HOME}/.config/chezmoi/chezmoi.toml"
-PI_CONFIG_BOOTSTRAP_URL="https://github.com/kkiyama117/pi-config.git"
-NVIM_CONFIG_BOOTSTRAP_URL="https://github.com/kkiyama117/nvim_config.git"
+PI_CONFIG_SSH_URL="git@github.com:kkiyama117/pi-config.git"
+PI_CONFIG_HTTPS_URL="https://github.com/kkiyama117/pi-config.git"
+NVIM_CONFIG_SSH_URL="git@github.com:kkiyama117/nvim_config.git"
+NVIM_CONFIG_HTTPS_URL="https://github.com/kkiyama117/nvim_config.git"
+SELECTED_EXTERNAL_URL=""
 # Readiness sentinel for `make up`'s wait loop. Written ONLY after
 # `chezmoi apply` succeeds (so any `make exec` started after the sentinel
 # exists is guaranteed a fully applied $HOME: ~/.zshrc, sheldon, starship,
@@ -54,6 +57,50 @@ run_interruptible() {
   fi
   child_pid=""
   return "$rc"
+}
+
+validate_external_url() {
+  local url="$1"
+  case "$url" in
+    http://*@*|https://*@*)
+      echo "entrypoint: URL overrides must not contain HTTP(S) userinfo." >&2
+      return 1
+      ;;
+  esac
+}
+
+select_external_url() {
+  local override="$1"
+  local ssh_url="$2"
+  local https_url="$3"
+
+  if [[ -n "$override" ]]; then
+    validate_external_url "$override"
+    SELECTED_EXTERNAL_URL="$override"
+    return 0
+  fi
+
+  if run_interruptible timeout --signal=TERM --kill-after=2s 10s \
+      env GIT_TERMINAL_PROMPT=0 \
+      GIT_SSH_COMMAND="ssh -o BatchMode=yes -o ConnectTimeout=5 -o ConnectionAttempts=1" \
+      git ls-remote "$ssh_url" HEAD >/dev/null 2>&1; then
+    SELECTED_EXTERNAL_URL="$ssh_url"
+  else
+    echo "entrypoint: warning: SSH unavailable for a managed external; using HTTPS fallback." >&2
+    SELECTED_EXTERNAL_URL="$https_url"
+  fi
+}
+
+set_external_remote_url() {
+  local checkout="$1"
+  local selected_url="$2"
+  [[ -e "$checkout/.git" ]] || return 0
+
+  if ! git -C "$checkout" remote get-url origin >/dev/null 2>&1; then
+    echo "entrypoint: existing managed external has no origin remote." >&2
+    return 1
+  fi
+  git -C "$checkout" remote set-url origin "$selected_url"
 }
 
 # ===========================================================================
@@ -119,13 +166,19 @@ fi
 # not appear in the container (e.g. credential.helper=libsecret — the
 # container has no keyring daemon; see dot_config/git/config.tmpl I-GIT3).
 export DOTFILES_RUNTIME=container
+
+# Resolve the transport for managed externals.  The SSH probe is
+# interruptible and falls back to HTTPS so the first apply can succeed
+# before the runtime SSH config / Bitwarden-backed key are installed.
+select_external_url "${PI_CONFIG_URL:-}" "$PI_CONFIG_SSH_URL" "$PI_CONFIG_HTTPS_URL"
+selected_pi_config_url="$SELECTED_EXTERNAL_URL"
+select_external_url "${NVIM_CONFIG_URL:-}" "$NVIM_CONFIG_SSH_URL" "$NVIM_CONFIG_HTTPS_URL"
+selected_nvim_config_url="$SELECTED_EXTERNAL_URL"
+
 # Keep this render in the foreground: background jobs in non-interactive shell
 # read redirected stdin from /dev/null, which would create an empty config.
-# Chezmoi resolves git externals before its run_after SSH-key import script.
-# Use public HTTPS only for this bootstrap render so the first apply can create
-# ~/.ssh/config and import ~/.ssh/main without an SSH dependency cycle.
-PI_CONFIG_URL="$PI_CONFIG_BOOTSTRAP_URL" \
-NVIM_CONFIG_URL="$NVIM_CONFIG_BOOTSTRAP_URL" \
+PI_CONFIG_URL="$selected_pi_config_url" \
+NVIM_CONFIG_URL="$selected_nvim_config_url" \
 chezmoi execute-template --init \
   < "$CONFIG_TEMPLATE" \
   > "$RUNTIME_CONFIG"
@@ -167,6 +220,10 @@ if [ -f /run/secrets/bw_password ]; then
 fi
 
 run_interruptible chezmoi apply --no-tty --force
+
+# Ensure existing managed externals point at the selected transport URL.
+set_external_remote_url "$HOME/.pi" "$selected_pi_config_url"
+set_external_remote_url "$HOME/.config/nvim" "$selected_nvim_config_url"
 
 seed_zoxide_paths
 
