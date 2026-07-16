@@ -232,16 +232,16 @@ def test_pi_commit_hook_uses_external_prompt_precedence() -> None:
     assert '$src_dir/.pi/prompts/commit.md' not in text
 
 
-def test_pi_coding_agent_inventory_and_container_install() -> None:
+def test_pi_is_mise_managed_via_aqua() -> None:
+    mise_config = MISE_CONFIG.read_text()
     packages = PACKAGES.read_text()
     containerfile = CONTAINERFILE.read_text()
 
-    assert 'name = "pi-coding-agent"' in packages
-    assert 'manager = "custom"' in packages
-    assert "@earendil-works/pi-coding-agent" in packages
-    assert "@earendil-works/pi-coding-agent" in containerfile
-    assert "--ignore-scripts" in containerfile
-    assert "pi --version" in containerfile
+    assert '"aqua:earendil-works/pi" = "latest"' in mise_config
+    assert "npm:@earendil-works/pi-coding-agent" not in mise_config
+    assert 'name = "pi-coding-agent"' not in packages
+    assert "@earendil-works/pi-coding-agent" not in containerfile
+    assert "# Layer 3-5: Install pi coding agent CLI" not in containerfile
 
 
 def test_makepkg_conf_baked_into_layer_1_2() -> None:
