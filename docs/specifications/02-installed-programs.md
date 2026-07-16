@@ -125,6 +125,7 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `cargo-outdated` | cargo | no | Detect outdated Rust crate dependencies |
 | `topgrade` | cargo | yes | multi-package-manager updater; build-time cargo tool (signed prebuilt via cargo-binstall --only-signed) |
 | `cargo-binstall` | custom | no | Install binaries |
+| `kakehashi` | custom | no | language-server bridge; latest x86_64 GNU/Linux release binary installed to ~/.local/bin during the container build |
 | `pi-coding-agent` | custom | yes | pi coding agent CLI (`@earendil-works/pi-coding-agent`); installed with npm --ignore-scripts after mise-managed Node |
 
 #### Layer 4 — install list
