@@ -39,7 +39,7 @@ templates, Podman Make targets, pytest.
 
 ## Phases
 
-### Phase 1 — Tests first: transport selection and integration
+### Task 1 — Tests first: transport selection and integration
 
 **Files:**
 - Modify: `container/tests/container/test_entrypoint.py`
@@ -180,7 +180,7 @@ or syntax error.
 
 **Rollback:** Revert only the new test changes; production files are untouched.
 
-### Phase 2 — Implement SSH-first selection and existing-remote enforcement
+### Task 1 continued — Implement SSH-first selection and existing-remote enforcement
 
 **Files:**
 - Modify: `container/bind/layer_5_files/entrypoint.sh`
@@ -336,7 +336,7 @@ record each old remote with `git -C "$HOME/.pi" remote get-url origin` and
 values with `git -C "$HOME/.pi" remote set-url origin "$old_pi_url"` and
 `git -C "$HOME/.config/nvim" remote set-url origin "$old_nvim_url"`.
 
-### Phase 3 — Synchronize specifications and close with evidence
+### Task 2 — Synchronize specifications and close with evidence
 
 **Files:**
 - Modify: `docs/specifications/11-pre-required-env-values.md`
