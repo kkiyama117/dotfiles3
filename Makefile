@@ -100,6 +100,10 @@ up: _require_username _verify_image_fresh ## Start a detached container with ini
 	podman run -d --replace --name $(CONTAINER) \
 		--init \
 		--userns=keep-id \
+		--env PI_CONFIG_URL \
+		--env PI_CONFIG_REF \
+		--env NVIM_CONFIG_URL \
+		--env NVIM_CONFIG_REF \
 		$(BW_SECRETS) \
 		-v $(CURDIR):/home/$(USERNAME)/.local/share/chezmoi \
 		-v $(CARGO_VOLUME):/home/$(USERNAME)/.local/share/cargo \

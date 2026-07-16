@@ -64,7 +64,7 @@ julia = "latest"
 node = "latest"
 pnpm = "latest"
 usage = "latest" # This is only for `mise completion`
-"npm:@earendil-works/pi-coding-agent" = "latest" # `PI` agent
+"aqua:earendil-works/pi" = "latest" # `PI` agent
 "aqua:ogulcancelik/herdr" = "latest" # terminal workspace manager
 
 [settings.npm]

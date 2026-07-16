@@ -1,4 +1,10 @@
+import os
+import signal
 import subprocess
+import textwrap
+import time
+import tomllib
+import uuid
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -15,6 +21,25 @@ PI_COMMIT_HOOK = ROOT / "programs" / "chezmoi_pi_commit.sh"
 PACKAGES = ROOT / "dependencies" / "packages.toml"
 CONTAINERFILE = ROOT / "container" / "Containerfile"
 MAKEPKG_CONF = ROOT / "container" / "bind" / "layer_1_files" / "makepkg.conf"
+
+
+def shell_function(text: str, name: str) -> str:
+    start = text.index(f"{name}() {{")
+    end = text.index("\n}\n", start) + len("\n}\n")
+    return text[start:end]
+
+
+def write_executable(path: Path, body: str) -> None:
+    path.write_text(f"#!/bin/sh\n{body}\n")
+    path.chmod(0o755)
+
+
+def _entrypoint_env_with_fake_git(tmp_path: Path, fake_git_body: str) -> dict:
+    git = tmp_path / "git"
+    write_executable(git, fake_git_body)
+    env = os.environ.copy()
+    env["PATH"] = f"{tmp_path}{os.pathsep}{env['PATH']}"
+    return env
 
 
 def test_entrypoint_forwards_stop_signal_during_startup_work() -> None:
@@ -40,18 +65,372 @@ def test_entrypoint_propagates_failed_child_status() -> None:
     assert result.returncode != 0
 
 
-def test_entrypoint_bootstraps_externals_without_changing_git_remotes() -> None:
-    """Startup may bootstrap over HTTPS but must not rewrite Git remotes."""
+def test_select_external_url_ssh_first_per_repository(tmp_path: Path) -> None:
+    """SSH probe success selects SSH; failure falls back to HTTPS per repo."""
+    text = ENTRYPOINT.read_text()
+    select_fn = shell_function(text, "select_external_url")
+    validate_fn = shell_function(text, "validate_external_url")
+    run_fn = shell_function(text, "run_interruptible")
+
+    fake_git = textwrap.dedent(
+        """
+        if [ "$1" = "ls-remote" ]; then
+            shift
+            url="$1"
+            case "$url" in
+                *pi-config*) exit 0 ;;
+                *) exit 1 ;;
+            esac
+        fi
+        exit 1
+        """
+    )
+    env = _entrypoint_env_with_fake_git(tmp_path, fake_git)
+
+    script = f"""
+        set -euo pipefail
+        SELECTED_EXTERNAL_URL=""
+        {validate_fn}
+        {run_fn}
+        {select_fn}
+        select_external_url "" "git@github.com:kkiyama117/pi-config.git" "https://github.com/kkiyama117/pi-config.git"
+        selected_pi="$SELECTED_EXTERNAL_URL"
+        select_external_url "" "git@github.com:kkiyama117/nvim_config.git" "https://github.com/kkiyama117/nvim_config.git"
+        selected_nvim="$SELECTED_EXTERNAL_URL"
+        printf '%s\\n' "$selected_pi" "$selected_nvim"
+    """
+    result = subprocess.run(
+        ["zsh", "-fc", script],
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    selected_pi, selected_nvim = result.stdout.strip().splitlines()
+    assert selected_pi == "git@github.com:kkiyama117/pi-config.git"
+    assert selected_nvim == "https://github.com/kkiyama117/nvim_config.git"
+
+
+def test_select_external_url_non_empty_override_bypasses_probe(tmp_path: Path) -> None:
+    """A non-empty override URL must skip the SSH probe entirely."""
+    text = ENTRYPOINT.read_text()
+    select_fn = shell_function(text, "select_external_url")
+    validate_fn = shell_function(text, "validate_external_url")
+    run_fn = shell_function(text, "run_interruptible")
+
+    # This fake git would fail every probe; it must never be called.
+    env = _entrypoint_env_with_fake_git(tmp_path, "exit 1")
+
+    script = f"""
+        set -euo pipefail
+        SELECTED_EXTERNAL_URL=""
+        {validate_fn}
+        {run_fn}
+        {select_fn}
+        select_external_url "file:///data/nvim_config" "git@github.com:kkiyama117/nvim_config.git" "https://github.com/kkiyama117/nvim_config.git"
+        printf '%s\\n' "$SELECTED_EXTERNAL_URL"
+    """
+    result = subprocess.run(
+        ["zsh", "-fc", script],
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "file:///data/nvim_config"
+
+
+def test_select_external_url_empty_override_uses_probe(tmp_path: Path) -> None:
+    """An empty override must fall through to the SSH/HTTPS probe."""
+    text = ENTRYPOINT.read_text()
+    select_fn = shell_function(text, "select_external_url")
+    validate_fn = shell_function(text, "validate_external_url")
+    run_fn = shell_function(text, "run_interruptible")
+
+    env = _entrypoint_env_with_fake_git(tmp_path, "exit 0")
+
+    script = f"""
+        set -euo pipefail
+        SELECTED_EXTERNAL_URL=""
+        {validate_fn}
+        {run_fn}
+        {select_fn}
+        select_external_url "" "git@github.com:kkiyama117/pi-config.git" "https://github.com/kkiyama117/pi-config.git"
+        printf '%s\\n' "$SELECTED_EXTERNAL_URL"
+    """
+    result = subprocess.run(
+        ["zsh", "-fc", script],
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "git@github.com:kkiyama117/pi-config.git"
+
+
+def test_select_external_url_rejects_http_userinfo(tmp_path: Path) -> None:
+    """URL overrides containing HTTP(S) userinfo must be rejected without leaking them."""
+    text = ENTRYPOINT.read_text()
+    select_fn = shell_function(text, "select_external_url")
+    validate_fn = shell_function(text, "validate_external_url")
+    run_fn = shell_function(text, "run_interruptible")
+
+    calls = tmp_path / "git-calls"
+    env = _entrypoint_env_with_fake_git(
+        tmp_path,
+        f'echo called >> "{calls}"\nexit 0',
+    )
+
+    script = f"""
+        set -euo pipefail
+        SELECTED_EXTERNAL_URL=""
+        {validate_fn}
+        {run_fn}
+        {select_fn}
+        select_external_url "https://token@github.com/owner/repo.git" "git@github.com:owner/repo.git" "https://github.com/owner/repo.git"
+        printf '%s\\n' "$SELECTED_EXTERNAL_URL"
+    """
+    result = subprocess.run(
+        ["zsh", "-fc", script],
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode != 0, "credential-bearing URL should be rejected"
+    assert "token" not in result.stderr
+    assert result.stdout.strip() == ""
+    assert not calls.exists() or calls.read_text() == ""
+
+
+def test_select_external_url_enforces_ssh_timeout_options() -> None:
+    """The SSH probe must use hard timeouts and non-interactive SSH options."""
+    function = shell_function(ENTRYPOINT.read_text(), "select_external_url")
+
+    assert "BatchMode=yes" in function
+    assert "ConnectTimeout=5" in function
+    assert "GIT_TERMINAL_PROMPT=0" in function
+    assert "--kill-after=2s" in function
+    assert "10s" in function
+    assert "$(" not in function
+
+
+def test_select_external_url_signal_forwarding_kills_probe(tmp_path: Path) -> None:
+    """SIGTERM to the entrypoint shell must terminate the running probe and exit 143."""
+    text = ENTRYPOINT.read_text()
+    run_fn = shell_function(text, "run_interruptible")
+    term_fn = shell_function(text, "terminate")
+
+    child_script = tmp_path / "child.sh"
+    pid_file = tmp_path / f"probe-pid-{uuid.uuid4().hex}"
+    write_executable(
+        child_script,
+        f'printf "%s" "$$" > "{pid_file}"\nwhile :; do sleep 0.1; done',
+    )
+
+    zsh_script = f"""
+        set -euo pipefail
+        child_pid=""
+        {term_fn}
+        {run_fn}
+        trap terminate TERM INT
+        run_interruptible "{child_script}"
+        echo done
+    """
+    proc = subprocess.Popen(
+        ["zsh", "-fc", zsh_script],
+        start_new_session=True,
+    )
+
+    deadline = time.time() + 5
+    while not pid_file.exists():
+        if time.time() > deadline:
+            break
+        time.sleep(0.05)
+
+    child_pid: int | None = None
+    if pid_file.exists():
+        child_pid = int(pid_file.read_text().strip())
+
+    os.kill(proc.pid, signal.SIGTERM)
+    proc.wait(timeout=10)
+
+    assert proc.returncode == 143
+    if child_pid is not None:
+        # The child should have been killed, not left running.
+        for _ in range(50):
+            try:
+                os.kill(child_pid, 0)
+            except ProcessLookupError:
+                return
+            time.sleep(0.05)
+        raise AssertionError(f"probe child {child_pid} still running after SIGTERM")
+
+
+def test_select_external_url_ignoring_term_falls_back_to_https(tmp_path: Path) -> None:
+    """A probe child that ignores TERM must be killed and trigger HTTPS fallback."""
+    text = ENTRYPOINT.read_text()
+    select_fn = shell_function(text, "select_external_url")
+    validate_fn = shell_function(text, "validate_external_url")
+    run_fn = shell_function(text, "run_interruptible")
+
+    # Ignore TERM so timeout has to escalate to SIGKILL after --kill-after=2s.
+    env = _entrypoint_env_with_fake_git(
+        tmp_path,
+        "trap '' TERM\nsleep 60\nexit 0",
+    )
+
+    script = f"""
+        set -euo pipefail
+        SELECTED_EXTERNAL_URL=""
+        {validate_fn}
+        {run_fn}
+        {select_fn}
+        select_external_url "" "git@github.com:kkiyama117/pi-config.git" "https://github.com/kkiyama117/pi-config.git"
+        printf '%s\\n' "$SELECTED_EXTERNAL_URL"
+    """
+    start = time.time()
+    result = subprocess.run(
+        ["zsh", "-fc", script],
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=15,
+    )
+    elapsed = time.time() - start
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "https://github.com/kkiyama117/pi-config.git"
+    assert elapsed < 13, f"fallback took {elapsed:.1f}s, expected < 13s"
+
+
+def test_set_external_remote_url_migrates_origin(tmp_path: Path) -> None:
+    """An existing managed external's origin remote is rewritten to the selected URL."""
+    set_fn = shell_function(ENTRYPOINT.read_text(), "set_external_remote_url")
+    checkout = tmp_path / "checkout"
+    checkout.mkdir()
+    subprocess.run(["git", "init"], cwd=checkout, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "remote", "add", "origin", "https://old.example/repo.git"],
+        cwd=checkout,
+        check=True,
+        capture_output=True,
+    )
+    selected_url = "git@github.com:kkiyama117/pi-config.git"
+
+    script = f"""
+        set -euo pipefail
+        {set_fn}
+        set_external_remote_url "{checkout}" "{selected_url}"
+    """
+    result = subprocess.run(
+        ["zsh", "-fc", script],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    actual = subprocess.check_output(
+        ["git", "-C", str(checkout), "remote", "get-url", "origin"],
+        text=True,
+    ).strip()
+    assert actual == selected_url
+
+
+def test_set_external_remote_url_fails_without_origin(tmp_path: Path) -> None:
+    """A checkout that lacks an origin remote must be rejected."""
+    set_fn = shell_function(ENTRYPOINT.read_text(), "set_external_remote_url")
+    checkout = tmp_path / "checkout"
+    checkout.mkdir()
+    subprocess.run(["git", "init"], cwd=checkout, check=True, capture_output=True)
+
+    script = f"""
+        set -euo pipefail
+        {set_fn}
+        set_external_remote_url "{checkout}" "git@github.com:kkiyama117/pi-config.git"
+    """
+    result = subprocess.run(
+        ["zsh", "-fc", script],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode != 0
+
+
+def test_set_external_remote_url_runs_before_apply() -> None:
+    """Existing-checkout origin migration must happen after selection/render but before chezmoi apply."""
     text = ENTRYPOINT.read_text()
 
-    assert 'PI_CONFIG_BOOTSTRAP_URL="https://github.com/kkiyama117/pi-config.git"' in text
-    assert 'NVIM_CONFIG_BOOTSTRAP_URL="https://github.com/kkiyama117/nvim_config.git"' in text
-    assert "remote set-url" not in text
-    assert "switch_external_remote_to_ssh" not in text
-
+    select_pi = text.index('select_external_url "${PI_CONFIG_URL:-}"')
+    # The header comment also contains the render command; find the actual render call.
+    render_idx = text.index("chezmoi execute-template --init \\")
     apply_idx = text.index("run_interruptible chezmoi apply --no-tty --force")
-    ready_idx = text.index('touch "$READINESS_SENTINEL"')
-    assert apply_idx < ready_idx
+    pi_remote_idx = text.index('\nset_external_remote_url "$HOME/.pi"')
+    nvim_remote_idx = text.index('\nset_external_remote_url "$HOME/.config/nvim"')
+
+    assert select_pi < render_idx < pi_remote_idx < apply_idx
+    assert select_pi < render_idx < nvim_remote_idx < apply_idx
+
+
+def test_render_boundary_exports_mixed_ssh_https_selection(tmp_path: Path) -> None:
+    """The selected URLs are forwarded to chezmoi execute-template as env vars."""
+    text = ENTRYPOINT.read_text()
+    select_fn = shell_function(text, "select_external_url")
+    validate_fn = shell_function(text, "validate_external_url")
+    run_fn = shell_function(text, "run_interruptible")
+
+    env = _entrypoint_env_with_fake_git(
+        tmp_path,
+        textwrap.dedent(
+            """
+            if [ "$1" = "ls-remote" ]; then
+                shift
+                url="$1"
+                case "$url" in
+                    *pi-config*) exit 0 ;;
+                    *) exit 1 ;;
+                esac
+            fi
+            exit 1
+            """
+        ),
+    )
+
+    record = tmp_path / "render-boundary.env"
+    write_executable(
+        tmp_path / "chezmoi",
+        f'echo "PI_CONFIG_URL=$PI_CONFIG_URL" >> "{record}"\n'
+        f'echo "NVIM_CONFIG_URL=$NVIM_CONFIG_URL" >> "{record}"\n'
+        'echo rendered',
+    )
+
+    script = f"""
+        set -euo pipefail
+        SELECTED_EXTERNAL_URL=""
+        {validate_fn}
+        {run_fn}
+        {select_fn}
+        select_external_url "" "git@github.com:kkiyama117/pi-config.git" "https://github.com/kkiyama117/pi-config.git"
+        selected_pi_config_url="$SELECTED_EXTERNAL_URL"
+        select_external_url "" "git@github.com:kkiyama117/nvim_config.git" "https://github.com/kkiyama117/nvim_config.git"
+        selected_nvim_config_url="$SELECTED_EXTERNAL_URL"
+        PI_CONFIG_URL="$selected_pi_config_url" NVIM_CONFIG_URL="$selected_nvim_config_url" chezmoi execute-template --init < /dev/null > /dev/null
+    """
+    result = subprocess.run(
+        ["zsh", "-fc", script],
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    lines = record.read_text().strip().splitlines()
+    assert "PI_CONFIG_URL=git@github.com:kkiyama117/pi-config.git" in lines
+    assert "NVIM_CONFIG_URL=https://github.com/kkiyama117/nvim_config.git" in lines
 
 
 def test_ssh_key_normalization_does_not_require_perl(tmp_path: Path) -> None:
@@ -78,6 +457,19 @@ def test_make_up_uses_init_for_steady_state_signal_forwarding() -> None:
 
     up_target = text.split("up: _require_username", 1)[1].split("\nexec:", 1)[0]
     assert "--init" in up_target
+
+
+def test_make_up_forwards_external_url_and_ref_variables() -> None:
+    text = MAKEFILE.read_text()
+    up_target = text.split("up: _require_username", 1)[1].split("\nexec:", 1)[0]
+
+    for variable in (
+        "PI_CONFIG_URL",
+        "PI_CONFIG_REF",
+        "NVIM_CONFIG_URL",
+        "NVIM_CONFIG_REF",
+    ):
+        assert f"--env {variable}" in up_target
 
 
 def test_entrypoint_writes_readiness_sentinel_only_after_apply() -> None:
@@ -192,9 +584,9 @@ def test_pi_config_external_is_build_mode_gated_and_pinned() -> None:
     assert 'eq .runtime "container"' in external
     assert '[".pi"]' in external
     assert 'type = "git-repo"' in external
-    assert 'url = "{{ .pi_config_url }}"' in external
+    assert "url = {{ .pi_config_url | quote }}" in external
     assert 'refreshPeriod = "0"' in external
-    assert 'clone.args = ["--branch", "{{ .pi_config_ref }}", "--depth", "1", "--no-single-branch"]' in external
+    assert 'clone.args = ["--branch", {{ .pi_config_ref | quote }}, "--depth", "1", "--no-single-branch"]' in external
 
 
 def test_nvim_config_external_is_build_mode_gated_and_pinned() -> None:
@@ -209,8 +601,8 @@ def test_nvim_config_external_is_build_mode_gated_and_pinned() -> None:
     assert 'nvim_config_ref = {{ env "NVIM_CONFIG_REF" | default "main" | quote }}' in config
 
     assert '[".config/nvim"]' in external
-    assert 'url = "{{ .nvim_config_url }}"' in external
-    assert 'clone.args = ["--branch", "{{ .nvim_config_ref }}", "--depth", "1", "--no-single-branch"]' in external
+    assert "url = {{ .nvim_config_url | quote }}" in external
+    assert 'clone.args = ["--branch", {{ .nvim_config_ref | quote }}, "--depth", "1", "--no-single-branch"]' in external
     assert "file:///data/nvim_config" not in external
 
 
@@ -232,16 +624,16 @@ def test_pi_commit_hook_uses_external_prompt_precedence() -> None:
     assert '$src_dir/.pi/prompts/commit.md' not in text
 
 
-def test_pi_coding_agent_inventory_and_container_install() -> None:
+def test_pi_is_mise_managed_via_aqua() -> None:
+    mise_config = MISE_CONFIG.read_text()
     packages = PACKAGES.read_text()
     containerfile = CONTAINERFILE.read_text()
 
-    assert 'name = "pi-coding-agent"' in packages
-    assert 'manager = "custom"' in packages
-    assert "@earendil-works/pi-coding-agent" in packages
-    assert "@earendil-works/pi-coding-agent" in containerfile
-    assert "--ignore-scripts" in containerfile
-    assert "pi --version" in containerfile
+    assert '"aqua:earendil-works/pi" = "latest"' in mise_config
+    assert "npm:@earendil-works/pi-coding-agent" not in mise_config
+    assert 'name = "pi-coding-agent"' not in packages
+    assert "@earendil-works/pi-coding-agent" not in containerfile
+    assert "# Layer 3-5: Install pi coding agent CLI" not in containerfile
 
 
 def test_makepkg_conf_baked_into_layer_1_2() -> None:
@@ -286,3 +678,44 @@ def test_kakehashi_inventory_and_container_install() -> None:
     assert 'install -D -m 0755' in block
     assert '"$HOME/.local/bin/kakehashi" --version' in block
     assert "kakehashi" not in entrypoint
+
+
+def test_external_template_renders_quoted_values(tmp_path: Path) -> None:
+    """The final external TOML sink must quote values and survive special characters."""
+    external = CHEZMOI_EXTERNAL.read_text()
+
+    assert "url = {{ .pi_config_url | quote }}" in external
+    assert '{{ .pi_config_ref | quote }}' in external
+    assert "url = {{ .nvim_config_url | quote }}" in external
+    assert '{{ .nvim_config_ref | quote }}' in external
+
+    config_path = tmp_path / "chezmoi.toml"
+    config_path.write_text(
+        textwrap.dedent(
+            """
+            [data]
+            build_mode = false
+            runtime = "container"
+            pi_config_url = 'https://github.com/example/pi-"quoted".git'
+            pi_config_ref = 'branch-"quoted"'
+            nvim_config_url = 'https://github.com/example/nvim-"quoted".git'
+            nvim_config_ref = 'branch-"quoted"'
+            """
+        ).strip()
+    )
+    rendered = subprocess.run(
+        [
+            "chezmoi",
+            "execute-template",
+            "--init",
+            "--config",
+            str(config_path),
+        ],
+        input=external,
+        text=True,
+        capture_output=True,
+        check=True,
+    ).stdout
+    parsed = tomllib.loads(rendered)
+    assert parsed[".pi"]["url"] == 'https://github.com/example/pi-"quoted".git'
+    assert parsed[".config/nvim"]["clone"]["args"][1] == 'branch-"quoted"'

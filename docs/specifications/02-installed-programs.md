@@ -61,9 +61,6 @@ Containerfile install.
   bespoke install path in the Containerfile that cannot go through a
   generated list — e.g. `paru`, which is bootstrapped via `makepkg` and
   therefore cannot also be a `paru -S` target.
-  `pi-coding-agent` is a `custom` Layer 3 entry because the package is
-  installed by a bespoke npm command after mise-managed Node is available,
-  not from a generated package-manager list.
 - `migrated`: doc-only. Config copied from a prior dotfiles setup and
   still templated under chezmoi, but the tool is NOT installed in the
   container (and the Containerfile MUST NOT be updated for it). Use
@@ -126,7 +123,6 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `topgrade` | cargo | yes | multi-package-manager updater; build-time cargo tool (signed prebuilt via cargo-binstall --only-signed) |
 | `cargo-binstall` | custom | no | Install binaries |
 | `kakehashi` | custom | no | language-server bridge; latest x86_64 GNU/Linux release binary installed to ~/.local/bin during the container build |
-| `pi-coding-agent` | custom | yes | pi coding agent CLI (`@earendil-works/pi-coding-agent`); installed with npm --ignore-scripts after mise-managed Node |
 
 #### Layer 4 — install list
 

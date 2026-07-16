@@ -223,17 +223,6 @@ RUN --mount=type=cache,target=/home/${USERNAME}/.cache/mise,uid=${HOST_UID},gid=
       mise install --yes; \
     '
 
-# Layer 3-5: Install pi coding agent CLI with mise-managed Node/pnpm.
-#
-# The upstream install path is pnpm global with lifecycle scripts disabled.
-# Node and pnpm are available through the mise config installed in Layer 3-4.
-RUN --mount=type=cache,target=/home/${USERNAME}/.cache/pnpm,uid=${HOST_UID},gid=${HOST_GID} \
-    zsh -c 'set -eo pipefail; \
-      source /tmp/build-home/.zshenv; \
-      mise exec node@latest pnpm@latest -- pnpm install -g --ignore-scripts @earendil-works/pi-coding-agent; \
-      pi --version; \
-    '
-
 # Layer 3-6: Install cargo-binstall (prebuilt bootstrap — INFRA, not in packages.toml).
 #
 # cargo-binstall is the installer for the rest of the cargo ecosystem; like
