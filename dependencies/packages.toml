@@ -167,6 +167,13 @@ has_configs = false
 description = "Install binaries"
 
 [[tool]]
+name = "kakehashi"
+manager = "custom"
+layer = 3
+has_configs = false
+description = "language-server bridge; latest x86_64 GNU/Linux release binary installed to ~/.local/bin during the container build"
+
+[[tool]]
 name = "topgrade"
 manager = "cargo"
 layer = 3

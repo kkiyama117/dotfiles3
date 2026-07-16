@@ -29,6 +29,7 @@ stage; within a stage, numbered **sub-layers** (`Layer N-M`) group related
 | `toolchain` (`FROM build-prepass`) | 3-5 | `mise exec node@latest -- npm install -g --ignore-scripts @earendil-works/pi-coding-agent`; `pi --version`; npm cache mount on `~/.cache/npm` | Install the pi coding agent CLI with lifecycle scripts disabled after mise-managed Node/npm is available. Declared as `manager = "custom"` in `packages.toml` (doc-only; no generated install list). | `/tmp/build-home/.zshenv`, rendered mise config from Layer 3-4 |
 | `toolchain` (`FROM build-prepass`) | 3-6 | `curl` the pinned v1.20.1 `cargo-binstall-x86_64-unknown-linux-musl.tgz`; `sha256sum -c` against the hardcoded SHA256; single-file `tar` + `mv` to `$CARGO_HOME/bin` | Bootstrap `cargo-binstall` as infra (I-INFRA1 / I-CARGO1) — the installer for the rest of the cargo ecosystem. Not a `packages.toml` entry. No cache mount (binstall has no persistent download cache). | `/tmp/build-home/.zshenv`, `ARG CARGO_BINSTALL_VERSION`/`CARGO_BINSTALL_SHA256` |
 | `toolchain` (`FROM build-prepass`) | 3-7 | `COPY --from=deps layer_3/cargo.txt`; `cargo binstall --only-signed -y ${=pkgs}` | Install the Layer 3 build-time cargo tool set (currently `topgrade`) from the generated list (`manager = "cargo"`, `layer = 3` only) via signed prebuilt binaries. Per [`24-rust-packages-rule.md`](24-rust-packages-rule.md) §3, layer=3 entries MUST ship a signed prebuilt; unsigned-only/source-only tools are `layer = 6` (runtime-manual). No cache mount (binstall resolves via the crates.io HTTP API, not the registry/git index). | `/tmp/build-home/.zshenv`, `dependencies/layer_3/cargo.txt` |
+| `toolchain` (`FROM build-prepass`) | 3-8 | Resolve GitHub's stable latest tag; download the hardcoded `atusy/kakehashi` x86_64 GNU/Linux asset over HTTPS; validate one regular `kakehashi` member; install to `$HOME/.local/bin/kakehashi`; run `--version` | Install the custom Layer 3 `kakehashi` binary at build time. Normal layer caching is intentional; no runtime update path or named volume is added (I-KAKEHASHI1–I-KAKEHASHI6). | GitHub releases, `dependencies/packages.toml` |
 | `aur` (`FROM toolchain`) | 4-1 | `git clone` paru PKGBUILD + `makepkg -si` (sources `/tmp/build-home/.zshenv`; cache mounts on `~/.cache/paru` + `/var/cache/pacman/pkg` + `$CARGO_HOME/{registry,git}`) | Bootstrap `paru` from the AUR as non-root `${USERNAME}`. | AUR `paru` PKGBUILD, Layer 1-4 sudoers |
 | `aur` (`FROM toolchain`) | 4-2 | `paru -S --noconfirm --needed` | Install the Layer 4 AUR package set from the generated list (`manager = "paru"` entries only). | `dependencies/layer_4/paru.txt` |
 | `runtime` (`FROM aur`) | 5-1 | `FROM aur AS runtime` | Runtime stage base (inherits the `aur` image). | - |
@@ -225,6 +226,14 @@ A new stage may land only when:
     `herdr` install from the image (I-HERDR2). Do **not** use `make clean` —
     that also removes the image and other volumes. Routine upgrades use
     `mise upgrade aqua:ogulcancelik/herdr`, not image rebuilds or `herdr update`.
+26. After `make up`, `podman exec dotfiles-manjaro zsh -ic 'command -v
+    kakehashi; kakehashi --version'` exits 0 and resolves
+    `/home/${USERNAME}/.local/bin/kakehashi`; `podman exec
+    dotfiles-manjaro stat -c '%a %U:%G' /home/${USERNAME}/.local/bin/kakehashi`
+    reports `755 ${USERNAME}:${USERNAME}` (or the configured primary group).
+    The entrypoint contains no `kakehashi` install/update path. **Refresh:**
+    ordinary `make build` may reuse Layer 3-8; use the design's full
+    `podman build --no-cache` command to re-resolve latest.
 
 ## Open questions
 

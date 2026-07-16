@@ -280,6 +280,47 @@ RUN zsh -c 'set -eo pipefail; \
       fi; \
     '
 
+# Layer 3-8: Install kakehashi (latest x86_64 GNU/Linux release binary).
+#
+# kakehashi is a user-facing custom Layer 3 tool declared in packages.toml.
+# Resolve the stable tag only when this layer executes; normal layer caching
+# intentionally retains the previously resolved release. The GitHub asset base
+# is hardcoded, and private staging is removed on every shell exit.
+RUN zsh -c 'set -eo pipefail; \
+      staging=$(mktemp -d); \
+      trap "rm -rf -- ${(q)staging}" EXIT INT TERM; \
+      latest_url=$(curl -L --proto "=https" --proto-redir "=https" --tlsv1.2 -sSf \
+        -o /dev/null -w "%{url_effective}" \
+        https://github.com/atusy/kakehashi/releases/latest); \
+      tag=${latest_url##*/}; \
+      [[ "$tag" == v<->.<->.<-> ]] || { \
+        print -u2 "kakehashi: unexpected latest release tag: $tag"; \
+        exit 1; \
+      }; \
+      asset="kakehashi-${tag}-x86_64-unknown-linux-gnu.tar.gz"; \
+      archive="$staging/$asset"; \
+      curl -L --proto "=https" --proto-redir "=https" --tlsv1.2 -sSf \
+        -o "$archive" \
+        "https://github.com/atusy/kakehashi/releases/download/${tag}/${asset}"; \
+      members=("${(@f)$(tar -tzf "$archive")}"); \
+      (( ${#members} == 1 )) && [[ "${members[1]}" == "kakehashi" ]] || { \
+        print -u2 "kakehashi: unexpected archive members"; \
+        exit 1; \
+      }; \
+      listing=$(tar -tvzf "$archive"); \
+      [[ "${listing[1]}" == "-" ]] || { \
+        print -u2 "kakehashi: archive member is not a regular file"; \
+        exit 1; \
+      }; \
+      tar --no-same-owner --no-same-permissions -xzf "$archive" -C "$staging"; \
+      [[ -f "$staging/kakehashi" && ! -L "$staging/kakehashi" ]] || { \
+        print -u2 "kakehashi: extracted member is not a regular file"; \
+        exit 1; \
+      }; \
+      install -D -m 0755 "$staging/kakehashi" "$HOME/.local/bin/kakehashi"; \
+      "$HOME/.local/bin/kakehashi" --version; \
+    '
+
 # ---------------------------------------------------------------------------
 # Stage 4: aur
 #
