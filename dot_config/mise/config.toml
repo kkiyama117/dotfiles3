@@ -66,7 +66,7 @@ pnpm = "latest"
 usage = "latest" # This is only for `mise completion`
 "aqua:earendil-works/pi" = "latest" # `PI` agent
 "aqua:ogulcancelik/herdr" = "latest" # terminal workspace manager
-"aqua:svkozak/pi-acp" = "latest" # ACP (Agent Communication Protocol) for pi
+"npm:pi-acp" = "latest" # ACP (Agent Communication Protocol) adapter for pi (TypeScript/npm package)
 
 [settings.npm]
 package_manager = "pnpm"
