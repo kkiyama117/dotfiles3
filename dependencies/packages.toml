@@ -259,6 +259,13 @@ has_configs = true
 description = "TUI for git"
 
 [[tool]]
+name = "libskk"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "SKK Japanese input engine"
+
+[[tool]]
 name = "man-db"
 manager = "paru"
 layer = 4
@@ -299,6 +306,20 @@ name = "rsync"
 manager = "paru"
 layer = 4
 has_configs = false
+
+[[tool]]
+name = "skk-jisyo"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "SKK Jisyo"
+
+[[tool]]
+name = "skktools"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "SKK utilities"
 
 [[tool]]
 name = "skim"
