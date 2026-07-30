@@ -134,6 +134,7 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `fd` | paru | no | Alternative `find` |
 | `github-cli` | paru | yes | Github commands |
 | `lazygit` | paru | yes | TUI for git |
+| `libskk` | paru | no | SKK Japanese input engine |
 | `man-db` | paru | no | man command |
 | `neovim-git` | paru | no | neovim built from upstream git master (AUR); first concrete AUR package |
 | `pastel` | paru | no | color utility |
@@ -141,6 +142,8 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `ripgrep` | paru | no | grep alternative |
 | `rsync` | paru | no |  |
 | `skim` | paru | no | fzf alternative written in Rust |
+| `skk-jisyo` | paru | no | SKK Jisyo |
+| `skktools` | paru | no | SKK utilities |
 | `starship` | paru | yes | zsh prompt theme manager |
 | `tealdeer` | paru | yes | tldr alternative |
 | `tmux` | paru | no | tmux multiplexer |
