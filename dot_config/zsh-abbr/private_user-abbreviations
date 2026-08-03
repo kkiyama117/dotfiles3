@@ -50,6 +50,7 @@ abbr "mv"="mv -i"
 # nvim
 abbr "vi"="nvim"
 abbr "vim"="nvim"
+abbr "dnvim"="NVIM_DEBUG=true nvim"
 
 # rm
 abbr "rm"="rm -i"
@@ -61,3 +62,4 @@ abbr "tree"="tre"
 
 # zoxide
 abbr "cd"="z"
+
