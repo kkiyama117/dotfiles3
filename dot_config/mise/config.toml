@@ -67,6 +67,14 @@ usage = "latest" # This is only for `mise completion`
 "aqua:earendil-works/pi" = "latest" # `PI` agent
 "aqua:ogulcancelik/herdr" = "latest" # terminal workspace manager
 "npm:pi-acp" = "latest" # ACP (Agent Communication Protocol) adapter for pi (TypeScript/npm package)
+# LSP servers & tools (replaces mason.nvim; keep in sync with
+# bridged_servers in vimrc.kakehashi_config of the nvim config)
+"go:golang.org/x/tools/gopls" = "latest" # gopls
+"npm:pyright" = "latest" # pyright-langserver
+"npm:@vtsls/language-server" = "latest" # vtsls (npm:vtsls was unpublished)
+"aqua:LuaLS/lua-language-server" = "latest" # emmylua_ls
+"aqua:tombi-toml/tombi" = "latest" # tombi
+"aqua:JohnnyMorganz/StyLua" = "latest" # stylua (Lua formatter)
 
 [settings.npm]
 package_manager = "pnpm"
