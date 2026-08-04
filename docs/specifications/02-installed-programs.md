@@ -122,7 +122,7 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `cargo-outdated` | cargo | no | Detect outdated Rust crate dependencies |
 | `topgrade` | cargo | yes | multi-package-manager updater; build-time cargo tool (signed prebuilt via cargo-binstall --only-signed) |
 | `cargo-binstall` | custom | no | Install binaries |
-| `kakehashi` | custom | no | language-server bridge; latest x86_64 GNU/Linux release binary installed to ~/.local/bin during the container build |
+| `kakehashi` | custom | yes | language-server bridge; latest x86_64 GNU/Linux release binary installed to ~/.local/bin during the container build |
 
 #### Layer 4 — install list
 
@@ -141,6 +141,7 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `pueue` | paru | yes | task queue daemon |
 | `ripgrep` | paru | no | grep alternative |
 | `rsync` | paru | no |  |
+| `rust-analyzer` | paru | no | Rust language server; official `extra` repo prebuilt (user-selected over cargo-binstall/mise; spec 24 inapplicable — no rust toolchain dependency) |
 | `skim` | paru | no | fzf alternative written in Rust |
 | `skk-jisyo` | paru | no | SKK Jisyo |
 | `skktools` | paru | no | SKK utilities |

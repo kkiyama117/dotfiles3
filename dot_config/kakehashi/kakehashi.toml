@@ -1,0 +1,144 @@
+# Global kakehashi configuration (user layer).
+#
+# Documentation: https://github.com/atusy/kakehashi/blob/main/docs/README.md
+#
+# The language servers declared below are the user's global catalog: they
+# are installed either via mise (`dot_config/mise/config.toml`) or via
+# pacman/paru (`dependencies/packages.toml`). Keep the three files in sync —
+# `kakehashi format` / `kakehashi diagnose` and every editor rely on the
+# binaries resolving through PATH (mise shims / system packages).
+
+[languages._]
+autoInstall = true
+
+# Host-document bridging (`bridge._self`): the host language's own server
+# answers on the document itself (hover, completion, diagnostics, …).
+
+[languages.go.bridge._self]
+enabled = true
+
+[languages.javascript.bridge._self]
+enabled = true
+
+[languages.lua.bridge._self]
+enabled = true
+
+[languages.python.bridge._self]
+enabled = true
+
+[languages.rust.bridge._self]
+enabled = true
+
+[languages.toml.bridge._self]
+enabled = true
+
+[languages.typescript.bridge._self]
+enabled = true
+
+# Markdown family: bridge embedded code blocks to the matching servers.
+
+[languages.markdown.bridge.lua.aggregation._]
+priorities = ["emmylua_ls"]
+
+[languages.markdown.bridge.python.aggregation."textDocument/completion"]
+priorities = ["pyright"]
+maxFanOut = 1
+
+[languages.markdown.bridge.rust.aggregation._]
+priorities = ["rust_analyzer"]
+
+[languages.markdown.bridge.typescript.aggregation."textDocument/completion"]
+priorities = ["vtsls", "denols"]
+maxFanOut = 1
+
+[languages.markdown.bridge.javascript.aggregation."textDocument/completion"]
+priorities = ["vtsls", "denols"]
+maxFanOut = 1
+
+[languages.rmd]
+base = "markdown"
+
+[languages.quarto]
+base = "markdown"
+
+# ---- Language servers ----
+#
+# `cmd[0]` keeps PATH lookup semantics (mise shims / system packages).
+# `workspaceMarkers` mirrors nvim-lspconfig's root_markers, which are passed
+# to `vim.fs.root` (each top-level entry tried in order = priority order; a
+# nested array = one equal-priority group, nearest ancestor with any name
+# wins).
+
+[languageServers.denols]
+cmd = ["deno", "lsp"]
+languages = ["typescript", "javascript", "typescriptreact", "javascriptreact"]
+workspaceMarkers = [["deno.lock", "deno.json", "deno.jsonc"], ".git"]
+
+[languageServers.emmylua_ls]
+# Binary `emmylua_ls` (mise cargo:emmylua_ls, EmmyLuaLs/emmylua-analyzer-rust)
+# matches nvim-lspconfig's cmd and the `emmylua` settings namespace.
+cmd = ["emmylua_ls"]
+languages = ["lua"]
+workspaceMarkers = [
+    [".emmyrc.json", ".emmyrc.lua", ".luarc.json", ".luarc.jsonc"],
+    [".luacheckrc", ".stylua.toml", "stylua.toml", "selene.toml", "selene.yml"],
+    ".git",
+]
+
+[languageServers.gopls]
+cmd = ["gopls"]
+languages = ["go", "gomod", "gowork", "gotmpl"]
+workspaceMarkers = ["go.work", "go.mod", ".git"]
+
+[languageServers.pyright]
+cmd = ["pyright-langserver", "--stdio"]
+languages = ["python"]
+workspaceMarkers = [
+    "pyrightconfig.json",
+    "pyproject.toml",
+    "setup.py",
+    "setup.cfg",
+    "requirements.txt",
+    "Pipfile",
+    ".git",
+]
+
+[languageServers.rust_analyzer]
+# System package (official `extra` repo via paru, layer 4) — NOT the rustup
+# component/proxy. See dependencies/packages.toml. Approximation: lspconfig
+# additionally recognizes rust-project.json and resolves Cargo workspace
+# roots via `cargo metadata`; workspaceMarkers cannot reproduce that.
+cmd = ["rust-analyzer"]
+languages = ["rust"]
+workspaceMarkers = ["Cargo.toml", ".git"]
+
+[languageServers.tombi]
+cmd = ["tombi", "lsp"]
+languages = ["toml"]
+workspaceMarkers = ["tombi.toml", "pyproject.toml", ".git"]
+
+[languageServers.vtsls]
+cmd = ["vtsls", "--stdio"]
+languages = ["typescript", "javascript", "typescriptreact", "javascriptreact"]
+workspaceMarkers = [
+    ["package-lock.json", "yarn.lock", "pnpm-lock.yaml", "bun.lockb", "bun.lock"],
+    ".git",
+]
+
+[languageServers.clangd]
+# Installed via pacman `clang` (layer 1). kakehashi does not attach to C/C++
+# buffers in nvim (not in vimrc.kakehashi_config filetypes); this entry
+# serves C/C++ in other editors and the kakehashi CLI. lspconfig's
+# c.doxygen/cpp.doxygen filetypes are nvim-specific and have no
+# tree-sitter language id, so they are not listed.
+cmd = ["clangd"]
+languages = ["c", "cpp", "objc", "objcpp", "cuda"]
+workspaceMarkers = [
+    ".clangd",
+    ".clang-tidy",
+    ".clang-format",
+    "compile_commands.json",
+    "compile_flags.txt",
+    "configure.ac",
+    ".git",
+]

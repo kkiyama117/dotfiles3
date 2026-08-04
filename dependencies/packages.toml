@@ -170,7 +170,8 @@ description = "Install binaries"
 name = "kakehashi"
 manager = "custom"
 layer = 3
-has_configs = false
+# `~/.config/kakehashi/kakehashi.toml`
+has_configs = true
 description = "language-server bridge; latest x86_64 GNU/Linux release binary installed to ~/.local/bin during the container build"
 
 [[tool]]
@@ -300,6 +301,13 @@ manager = "paru"
 layer = 4
 has_configs = false
 description = "grep alternative"
+
+[[tool]]
+name = "rust-analyzer"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "Rust language server; official `extra` repo prebuilt (user-selected over cargo-binstall/mise; spec 24 inapplicable — no rust toolchain dependency)"
 
 [[tool]]
 name = "rsync"

@@ -286,9 +286,14 @@ labels directly.
   asset repository prefix is hardcoded and only a validated stable tag is
   interpolated. No repository-pinned digest exists, so shape and version
   checks are not a cryptographic identity guarantee.
-- I-KAKEHASHI6: **No runtime state or secret is baked.** The build invokes
-  only the installed binary's `--version`; it starts no bridge service,
-  creates no configuration, and reads no secret.
+- I-KAKEHASHI6: **No runtime state or secret is baked into the final
+  image.** The build invokes only the installed binary's `--version`; it
+  starts no bridge service, and reads no secret. The build pre-pass renders
+  user configuration (e.g. `~/.config/kakehashi/kakehashi.toml`) into build
+  scratch for the Layer 3-4 mise install and later stages; that scratch is
+  removed when the image build finishes, and the final image contains no
+  kakehashi configuration (it arrives at container start via chezmoi
+  apply).
 
 > NOTE on `git safe.directory`: an earlier draft mandated registering
 > `/var/lib/chezmoi-source` via `git config --global --add safe.directory`.
