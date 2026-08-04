@@ -33,6 +33,7 @@ abbr "gf"="git fetch"
 abbr "gp"="git pull"
 abbr "gP"="git push"
 abbr "gs"="git switch"
+abbr "gS"="git status"
 abbr "gm"="git merge"
 
 #ls
