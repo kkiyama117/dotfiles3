@@ -1,144 +1,74 @@
-# Global kakehashi configuration (user layer).
+# kakehashi user config (standard location).
 #
-# Documentation: https://github.com/atusy/kakehashi/blob/main/docs/README.md
+# This is the kakehashi server's default user config:
+#   $XDG_CONFIG_HOME/kakehashi/kakehashi.toml  (~/.config/kakehashi/kakehashi.toml)
+# It is a symlink to this repo-owned file, so the vimrc repo stays the
+# source of truth (and `kakehashi format` / `kakehashi diagnose` from the
+# shell pick up the same config).
 #
-# The language servers declared below are the user's global catalog: they
-# are installed either via mise (`dot_config/mise/config.toml`) or via
-# pacman/paru (`dependencies/packages.toml`). Keep the three files in sync —
-# `kakehashi format` / `kakehashi diagnose` and every editor rely on the
-# binaries resolving through PATH (mise shims / system packages).
-
-[languages._]
-autoInstall = true
-
-# Host-document bridging (`bridge._self`): the host language's own server
-# answers on the document itself (hover, completion, diagnostics, …).
-
-[languages.go.bridge._self]
-enabled = true
-
-[languages.javascript.bridge._self]
-enabled = true
-
-[languages.lua.bridge._self]
-enabled = true
-
-[languages.python.bridge._self]
-enabled = true
-
-[languages.rust.bridge._self]
-enabled = true
-
-[languages.toml.bridge._self]
-enabled = true
-
-[languages.typescript.bridge._self]
-enabled = true
-
-# Markdown family: bridge embedded code blocks to the matching servers.
-
-[languages.markdown.bridge.lua.aggregation._]
-priorities = ["emmylua_ls"]
-
-[languages.markdown.bridge.python.aggregation."textDocument/completion"]
-priorities = ["pyright"]
-maxFanOut = 1
-
-[languages.markdown.bridge.rust.aggregation._]
-priorities = ["rust_analyzer"]
-
-[languages.markdown.bridge.typescript.aggregation."textDocument/completion"]
-priorities = ["vtsls", "denols"]
-maxFanOut = 1
-
-[languages.markdown.bridge.javascript.aggregation."textDocument/completion"]
-priorities = ["vtsls", "denols"]
-maxFanOut = 1
-
-[languages.rmd]
-base = "markdown"
-
-[languages.quarto]
-base = "markdown"
-
-# ---- Language servers ----
+# It is ALSO passed explicitly as a --config-file layer (after the
+# kakehashi-lspconfig fragments, before the generated library.toml) so it
+# merges in order — see after/lsp/kakehashi.lua. Later layers win,
+# per-server configs are deep-merged (settings via deep JSON merge —
+# kakehashi src/config/merge.rs).
 #
-# `cmd[0]` keeps PATH lookup semantics (mise shims / system packages).
-# `workspaceMarkers` mirrors nvim-lspconfig's root_markers, which are passed
-# to `vim.fs.root` (each top-level entry tried in order = priority order; a
-# nested array = one equal-priority group, nearest ancestor with any name
-# wins).
+# The fragments ship with `enabled = false`; this file turns on exactly the
+# bridged servers this vimrc uses (keep in sync with
+# lua/kakehashi/config.lua `bridged_servers` and the mise installs in
+# ~/.config/mise/config.toml), and carries the per-server settings that the
+# fork previously inherited from lua/hooks/nvim-lspconfig.dpp.
+#
+# Dynamic values (emmylua workspace.library from the running nvim runtime)
+# are generated into $NVIM_CACHE_HOME/kakehashi/library.toml by
+# after/lsp/kakehashi.lua.
 
+# denols — disable nest.land imports (nvim-lspconfig#2793); restore the
+# root markers the fork inherited (the fragment's root_dir was dynamic).
 [languageServers.denols]
-cmd = ["deno", "lsp"]
-languages = ["typescript", "javascript", "typescriptreact", "javascriptreact"]
-workspaceMarkers = [["deno.lock", "deno.json", "deno.jsonc"], ".git"]
+enabled = true
+workspaceMarkers = ["deno.json", "deno.jsonc", "deps.ts"]
 
+[languageServers.denols.settings.deno]
+lint = true
+unstable = true
+
+[languageServers.denols.settings.deno.suggest.imports]
+autoDiscover = false
+
+[languageServers.denols.settings.deno.suggest.imports.hosts]
+"https://x.nest.land" = false
+
+# emmylua_ls — settings under the `emmylua` namespace (NOT `Lua`, which
+# belongs to sumneko/lua-language-server). workspace.library is generated
+# at runtime (library.toml) — it must stay a FLAT array of path strings.
 [languageServers.emmylua_ls]
-# Binary `emmylua_ls` (mise cargo:emmylua_ls, EmmyLuaLs/emmylua-analyzer-rust)
-# matches nvim-lspconfig's cmd and the `emmylua` settings namespace.
-cmd = ["emmylua_ls"]
-languages = ["lua"]
-workspaceMarkers = [
-    [".emmyrc.json", ".emmyrc.lua", ".luarc.json", ".luarc.jsonc"],
-    [".luacheckrc", ".stylua.toml", "stylua.toml", "selene.toml", "selene.yml"],
-    ".git",
-]
+enabled = true
+
+# Prefer treesitter (lua + luadoc injections) over LSP semantic tokens for
+# Lua highlighting — see
+# https://blog.atusy.net/2025/07/15/prefer-luadoc-to-luals-semantictokens
+# (applies to `*.dpp` hook files too; kakehashi's own tokens are disabled
+# per-buffer in lua/hooks/kakehashi.nvim.dpp on_attach).
+[languageServers.emmylua_ls.settings.emmylua.semanticTokens]
+enable = false
+
+[languageServers.emmylua_ls.settings.emmylua.runtime]
+version = "LuaJIT"
+
+[languageServers.emmylua_ls.settings.emmylua.diagnostics]
+globals = ["vim"]
 
 [languageServers.gopls]
-cmd = ["gopls"]
-languages = ["go", "gomod", "gowork", "gotmpl"]
-workspaceMarkers = ["go.work", "go.mod", ".git"]
+enabled = true
 
 [languageServers.pyright]
-cmd = ["pyright-langserver", "--stdio"]
-languages = ["python"]
-workspaceMarkers = [
-    "pyrightconfig.json",
-    "pyproject.toml",
-    "setup.py",
-    "setup.cfg",
-    "requirements.txt",
-    "Pipfile",
-    ".git",
-]
+enabled = true
 
 [languageServers.rust_analyzer]
-# System package (official `extra` repo via paru, layer 4) — NOT the rustup
-# component/proxy. See dependencies/packages.toml. Approximation: lspconfig
-# additionally recognizes rust-project.json and resolves Cargo workspace
-# roots via `cargo metadata`; workspaceMarkers cannot reproduce that.
-cmd = ["rust-analyzer"]
-languages = ["rust"]
-workspaceMarkers = ["Cargo.toml", ".git"]
+enabled = true
 
 [languageServers.tombi]
-cmd = ["tombi", "lsp"]
-languages = ["toml"]
-workspaceMarkers = ["tombi.toml", "pyproject.toml", ".git"]
+enabled = true
 
 [languageServers.vtsls]
-cmd = ["vtsls", "--stdio"]
-languages = ["typescript", "javascript", "typescriptreact", "javascriptreact"]
-workspaceMarkers = [
-    ["package-lock.json", "yarn.lock", "pnpm-lock.yaml", "bun.lockb", "bun.lock"],
-    ".git",
-]
-
-[languageServers.clangd]
-# Installed via pacman `clang` (layer 1). kakehashi does not attach to C/C++
-# buffers in nvim (not in vimrc.kakehashi_config filetypes); this entry
-# serves C/C++ in other editors and the kakehashi CLI. lspconfig's
-# c.doxygen/cpp.doxygen filetypes are nvim-specific and have no
-# tree-sitter language id, so they are not listed.
-cmd = ["clangd"]
-languages = ["c", "cpp", "objc", "objcpp", "cuda"]
-workspaceMarkers = [
-    ".clangd",
-    ".clang-tidy",
-    ".clang-format",
-    "compile_commands.json",
-    "compile_flags.txt",
-    "configure.ac",
-    ".git",
-]
+enabled = true
