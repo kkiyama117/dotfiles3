@@ -22,19 +22,15 @@
       "type": "array",
       "items": {
         "type": "object",
-        "description": "dpp.vim MultipleHook (denops/dpp/base/config.ts): plugins required; hooks_file / hook_add / hook_source / hook_post_source optional",
         "properties": {
           "plugins": {
             "type": "array",
             "items": { "type": "string" },
             "description": "plugin names the hooks apply to"
           },
-          "hooks_file": { "type": "string" },
-          "hook_add": { "type": "string" },
-          "hook_source": { "type": "string" },
-          "hook_post_source": { "type": "string" }
+          "hooks_file": { "type": "string" }
         },
-        "required": ["plugins"],
+        "required": ["plugins", "hooks_file"],
         "additionalProperties": false
       }
     }
@@ -99,13 +95,7 @@
         "dummy_commands": { "type": "array", "items": { "type": "string" } },
         "dummy_mappings": {
           "type": "array",
-          "items": {
-            "type": "array",
-            "minItems": 2,
-            "maxItems": 2,
-            "items": { "type": "string" },
-            "prefixItems": [{ "type": "string" }, { "type": "string" }]
-          }
+          "items": { "type": "array", "items": { "type": "string" }, "prefixItems": [{ "type": "string" }, { "type": "string" }] }
         },
         "external_commands": { "type": ["string", "array"], "items": { "type": "string" } },
         "script_type": { "type": "string" },
