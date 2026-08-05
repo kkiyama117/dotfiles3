@@ -1,0 +1,18 @@
+{
+  "name": "tree-sitter-dpp",
+  "version": "0.1.0",
+  "grammars": [
+    {
+      "name": "dpp",
+      "camelcase": "Dpp",
+      "scope": "source.dpp",
+      "file-types": ["dpp"],
+      "highlights": ["queries/dpp/highlights.scm"],
+      "injections": ["queries/dpp/injections.scm"]
+    }
+  ],
+  "metadata": {
+    "version": "0.1.0",
+    "description": "dpp.vim hooks file (*.dpp): 'almost lua' with `-- name {{{` ... `-- }}}` hook blocks (mirrors dpp.vim's parseHooksFile)."
+  }
+}

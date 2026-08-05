@@ -1,0 +1,116 @@
+{
+  "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/grammar.schema.json",
+  "name": "dpp",
+  "rules": {
+    "document": {
+      "type": "REPEAT",
+      "content": {
+        "type": "CHOICE",
+        "members": [
+          {
+            "type": "SYMBOL",
+            "name": "hook_block"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "line"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "end_marker_line"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "wrapper_start_line"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "wrapper_end_line"
+          }
+        ]
+      }
+    },
+    "hook_block": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "start_marker_line"
+        },
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "hook_block"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "hook_line"
+              }
+            ]
+          }
+        },
+        {
+          "type": "SYMBOL",
+          "name": "end_marker_line"
+        }
+      ]
+    },
+    "start_marker_line": {
+      "type": "PATTERN",
+      "value": "[ \\t]*--[ \\t]+[0-9a-zA-Z_-]+[ \\t]*\\{\\{\\{[^\\n]*\\n"
+    },
+    "end_marker_line": {
+      "type": "PATTERN",
+      "value": "[ \\t]*--[ \\t]*\\}\\}\\}[ \\t]*\\n"
+    },
+    "line": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "PATTERN",
+          "value": "[^\\n]*"
+        },
+        {
+          "type": "STRING",
+          "value": "\n"
+        }
+      ]
+    },
+    "wrapper_start_line": {
+      "type": "PATTERN",
+      "value": "[ \\t]*lua[ \\t]*<<[ \\t]*[A-Za-z_][A-Za-z0-9_]*[ \\t]*\\n"
+    },
+    "wrapper_end_line": {
+      "type": "PATTERN",
+      "value": "[ \\t]*EOF[ \\t]*\\n"
+    },
+    "hook_line": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "line"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "wrapper_start_line"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "wrapper_end_line"
+        }
+      ]
+    }
+  },
+  "extras": [],
+  "conflicts": [],
+  "precedences": [],
+  "externals": [],
+  "inline": [],
+  "supertypes": [],
+  "reserved": {}
+}

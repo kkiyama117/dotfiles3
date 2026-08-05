@@ -1,0 +1,109 @@
+[
+  {
+    "type": "document",
+    "named": true,
+    "root": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "end_marker_line",
+          "named": true
+        },
+        {
+          "type": "hook_block",
+          "named": true
+        },
+        {
+          "type": "line",
+          "named": true
+        },
+        {
+          "type": "wrapper_end_line",
+          "named": true
+        },
+        {
+          "type": "wrapper_start_line",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "hook_block",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "end_marker_line",
+          "named": true
+        },
+        {
+          "type": "hook_block",
+          "named": true
+        },
+        {
+          "type": "hook_line",
+          "named": true
+        },
+        {
+          "type": "start_marker_line",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "hook_line",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "line",
+          "named": true
+        },
+        {
+          "type": "wrapper_end_line",
+          "named": true
+        },
+        {
+          "type": "wrapper_start_line",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "line",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "\n",
+    "named": false
+  },
+  {
+    "type": "end_marker_line",
+    "named": true
+  },
+  {
+    "type": "start_marker_line",
+    "named": true
+  },
+  {
+    "type": "wrapper_end_line",
+    "named": true
+  },
+  {
+    "type": "wrapper_start_line",
+    "named": true
+  }
+]
