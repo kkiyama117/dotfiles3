@@ -1,0 +1,50 @@
+---
+profiles: {
+  #  remote:
+  #    client:
+  #      read_local_logs: false
+  #    shared:
+  #      use_unix_socket: false
+  #      host: localhost
+  #      port: '8080'
+  #      daemon_cert: ~/.local/share/pueue/certs/remote_daemon.cert
+  #      shared_secret_path: ~/.local/share/pueue/remote_shared_secret
+}
+client:
+  restart_in_place: false
+  read_local_logs: true
+  show_confirmation_questions: false
+  edit_mode: toml
+  show_expanded_aliases: false
+  dark_mode: true
+  max_status_lines: null
+  status_time_format: '%H:%M:%S'
+  status_datetime_format: |-
+    %Y-%m-%d
+    %H:%M:%S
+daemon:
+  default_parallel_tasks: 1
+  pause_group_on_failure: false
+  pause_all_on_failure: false
+  compress_state_file: false
+  callback: null
+  env_vars: {}
+  callback_log_lines: 10
+  shell_command: null
+shared:
+  pueue_directory: $XDG_DATA_HOME/pueue
+  runtime_directory: null
+  alias_file: null
+  use_unix_socket: true
+  unix_socket_path: $XDG_DATA_HOME/pueue/pueue_main.socket
+  unix_socket_permissions: 448
+  host: 127.0.0.1
+  port: '6924'
+  pid_path: null
+  daemon_cert: $XDG_DATA_HOME/pueue/certs/daemon.cert
+  daemon_key: $XDG_DATA_HOME/pueue/certs/daemon.key
+  shared_secret_path: $XDG_DATA_HOME/pueue/shared_secret
+  daemon_cert: null
+  daemon_key: null
+  shared_secret_path: null
+
