@@ -45,7 +45,7 @@ not_found_auto_install = false
 paranoid = true
 
 # see Tasks Runner for more information
-task_output = "prefix"
+task.output = "prefix"
 
 disable_default_registry = true
 # disable specific tools, generally used to turn off core tools
