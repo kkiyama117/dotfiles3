@@ -45,7 +45,7 @@ not_found_auto_install = false
 paranoid = true
 
 # see Tasks Runner for more information
-task_output = "prefix"
+task.output = "prefix"
 
 disable_default_registry = true
 # disable specific tools, generally used to turn off core tools
@@ -66,6 +66,16 @@ pnpm = "latest"
 usage = "latest" # This is only for `mise completion`
 "aqua:earendil-works/pi" = "latest" # `PI` agent
 "aqua:ogulcancelik/herdr" = "latest" # terminal workspace manager
+"npm:pi-acp" = "latest" # ACP (Agent Communication Protocol) adapter for pi (TypeScript/npm package)
+# LSP servers & tools (replaces mason.nvim; keep in sync with
+# bridged_servers in vimrc.kakehashi_config of the nvim config and with
+# languageServers in dot_config/kakehashi/kakehashi.toml)
+"go:golang.org/x/tools/gopls" = "latest" # gopls
+"npm:pyright" = "latest" # pyright-langserver
+"npm:@vtsls/language-server" = "latest" # vtsls (npm:vtsls was unpublished)
+"cargo:emmylua_ls" = "latest" # emmylua_ls (Rust EmmyLua analyzer; binary: emmylua_ls)
+"aqua:tombi-toml/tombi" = "latest" # tombi
+"aqua:JohnnyMorganz/StyLua" = "latest" # stylua (Lua formatter)
 
 [settings.npm]
 package_manager = "pnpm"

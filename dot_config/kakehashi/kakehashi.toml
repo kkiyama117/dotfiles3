@@ -1,0 +1,74 @@
+# kakehashi user config (standard location).
+#
+# This is the kakehashi server's default user config:
+#   $XDG_CONFIG_HOME/kakehashi/kakehashi.toml  (~/.config/kakehashi/kakehashi.toml)
+# It is a symlink to this repo-owned file, so the vimrc repo stays the
+# source of truth (and `kakehashi format` / `kakehashi diagnose` from the
+# shell pick up the same config).
+#
+# It is ALSO passed explicitly as a --config-file layer (after the
+# kakehashi-lspconfig fragments, before the generated library.toml) so it
+# merges in order — see after/lsp/kakehashi.lua. Later layers win,
+# per-server configs are deep-merged (settings via deep JSON merge —
+# kakehashi src/config/merge.rs).
+#
+# The fragments ship with `enabled = false`; this file turns on exactly the
+# bridged servers this vimrc uses (keep in sync with
+# lua/kakehashi/config.lua `bridged_servers` and the mise installs in
+# ~/.config/mise/config.toml), and carries the per-server settings that the
+# fork previously inherited from lua/hooks/nvim-lspconfig.dpp.
+#
+# Dynamic values (emmylua workspace.library from the running nvim runtime)
+# are generated into $NVIM_CACHE_HOME/kakehashi/library.toml by
+# after/lsp/kakehashi.lua.
+
+# denols — disable nest.land imports (nvim-lspconfig#2793); restore the
+# root markers the fork inherited (the fragment's root_dir was dynamic).
+[languageServers.denols]
+enabled = true
+workspaceMarkers = ["deno.json", "deno.jsonc", "deps.ts"]
+
+[languageServers.denols.settings.deno]
+lint = true
+unstable = true
+
+[languageServers.denols.settings.deno.suggest.imports]
+autoDiscover = false
+
+[languageServers.denols.settings.deno.suggest.imports.hosts]
+"https://x.nest.land" = false
+
+# emmylua_ls — settings under the `emmylua` namespace (NOT `Lua`, which
+# belongs to sumneko/lua-language-server). workspace.library is generated
+# at runtime (library.toml) — it must stay a FLAT array of path strings.
+[languageServers.emmylua_ls]
+enabled = true
+
+# Prefer treesitter (lua + luadoc injections) over LSP semantic tokens for
+# Lua highlighting — see
+# https://blog.atusy.net/2025/07/15/prefer-luadoc-to-luals-semantictokens
+# (applies to `*.dpp` hook files too; kakehashi's own tokens are disabled
+# per-buffer in lua/hooks/kakehashi.nvim.dpp on_attach).
+[languageServers.emmylua_ls.settings.emmylua.semanticTokens]
+enable = false
+
+[languageServers.emmylua_ls.settings.emmylua.runtime]
+version = "LuaJIT"
+
+[languageServers.emmylua_ls.settings.emmylua.diagnostics]
+globals = ["vim"]
+
+[languageServers.gopls]
+enabled = true
+
+[languageServers.pyright]
+enabled = true
+
+[languageServers.rust_analyzer]
+enabled = true
+
+[languageServers.tombi]
+enabled = true
+
+[languageServers.vtsls]
+enabled = true

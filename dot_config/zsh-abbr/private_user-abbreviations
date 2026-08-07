@@ -33,6 +33,7 @@ abbr "gf"="git fetch"
 abbr "gp"="git pull"
 abbr "gP"="git push"
 abbr "gs"="git switch"
+abbr "gS"="git status"
 abbr "gm"="git merge"
 
 #ls
@@ -50,6 +51,7 @@ abbr "mv"="mv -i"
 # nvim
 abbr "vi"="nvim"
 abbr "vim"="nvim"
+abbr "dnvim"="NVIM_DEBUG=true nvim"
 
 # rm
 abbr "rm"="rm -i"
@@ -61,3 +63,4 @@ abbr "tree"="tre"
 
 # zoxide
 abbr "cd"="z"
+

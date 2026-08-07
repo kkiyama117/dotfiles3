@@ -54,6 +54,12 @@ README.md
 .config/go/*
 !.config/go/.keep
 
+# Herdr: log of herdr isn't needed to manage
+.config/herdr/*
+!.config/herdr/config.toml
+!.config/herdr/config.yml
+
+
 # SSH: chezmoi manages ONLY ~/.ssh/config. Everything else under ~/.ssh/
 # (private/public keys, known_hosts, config.d/*) is volume-owned and must
 # never be touched by chezmoi. Exclude the whole tree, then re-include config.
@@ -79,3 +85,4 @@ README.md
 .claude
 {{ if not (eq .runtime "container") }}.pi{{ end }}
 .superpowers
+

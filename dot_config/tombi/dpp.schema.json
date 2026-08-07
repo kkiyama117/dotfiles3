@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://localhost/tombi/dpp.schema.json",
+  "title": "dpp-ext-toml config",
+  "description": "TOML configuration loaded by dpp-ext-toml (dpp.vim). Shape derived from dpp-ext-toml `Toml` type and dpp.vim `Plugin` type (denops/dpp/types.ts). All plugin fields are optional: dpp-ext-toml derives `name` from the repo basename and dpp fills remaining defaults.",
+  "type": "object",
+  "properties": {
+    "plugins": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/plugin" }
+    },
+    "ftplugins": {
+      "type": "object",
+      "description": "filetype -> Vimscript lines",
+      "additionalProperties": { "type": "string" }
+    },
+    "hooks_file": {
+      "type": "string",
+      "description": "path to a *.dpp hooks file for the whole config"
+    },
+    "multiple_hooks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "plugins": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "plugin names the hooks apply to"
+          },
+          "hooks_file": { "type": "string" }
+        },
+        "required": ["plugins", "hooks_file"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "plugin": {
+      "type": "object",
+      "description": "dpp.vim Plugin (denops/dpp/types.ts) — every field optional; name derived from repo basename",
+      "properties": {
+        "repo": { "type": "string", "description": "Git repository (owner/repo); dpp-protocol-git clones it" },
+        "name": { "type": "string", "description": "plugin name; defaults to the repo basename" },
+        "url": { "type": "string" },
+        "path": { "type": "string", "description": "local path plugin" },
+        "protocol": { "type": "string", "description": "dpp protocol name (git/http/...) overriding the repo URL scheme" },
+        "rev": { "type": "string", "description": "commit/tag/branch to check out" },
+        "rtp": { "type": "string", "description": "subdirectory added to runtimepath" },
+        "group": { "type": ["string", "array"], "items": { "type": "string" } },
+        "depends": { "type": ["string", "array"], "items": { "type": "string" }, "description": "plugins loaded before this one" },
+        "description": { "type": "string" },
+        "if": { "type": ["boolean", "string"], "description": "condition (expression) for enabling" },
+        "lazy": { "type": "boolean" },
+        "merged": { "type": "boolean", "description": "merge into the parent plugin" },
+        "local": { "type": "boolean" },
+        "sourced": { "type": "boolean" },
+        "priority": { "type": "integer" },
+        "on_cmd": { "type": ["string", "array"], "items": { "type": "string" } },
+        "on_event": { "type": ["string", "array"], "items": { "type": "string" } },
+        "on_ft": { "type": ["string", "array"], "items": { "type": "string" } },
+        "on_func": { "type": ["string", "array"], "items": { "type": "string" } },
+        "on_if": { "type": ["string", "array"], "items": { "type": "string" } },
+        "on_lua": { "type": ["string", "array"], "items": { "type": "string" } },
+        "on_map": {
+          "type": ["string", "array", "object"],
+          "items": { "type": "string" },
+          "additionalProperties": {
+            "type": ["string", "array"],
+            "items": { "type": "string" }
+          }
+        },
+        "on_path": { "type": ["string", "array"], "items": { "type": "string" } },
+        "on_post_source": { "type": ["string", "array"], "items": { "type": "string" } },
+        "on_root": { "type": ["string", "array"], "items": { "type": "string" } },
+        "on_source": { "type": ["string", "array"], "items": { "type": "string" } },
+        "hook_add": { "type": "string" },
+        "hook_source": { "type": "string" },
+        "hook_post_source": { "type": "string" },
+        "hook_pre_update": { "type": "string" },
+        "hook_post_update": { "type": "string" },
+        "hook_done_update": { "type": "string" },
+        "hook_depends_update": { "type": "string" },
+        "hook_post_check_update": { "type": "string" },
+        "lua_add": { "type": "string" },
+        "lua_source": { "type": "string" },
+        "hooks_file": { "type": ["string", "array"], "items": { "type": "string" } },
+        "ftplugin": {
+          "type": "object",
+          "description": "filetype -> Vimscript lines",
+          "additionalProperties": { "type": "string" }
+        },
+        "merge_ftdetect": { "type": "string" },
+        "dummy_commands": { "type": "array", "items": { "type": "string" } },
+        "dummy_mappings": {
+          "type": "array",
+          "items": { "type": "array", "items": { "type": "string" }, "prefixItems": [{ "type": "string" }, { "type": "string" }] }
+        },
+        "external_commands": { "type": ["string", "array"], "items": { "type": "string" } },
+        "script_type": { "type": "string" },
+        "augroup": { "type": "string" },
+        "denops_wait": { "type": "boolean", "description": "wait for denops to start before sourcing (used by ddc/ddu ecosystem)" },
+        "extAttrs": { "description": "extension-specific attributes (dpp.vim: unknown)" },
+        "protocolAttrs": { "description": "protocol-specific attributes (dpp.vim: unknown)" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

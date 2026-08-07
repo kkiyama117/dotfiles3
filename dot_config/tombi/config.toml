@@ -1,0 +1,24 @@
+# User-level tombi configuration.
+#
+# Discovery (tombi >= 1.2, rust/serde_tombi/src/config.rs):
+#   1. project config walk-up per document: `.tombi.toml`, `tombi.toml`,
+#      `.config/tombi.toml`, then `pyproject.toml` with `[tool.tombi]`
+#      (first match wins, walk continues at parent dirs)
+#   2. else user config: `$XDG_CONFIG_HOME/tombi/config.toml` or
+#      `~/.config/tombi/config.toml`
+#   3. else built-in defaults
+#
+# A project config REPLACES this file entirely (no merge) — if a repo adds
+# `tombi.toml`, the schemas below stop applying inside it.
+
+# dpp-ext-toml config files (`deps/*.toml` of the nvim config) get the
+# local dpp schema: key completion, hover, type + unknown-key validation
+# of `[[plugins]]` entries (schema derived from dpp.vim `Plugin` type and
+# dpp-ext-toml `Toml` type).
+#
+# `path` is resolved relative to this config file's directory.
+# `include` globs match against the document path (absolute in the LSP),
+# so the pattern below pins the nvim config's deps directory.
+[[schemas]]
+path = "dpp.schema.json"
+include = ["**/.config/nvim/deps/*.toml"]

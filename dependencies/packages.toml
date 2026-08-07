@@ -170,7 +170,8 @@ description = "Install binaries"
 name = "kakehashi"
 manager = "custom"
 layer = 3
-has_configs = false
+# `~/.config/kakehashi/kakehashi.toml`
+has_configs = true
 description = "language-server bridge; latest x86_64 GNU/Linux release binary installed to ~/.local/bin during the container build"
 
 [[tool]]
@@ -259,6 +260,13 @@ has_configs = true
 description = "TUI for git"
 
 [[tool]]
+name = "libskk"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "SKK Japanese input engine"
+
+[[tool]]
 name = "man-db"
 manager = "paru"
 layer = 4
@@ -295,10 +303,31 @@ has_configs = false
 description = "grep alternative"
 
 [[tool]]
+name = "rust-analyzer"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "Rust language server; official `extra` repo prebuilt (user-selected over cargo-binstall/mise; spec 24 inapplicable — no rust toolchain dependency)"
+
+[[tool]]
 name = "rsync"
 manager = "paru"
 layer = 4
 has_configs = false
+
+[[tool]]
+name = "skk-jisyo"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "SKK Jisyo"
+
+[[tool]]
+name = "skktools"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "SKK utilities"
 
 [[tool]]
 name = "skim"
@@ -353,6 +382,20 @@ has_configs = true
 description = "notification daemon"
 
 [[tool]]
+name = "xsel"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "clipboard"
+
+[[tool]]
+name = "xclip"
+manager = "paru"
+layer = 4
+has_configs = false
+description = "clipboard"
+
+[[tool]]
 name = "zoxide"
 manager = "paru"
 layer = 4
@@ -389,12 +432,12 @@ layer = 6
 has_configs = false
 description = "Rust task runner and build tool."
 
-#[[tool]]
-#name = "cargo-watch"
-#manager = "cargo"
-#layer = 6
-#has_configs = false
-#description = "Cargo Watch watches over your project's source for changes, and runs Cargo commands when they occur."
+# [[tool]]
+# name = "cargo-watch"
+# manager = "cargo"
+# layer = 6
+# has_configs = false
+# description = "Cargo Watch watches over your project's source for changes, and runs Cargo commands when they occur."
 
 [[tool]]
 name = "cargo-zigbuild"
@@ -411,11 +454,11 @@ layer = 6
 has_configs = false
 description = "Rust version `goreleaser`"
 
-#[[tool]]
-#name = "mdbook"
-#manager = "pacman"
-#category = "rust-dev-support"
-#description = "book/doc generator"
+# [[tool]]
+# name = "mdbook"
+# manager = "pacman"
+# category = "rust-dev-support"
+# description = "book/doc generator"
 
 [[tool]]
 name = "tre"
@@ -424,30 +467,30 @@ layer = 6
 has_configs = false
 description = "A modern alternative to the tree command"
 
-#[[tool]]
-#name = "t-rec"
-#manager = "cargo"
-#layer = 6
-#has_configs = false
+# [[tool]]
+# name = "t-rec"
+# manager = "cargo"
+# layer = 6
+# has_configs = false
 ## cargo install -f t-rec --version 0.9.0-preview1
-#description = "recorder of shell"
+# description = "recorder of shell"
 
 ## C: Glue packages to bind rust with other toolchains or languages
 
 ### C
-#[[tool]]
-#name = "cbindgen"
-#manager = "cargo"
-#layer = 6
-#has_configs = false
-#description = "C header generation"
+# [[tool]]
+# name = "cbindgen"
+# manager = "cargo"
+# layer = 6
+# has_configs = false
+# description = "C header generation"
 
 ### LLVM
-#[[tool]]
-#name = "cargo-llvm-cov"
-#manager = "cargo"
-#layer = 6
-#has_configs = false
+# [[tool]]
+# name = "cargo-llvm-cov"
+# manager = "cargo"
+# layer = 6
+# has_configs = false
 
 ### python
 [[tool]]
@@ -458,31 +501,31 @@ has_configs = false
 description = "runtime-manual cargo tool; build & publish Rust-Python extensions"
 
 ### Wasm (WebAssembly)
-#[[tool]]
-#name = "trunk"
-#manager = "cargo"
-#layer = 6
-#has_configs = false
-#description = "Rust WASM app bundler"
+# [[tool]]
+# name = "trunk"
+# manager = "cargo"
+# layer = 6
+# has_configs = false
+# description = "Rust WASM app bundler"
 
-#[[tool]]
-#name = "wasm-bindgen"
-#manager = "cargo"
-#layer = 6
-#has_configs = false
-#description= "arch package `wasm-bindgen` provides the cli (`/usr/bin/wasm-bindgen`); was `wasm-bindgen-cli` under nixpkgs"
+# [[tool]]
+# name = "wasm-bindgen"
+# manager = "cargo"
+# layer = 6
+# has_configs = false
+# description= "arch package `wasm-bindgen` provides the cli (`/usr/bin/wasm-bindgen`); was `wasm-bindgen-cli` under nixpkgs"
 
-#[[tool]]
-#name = "wasm-pack"
-#manager = "cargo"
-#layer = 6
-#has_configs = false
+# [[tool]]
+# name = "wasm-pack"
+# manager = "cargo"
+# layer = 6
+# has_configs = false
 
 # Layer -1: Configs only for migration with the old dotfiles.
 #           These programs may be moved to a different layer in the future.
 [[tool]]
 name = "aria2"
-manager = "migrated" # "pacman" if it used
+manager = "migrated"  # "pacman" if it used
 layer = -1
 # `~/.config/aria2/aria2.toml`
 has_configs = true
@@ -490,7 +533,7 @@ description = "download files concurrently"
 
 [[tool]]
 name = "fcitx5"
-manager = "migrated" # "pacman" if it used
+manager = "migrated"  # "pacman" if it used
 layer = -1
 # `~/.config/fcitx5/` and  `~/.config/environment.d/` to use it in desktop
 has_configs = true
@@ -498,7 +541,7 @@ description = "download files concurrently"
 
 [[tool]]
 name = "gtk"
-manager = "migrated" # "pacman" if it used
+manager = "migrated"  # "pacman" if it used
 layer = -1
 # `~/.config/gtk-3.0/settings.ini`
 has_configs = true
@@ -506,7 +549,7 @@ description = "GTK"
 
 [[tool]]
 name = "rofi"
-manager = "migrated" # "paru" if it used
+manager = "migrated"  # "paru" if it used
 layer = -1
 # `~/.config/rofi`
 has_configs = true
@@ -514,7 +557,7 @@ description = "display and focus switcher"
 
 [[tool]]
 name = "kitty"
-manager = "migrated" # "pacman" if it used
+manager = "migrated"  # "pacman" if it used
 layer = -1
 # `~/.config/kitty/kitty.conf`
 has_configs = true
@@ -522,92 +565,93 @@ description = "Terminal emulator"
 
 [[tool]]
 name = "X11"
-manager = "migrated" # "pacman" if it used
+manager = "migrated"  # "pacman" if it used
 layer = -1
 # `~/.config/X11` and `~/.cache/X11`
 has_configs = true
 description = "X11 config"
 
-#[[tool]]
-#name = "kitty"
+# [[tool]]
+# name = "kitty"
 ## (and `kitty-shell-integration`, `kitty-terminfo`)
-#manager = "migrated" # "paru" if it used
-#layer = 4
+# manager = "migrated" # "paru" if it used
+# layer = 4
 ## `~/.kitty/kitty.conf`
-#has_configs = true
-#description = "terminal emulator. Now it is only installed for host, and not for container."
+# has_configs = true
+# description = "terminal emulator. Now it is only installed for host, and not for container."
 
 # ======================================
 # Not classified
 # TODO: make issue to classify them, and do it.
 #
 #
-#[[tool]]
-#name = "evcxr_repl"
-#manager = "pacman"
-#category = "rust-cli"
-#description = "Rust REPL"
-#comment = "Arch package `evcxr_repl` provides binary `evcxr`; was `evcxr` under nixpkgs"
+# [[tool]]
+# name = "evcxr_repl"
+# manager = "pacman"
+# category = "rust-cli"
+# description = "Rust REPL"
+# comment = "Arch package `evcxr_repl` provides binary `evcxr`; was `evcxr` under nixpkgs"
 
-#[[tool]]
-#name = "bootimage"
-#manager = "skipped"
-#reason = "embedded-host-only"
-#description = "osdev bootloader image builder"
+# [[tool]]
+# name = "bootimage"
+# manager = "skipped"
+# reason = "embedded-host-only"
+# description = "osdev bootloader image builder"
 #
-#[[tool]]
-#name = "bpf-linker"
-#manager = "skipped"
-#reason = "embedded-host-only"
-#description = "eBPF linker"
+# [[tool]]
+# name = "bpf-linker"
+# manager = "skipped"
+# reason = "embedded-host-only"
+# description = "eBPF linker"
 #
-#[[tool]]
-#name = "elf2uf2-rs"
-#manager = "skipped"
-#reason = "embedded-host-only"
-#description = "RP2040 firmware packager"
+# [[tool]]
+# name = "elf2uf2-rs"
+# manager = "skipped"
+# reason = "embedded-host-only"
+# description = "RP2040 firmware packager"
 #
-#[[tool]]
-#name = "flip-link"
-#manager = "skipped"
-#reason = "embedded-host-only"
-#description = "cortex-m linker"
+# [[tool]]
+# name = "flip-link"
+# manager = "skipped"
+# reason = "embedded-host-only"
+# description = "cortex-m linker"
 #
-#[[tool]]
-#name = "xwin"
-#manager = "skipped"
-#reason = "embedded-host-only"
-#description = "Windows SDK fetcher (cross-compile only)"
+# [[tool]]
+# name = "xwin"
+# manager = "skipped"
+# reason = "embedded-host-only"
+# description = "Windows SDK fetcher (cross-compile only)"
 #
-#[[tool]]
-#name = "cargo-script"
-#manager = "skipped"
-#reason = "on-demand"
+# [[tool]]
+# name = "cargo-script"
+# manager = "skipped"
+# reason = "on-demand"
 #
-#[[tool]]
-#name = "cargo-dist"
-#manager = "skipped"
-#reason = "on-demand"
+# [[tool]]
+# name = "cargo-dist"
+# manager = "skipped"
+# reason = "on-demand"
 #
-#[[tool]]
-#name = "create-tauri-app"
-#manager = "skipped"
-#reason = "on-demand"
+# [[tool]]
+# name = "create-tauri-app"
+# manager = "skipped"
+# reason = "on-demand"
 #
-#[[tool]]
-#name = "git-ignore-generator"
-#manager = "skipped"
-#reason = "on-demand"
+# [[tool]]
+# name = "git-ignore-generator"
+# manager = "skipped"
+# reason = "on-demand"
 #
-#[[tool]]
-#name = "cargo-update"
-#manager = "skipped"
-#reason = "obsolete"
-#description = "the entire `cargo install` workflow is replaced by nix/paru, so the self-updater is no longer relevant"
+# [[tool]]
+# name = "cargo-update"
+# manager = "skipped"
+# reason = "obsolete"
+# description = "the entire `cargo install` workflow is replaced by nix/paru, so the self-updater is no longer relevant"
 #
-#[[tool]]
-#name = "satysfi-language-server"
-#manager = "skipped"
-#reason = "local-source"
-#description = "local path checkout, not a published artifact"
+# [[tool]]
+# name = "satysfi-language-server"
+# manager = "skipped"
+# reason = "local-source"
+# description = "local path checkout, not a published artifact"
 #
+

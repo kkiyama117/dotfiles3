@@ -18,7 +18,7 @@ def test_kakehashi_is_custom_layer_3_inventory() -> None:
         "name": "kakehashi",
         "manager": "custom",
         "layer": 3,
-        "has_configs": False,
+        "has_configs": True,
         "description": (
             "language-server bridge; latest x86_64 GNU/Linux release binary "
             "installed to ~/.local/bin during the container build"
@@ -27,7 +27,8 @@ def test_kakehashi_is_custom_layer_3_inventory() -> None:
 
 
 def test_kakehashi_is_not_mise_managed() -> None:
-    assert "kakehashi" not in MISE_CONFIG.read_text()
+    data = tomllib.loads(MISE_CONFIG.read_text())
+    assert "kakehashi" not in data["tools"]
 
 
 def test_kakehashi_container_specs_are_synchronized() -> None:

@@ -15,7 +15,7 @@ light_name = "catppuccin-latte"
 # red = "#ff6188"
 # green = "#a6e3a1"
 
-name = "terminal"
+name = "tokyo-night"
 [terminal]
 # Empty means $SHELL, then /bin/sh.
 # default_shell = ""

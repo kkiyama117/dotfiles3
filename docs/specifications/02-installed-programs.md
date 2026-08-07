@@ -122,7 +122,7 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `cargo-outdated` | cargo | no | Detect outdated Rust crate dependencies |
 | `topgrade` | cargo | yes | multi-package-manager updater; build-time cargo tool (signed prebuilt via cargo-binstall --only-signed) |
 | `cargo-binstall` | custom | no | Install binaries |
-| `kakehashi` | custom | no | language-server bridge; latest x86_64 GNU/Linux release binary installed to ~/.local/bin during the container build |
+| `kakehashi` | custom | yes | language-server bridge; latest x86_64 GNU/Linux release binary installed to ~/.local/bin during the container build |
 
 #### Layer 4 — install list
 
@@ -134,19 +134,24 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `fd` | paru | no | Alternative `find` |
 | `github-cli` | paru | yes | Github commands |
 | `lazygit` | paru | yes | TUI for git |
+| `libskk` | paru | no | SKK Japanese input engine |
 | `man-db` | paru | no | man command |
 | `neovim-git` | paru | no | neovim built from upstream git master (AUR); first concrete AUR package |
 | `pastel` | paru | no | color utility |
 | `pueue` | paru | yes | task queue daemon |
 | `ripgrep` | paru | no | grep alternative |
 | `rsync` | paru | no |  |
+| `rust-analyzer` | paru | no | Rust language server; official `extra` repo prebuilt (user-selected over cargo-binstall/mise; spec 24 inapplicable — no rust toolchain dependency) |
 | `skim` | paru | no | fzf alternative written in Rust |
+| `skk-jisyo` | paru | no | SKK Jisyo |
+| `skktools` | paru | no | SKK utilities |
 | `starship` | paru | yes | zsh prompt theme manager |
 | `tealdeer` | paru | yes | tldr alternative |
 | `tmux` | paru | no | tmux multiplexer |
 | `tree-sitter` | paru | no |  |
 | `tree-sitter-cli` | paru | no | tree-sitter command; that is used by `tree-sitter-manager.nvim` |
 | `wired` | paru | yes | notification daemon |
+| `xsel` | paru | no | clipboard |
 | `zoxide` | paru | no | Enhanced cd command |
 
 #### Layer 6 — runtime-manual (not build-installed)
