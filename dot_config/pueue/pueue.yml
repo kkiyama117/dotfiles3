@@ -44,7 +44,4 @@ shared:
   daemon_cert: $XDG_DATA_HOME/pueue/certs/daemon.cert
   daemon_key: $XDG_DATA_HOME/pueue/certs/daemon.key
   shared_secret_path: $XDG_DATA_HOME/pueue/shared_secret
-  daemon_cert: null
-  daemon_key: null
-  shared_secret_path: null
 
