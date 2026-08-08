@@ -2,6 +2,7 @@
 
 **Date:** 2026-08-08
 **Status:** open
+**GitHub issue:** https://github.com/kkiyama117/dotfiles3/issues/13
 **Related:** [design](../specifications/implementations/2026-08-08-apptainer-remote-design.md)
 
 ## Context
