@@ -52,7 +52,11 @@
           "named": true
         },
         {
-          "type": "start_marker_line",
+          "type": "lua_start_marker_line",
+          "named": true
+        },
+        {
+          "type": "viml_start_marker_line",
           "named": true
         }
       ]
@@ -95,7 +99,11 @@
     "named": true
   },
   {
-    "type": "start_marker_line",
+    "type": "lua_start_marker_line",
+    "named": true
+  },
+  {
+    "type": "viml_start_marker_line",
     "named": true
   },
   {

@@ -34,8 +34,17 @@
       "type": "SEQ",
       "members": [
         {
-          "type": "SYMBOL",
-          "name": "start_marker_line"
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "lua_start_marker_line"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "viml_start_marker_line"
+            }
+          ]
         },
         {
           "type": "REPEAT",
@@ -59,13 +68,17 @@
         }
       ]
     },
-    "start_marker_line": {
+    "lua_start_marker_line": {
       "type": "PATTERN",
-      "value": "[ \\t]*--[ \\t]+[0-9a-zA-Z_-]+[ \\t]*\\{\\{\\{[^\\n]*\\n"
+      "value": "[ \\t]*(?:--|\")[ \\t]+lua_[0-9a-zA-Z_-]*[ \\t]*\\{\\{\\{[^\\n]*\\n"
+    },
+    "viml_start_marker_line": {
+      "type": "PATTERN",
+      "value": "[ \\t]*(?:--|\")[ \\t]+[0-9a-zA-Z_-]+[ \\t]*\\{\\{\\{[^\\n]*\\n"
     },
     "end_marker_line": {
       "type": "PATTERN",
-      "value": "[ \\t]*--[ \\t]*\\}\\}\\}[ \\t]*\\n"
+      "value": "[ \\t]*(?:--|\")[ \\t]*\\}\\}\\}[ \\t]*\\n"
     },
     "line": {
       "type": "SEQ",
