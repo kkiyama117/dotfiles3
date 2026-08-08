@@ -59,7 +59,6 @@ README.md
 !.config/herdr/config.toml
 !.config/herdr/config.yml
 
-
 # SSH: chezmoi manages ONLY ~/.ssh/config. Everything else under ~/.ssh/
 # (private/public keys, known_hosts, config.d/*) is volume-owned and must
 # never be touched by chezmoi. Exclude the whole tree, then re-include config.
@@ -70,7 +69,6 @@ README.md
 # So we unmanage it in chezmoi.
 .config/zsh/.zcompdump*
 .config/zsh/.zcompcache
-.config/zsh/.zsh_history
 .config/zsh/.zshenv
 
 # Self bind-mount target (chezmoi source root)
@@ -90,8 +88,6 @@ README.md
 .config/mozc
 .config/yaskkserv2
 .config/systemd/user/yaskkserv2.service
-.config/dmux
-.dmux
 
 # tmux: host-local config, intentionally not managed
 .config/tmux
@@ -109,21 +105,7 @@ README.md
 
 # Backups / superseded files
 .config/npm
-.config/starship/*
-.config/pueue/pueue.yaml
 .config/pki
-
-# Old zsh layout (superseded by the new sheldon-based design)
-.config/zsh/abbreviations
-.config/zsh/bin
-.config/zsh/completions
-.config/zsh/theme
-.config/zsh/rc/integrations
-.config/zsh/rc/mise.zsh
-.config/zsh/rc/my_plugins
-.config/zsh/rc/options.zsh
-.config/zsh/.zfunc/_volta
-.config/zsh/.zfunc/_poetry
 
 # nvim secrets: superseded by env-based secrets (api_secrets.yaml)
 .config/nvim/rc/secrets.vim
