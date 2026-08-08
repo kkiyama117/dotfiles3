@@ -68,7 +68,10 @@ README.md
 
 # ZSH: compinit generates `.zcompdump` to cache the latest zsh complations.
 # So we unmanage it in chezmoi.
-.config/zsh/.zcompdump
+.config/zsh/.zcompdump*
+.config/zsh/.zcompcache
+.config/zsh/.zsh_history
+.config/zsh/.zshenv
 
 # Self bind-mount target (chezmoi source root)
 .local/share/chezmoi
@@ -77,6 +80,57 @@ README.md
 # User generated files for dotfiles
 # ============================================================
 .env
+
+# ============================================================
+# Legacy / superseded configs (kept in $HOME but never managed)
+# ============================================================
+
+# Legacy terminals / input methods (replaced by kitty / fcitx5+skk)
+.config/wezterm
+.config/mozc
+.config/yaskkserv2
+.config/systemd/user/yaskkserv2.service
+.config/dmux
+.dmux
+
+# tmux: host-local config, intentionally not managed
+.config/tmux
+
+# Syncthing: runtime state lives under ~/.local/state/syncthing
+.config/syncthing
+
+# Claude Code: only settings.json + CLAUDE.md are managed; the rest is runtime state
+.config/claude/*
+!.config/claude/settings.json
+!.config/claude/CLAUDE.md
+
+# Chezmoi's own config/state (machine-local)
+.config/chezmoi
+
+# Backups / superseded files
+.config/npm
+.config/starship/*
+.config/pueue/pueue.yaml
+.config/pki
+
+# Old zsh layout (superseded by the new sheldon-based design)
+.config/zsh/abbreviations
+.config/zsh/bin
+.config/zsh/completions
+.config/zsh/theme
+.config/zsh/rc/integrations
+.config/zsh/rc/mise.zsh
+.config/zsh/rc/my_plugins
+.config/zsh/rc/options.zsh
+.config/zsh/.zfunc/_volta
+.config/zsh/.zfunc/_poetry
+
+# nvim secrets: superseded by env-based secrets (api_secrets.yaml)
+.config/nvim/rc/secrets.vim
+
+# Tool binaries / local data
+.local/bin/hermes-fusion
+.local/share/zsh
 
 # ============================================================
 # AI-related files

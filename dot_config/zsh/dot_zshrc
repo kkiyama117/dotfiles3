@@ -11,3 +11,7 @@
   source "$sheldon_cache"
   unset cache_dir sheldon_cache sheldon_toml
 }
+
+# kimi-code — Kimi K2.7 Code CLI (AI coding agent)
+export PATH="${HOME}/.kimi-code/bin:${PATH}"
+

@@ -1,0 +1,141 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(gh repo create:*)",
+      "Bash(gh pr review:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "WebSearch",
+      "Bash(cargo check:*)",
+      "Bash(uv build:*)",
+      "Bash(rustup toolchain:*)",
+      "Bash(rustup default:*)",
+      "Bash(uv sync:*)",
+      "Bash(uv lock:*)",
+      "Bash(uv run:*)",
+      "Bash(cargo test:*)",
+      "Bash(cargo fmt:*)",
+      "Bash(cargo build:*)",
+      "Bash(git push:*)",
+      "Bash(wait)",
+      "Bash(cargo run:*)",
+      "Bash(cargo clippy *)",
+      "Bash(uv pip *)",
+      "Bash(cargo doc *)",
+      "Bash(./scripts/build.sh data_manager_core *)",
+      "Write(/home/kiyama/.claude/homunculus/instincts/personal/*.yaml)",
+      "Write(/home/kiyama/.claude/homunculus/instincts/personal/*.md)",
+      "Write(/home/kiyama/.claude/homunculus/projects/**/instincts/personal/*.yaml)",
+      "Write(/home/kiyama/.claude/homunculus/projects/**/instincts/personal/*.md)",
+      "Edit(/home/kiyama/.claude/homunculus/instincts/personal/*.yaml)",
+      "Edit(/home/kiyama/.claude/homunculus/instincts/personal/*.md)",
+      "Edit(/home/kiyama/.claude/homunculus/projects/**/instincts/personal/*.yaml)",
+      "Edit(/home/kiyama/.claude/homunculus/projects/**/instincts/personal/*.md)",
+      "Read(/home/kiyama/.claude/homunculus/**)"
+    ],
+    "deny": [],
+    "defaultMode": "auto"
+  },
+  "hooks": {
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/kiyama/.local/bin/claude-notify-hook notification"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/kiyama/.local/bin/claude-notify-hook stop"
+          }
+        ]
+      }
+    ]
+  },
+  "worktree": {
+    "baseRef": "fresh"
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "/home/kiyama/.claude/statusline-command.sh",
+    "padding": 0
+  },
+  "enabledPlugins": {
+    "rust-analyzer-lsp@claude-plugins-official": false,
+    "code-review@claude-plugins-official": false,
+    "slack@claude-plugins-official": false,
+    "commit-commands@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true,
+    "skill-creator@claude-plugins-official": true,
+    "code-simplifier@claude-plugins-official": true,
+    "ecc@ecc": true,
+    "honcho@honcho": true,
+    "dev-workflow@my-own-skills": true
+  },
+  "extraKnownMarketplaces": {
+    "ecc": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/affaan-m/everything-claude-code.git"
+      },
+      "autoUpdate": true
+    },
+    "academic-research-skills": {
+      "source": {
+        "source": "github",
+        "repo": "Imbad0202/academic-research-skills"
+      }
+    },
+    "my-own-skills": {
+      "source": {
+        "source": "directory",
+        "path": "/data/prompts/my_own_skills"
+      }
+    },
+    "honcho": {
+      "source": {
+        "source": "github",
+        "repo": "plastic-labs/claude-honcho"
+      }
+    }
+  },
+  "language": "Japanese",
+  "alwaysThinkingEnabled": true,
+  "effortLevel": "high",
+  "voice": {
+    "enabled": true,
+    "mode": "hold"
+  },
+  "skipDangerousModePermissionPrompt": true,
+  "skipWorkflowUsageWarning": true,
+  "editorMode": "vim",
+  "verbose": true,
+  "preferredNotifChannel": "kitty",
+  "remoteControlAtStartup": true,
+  "inputNeededNotifEnabled": true,
+  "agentPushNotifEnabled": true,
+  "skipAutoPermissionPrompt": true,
+  "voiceEnabled": true,
+  "disabledMcpJsonServers": [
+    "cloudflare-docs",
+    "cloudflare-workers-builds",
+    "cloudflare-workers-bindings",
+    "cloudflare-observability",
+    "clickhouse",
+    "firecrawl",
+    "magic",
+    "railway",
+    "PayPal",
+    "Stripe",
+    "supabase",
+    "vercel"
+  ]
+}

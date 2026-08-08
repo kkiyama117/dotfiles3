@@ -22,5 +22,159 @@ Host sp_B
   IdentityFile ~/.ssh/main
   ServerAliveInterval 120
 
+# General (merged from local ~/.ssh/config)
+Host aws
+  HostName hinatan.jp
+  IdentityFile ~/.ssh/main
+  # IdentityFile ~/.ssh/aws_ec2_1.pem
+  User ubuntu
+  Port 22
+  IdentitiesOnly yes
+  RequestTTY yes
+  ServerAliveInterval 60
+
+Host reborn
+  HostName reborn.colobus-powan.ts.net
+  IdentityFile ~/.ssh/main
+  User kiyama
+  Port 22
+  IdentitiesOnly yes
+  RequestTTY yes
+  ServerAliveInterval 60
+
+# Mine
+Host doll
+  HostName fd7a:115c:a1e0:ab12:4843:cd96:6248:7159
+  #HostName reborn.colobus-powan.ts.net
+  IdentityFile ~/.ssh/main
+  User kiyama
+  Port 22
+  IdentitiesOnly yes
+  RequestTTY yes
+  ServerAliveInterval 60
+
+# Home
+Host alpha
+  # HostName alpha.local.hinatan.jp
+  HostName 192.168.24.3
+  # HostName 192.168.1.3
+  IdentityFile ~/.ssh/main
+  User kiyama
+  Port 22
+  IdentitiesOnly yes
+  RequestTTY yes
+  ServerAliveInterval 60
+
+Host bravo
+  # HostName bravo.local.hinatan.jp
+  HostName 192.168.24.4
+  IdentityFile ~/.ssh/main
+  User kiyama
+  Port 22
+  IdentitiesOnly yes
+  RequestTTY yes
+  ServerAliveInterval 60
+
+Host hass
+  HostName homeassistant.local
+  IdentityFile ~/.ssh/main
+  User kiyama
+  Port 22
+  IdentitiesOnly yes
+  RequestTTY yes
+  ServerAliveInterval 60
+
+Host hass_ip
+  HostName 192.168.1.107
+  IdentityFile ~/.ssh/main
+  User kiyama
+  Port 22
+  IdentitiesOnly yes
+  RequestTTY yes
+  ServerAliveInterval 60
+
+Host colered
+  HostName 192.168.1.102
+  #HostName fd7a:115c:a1e0:ab12:4843:cd96:624f:5488
+  IdentityFile ~/.ssh/main
+  User kiyama
+  Port 22
+  IdentitiesOnly yes
+  RequestTTY yes
+  ServerAliveInterval 60
+
+Host fornax
+  HostName fornax
+  IdentityFile ~/.ssh/fornax
+  #IdentityFile ~/.ssh/miyake1
+  User hirato-ken
+  Port 22
+  IdentitiesOnly yes
+  RequestTTY yes
+  ServerAliveInterval 60
+  #ForwardX11 yes
+  #ForwardX11Trusted yes
+
+Host griffin
+  HostName griffin
+  IdentityFile ~/.ssh/miyake1
+  User kkouh
+  Port 22
+  IdentitiesOnly yes
+  RequestTTY yes
+  ServerAliveInterval 60
+  ForwardX11 yes
+  ForwardX11Trusted yes
+
+Host polaris
+  HostName polaris
+  IdentityFile ~/.ssh/miyake1
+  User miyakeken
+  Port 22
+  IdentitiesOnly yes
+  #RequestTTY yes
+  ServerAliveInterval 60
+  ForwardX11 yes
+  ForwardX11Trusted yes
+  # https://blog.bridgey.dev/2023/03/18/open-devcontainer-on-remote/
+  RemoteForward /run/user/1000/gnupg/d.7x6ks93nsxu1r8ynx6wp73oa/S.gpg-agent /run/user/1000/gnupg/d.acr6199gqekzjh8j8go4ybe8/S.gpg-agent.extra
+
+# (commented-out legacy hosts, kept from local ~/.ssh/config)
+  #Host unimap-website
+  #	HostName 49.212.196.58
+  #	User ansible
+  #	Port 12322
+  #	IdentityFile ~/.ssh/unimap
+  #	ServerAliveInterval 60
+  #Host unimap-production
+  #	HostName 133.242.225.238
+  #	User ansible
+  #	Port 12322
+  #	IdentityFile ~/.ssh/unimap
+  #	ServerAliveInterval 60
+  #  #SetEnv TERM=xterm-256color
+  #Host unimap-staging
+  #	HostName 133.242.238.71
+  #	User ansible
+  #	Port 12322
+  #	IdentityFile ~/.ssh/unimap
+  #	ServerAliveInterval 60
+  #Host unimap-dev
+  #	HostName 133.242.234.44
+  #	# User kiyama もある
+  #	User ansible
+  #	Port 12322
+  #	IdentityFile ~/.ssh/unimap
+  #	ServerAliveInterval 60
+  #Host dream
+  #  #HostName 10.232.117.135
+  #  HostName fd7a:115c:a1e0:ab12:4843:cd96:6253:e390
+  #  IdentityFile ~/.ssh/main
+  #  User kiyama
+  #  Port 22
+  #  IdentitiesOnly yes
+  #  RequestTTY yes
+  #  ServerAliveInterval 60
+
 # Include local SSH configs (especially for containers)
 Include ~/.ssh/config.d/local/*

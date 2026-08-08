@@ -96,16 +96,29 @@ apply = ["defer"]
 # Zsh local config
 #############################################################################
 # Completion fpath
-# it is loaded as a default
-#[plugins.my_fpaths]
-#local="~/.config/zsh/.zfunc"
-#apply = ["fpath"]
+# ~/.config/zsh/.zfunc を fpath に追加 (chezmoi 管理の補完関数を compinit が拾う)
+[plugins.my_fpaths]
+local="~/.config/zsh/.zfunc"
+apply = ["fpath"]
 
 # load config deferred
 [plugins.my_conf_defered]
 local="~/.config/zsh"
 use=["{options}.zsh"]
 apply = ['defer']
+
+# aliases / completion (deferred — zstyle は compinit 後に設定しても有効)
+[plugins.my_conf_defered_rc]
+local="~/.config/zsh/rc"
+use=["{aliases,completion}.zsh"]
+apply = ['defer']
+
+# Development environment (synchronous — PATH/env must be inherited by
+# child processes; same rationale as my_secrets)
+[plugins.my_conf_pre_load]
+local="~/.config/zsh/rc"
+use=["{for_development}.zsh"]
+apply = ['source']
 
 # API provider env (synchronous — child processes must inherit exports)
 [plugins.my_secrets]
