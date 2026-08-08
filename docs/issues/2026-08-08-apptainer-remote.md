@@ -1,0 +1,50 @@
+# Apptainer remote support (HPC login node)
+
+**Date:** 2026-08-08
+**Status:** open
+**Related:** [design](../specifications/implementations/2026-08-08-apptainer-remote-design.md)
+
+## Context
+
+The dotfiles container is built and run with Podman (spec 20/21). A remote
+environment — the login node of an HPC cluster, accessed via `ssh sp` — has
+only Apptainer (formerly Singularity) available. Apptainer can run OCI
+images (docker/podman images) directly, so the existing image can be reused
+without rewriting the Containerfile.
+
+## Problem
+
+The runtime contract (spec 20) depends on Podman-specific features:
+`--userns=keep-id`, `--secret` (Bitwarden), named volumes, `--init`. None of
+these exist in Apptainer. There is also no CI pipeline today: the image is
+built locally with `make build` (podman), so the remote has no way to obtain
+the image.
+
+## Decisions (from brainstorming, 2026-08-08)
+
+- Build the OCI image in GitHub Actions (BuildKit) and push to GHCR as a
+  public package; the remote pulls with `apptainer pull docker://...`.
+- Runtime model: ephemeral `apptainer run` per shell (entrypoint runs
+  `chezmoi apply` + Bitwarden auth, then `exec zsh -l`).
+- Use the remote home directly as `$HOME` (Apptainer default); named
+  volumes are replaced by binds of the remote home's XDG directories.
+- Bitwarden is used on the remote: secret files are bound to `/run/secrets`.
+- All three managed repositories (dotfiles3, pi-config, nvim_config) are
+  public, so the first clone/apply needs no credentials.
+
+## Acceptance criteria
+
+1. GitHub Actions builds the existing Containerfile unchanged (named build
+   contexts `deps` / `srcroot`, BuildKit cache mounts) and pushes
+   `ghcr.io/kkiyama117/dotfiles-manjaro:latest` (+ `:<sha>`) as a public
+   package.
+2. A wrapper script in the repo (`scripts/apptainer-run.sh`) starts an
+   interactive zsh on the remote: pull-if-missing, clone-if-missing,
+   secrets check, binds, `apptainer run ... zsh -l`.
+3. The entrypoint runs unchanged: `chezmoi apply` with Bitwarden auth from
+   `/run/secrets`, then `exec zsh -l`.
+4. The remote home receives the dotfiles (choice A: remote home as
+   `$HOME`); XDG dirs (`cargo`, `rustup`, `mise`, `gnupg`, `.ssh`) persist
+   in the remote home.
+5. Local Makefile / Containerfile / entrypoint are unchanged.
+6. A new spec (`26-apptainer-remote.md`) documents the remote contract.
