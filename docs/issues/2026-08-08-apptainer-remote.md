@@ -33,6 +33,43 @@ the image.
 - All three managed repositories (dotfiles3, pi-config, nvim_config) are
   public, so the first clone/apply needs no credentials.
 
+## Job state memo (2026-08-08)
+
+**Status:** paused — implementation deferred by the user; resume later.
+
+**Where we are:**
+
+- Brainstorming complete; design approved in conversation (2026-08-08).
+- Design doc: `docs/specifications/implementations/2026-08-08-apptainer-remote-design.md` — still **DRAFT** (plan Task 4 reviews it and marks Approved).
+- Implementation plan: `docs/plans/2026-08-08-apptainer-remote-impl.md` — committed, **not executed**.
+- GitHub issue #13 open.
+
+**Key decisions (do not re-brainsstorm):**
+
+- Build the OCI image in GitHub Actions (BuildKit) → public GHCR package; the remote pulls with `apptainer pull docker://...`.
+- Runtime: ephemeral `apptainer run` per shell; the existing entrypoint is unchanged (chezmoi apply + Bitwarden auth → `exec zsh -l`).
+- Remote home used directly as `$HOME`; the five named volumes → binds of remote-home XDG dirs.
+- Bitwarden used on the remote: files in `~/.config/dotfiles-secrets/` bound to `/run/secrets` (required — apply fails without them).
+- CI build args fixed: `HOST_UID=1000`, `HOST_GID=1000`, `USERNAME=kiyama`.
+- `XDG_RUNTIME_DIR` overridden to `$HOME/.run`; kakehashi copied out of the image once.
+- All three repos (dotfiles3, pi-config, nvim_config) are public → no auth needed for the first clone/apply.
+
+**Remaining work (per plan):**
+
+1. Task 1: `.github/workflows/build-image.yml`
+2. Task 2: `scripts/apptainer-run.sh` (+ shellcheck, dry-run tests)
+3. Task 3: `docs/specifications/26-apptainer-remote.md`
+4. Task 4: letter-A review (spec 09) → design Approved
+5. Task 5: push → CI build → GHCR public → remote verify via `ssh sp` → result-log → close #13
+
+**Pending decision:** execution mode — subagent-driven vs inline (user chooses on resume).
+
+**Operator actions needed (Task 5):**
+
+- Set GHCR package visibility to public (after the first push).
+- On the remote: place `bw_clientid` / `bw_clientsecret` / `bw_password` in `~/.config/dotfiles-secrets/` (chmod 600).
+- Remote access: `ssh sp`.
+
 ## Acceptance criteria
 
 1. GitHub Actions builds the existing Containerfile unchanged (named build
