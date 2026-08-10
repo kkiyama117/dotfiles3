@@ -13,6 +13,8 @@
 
 # cat
 abbr "cat"="bat -p --paging=never"
+# chezmoi
+abbr "chez_apply"="chezmoi apply -x externals"
 # cp
 abbr "cp"="cp -irf"
 # df
