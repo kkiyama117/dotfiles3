@@ -64,8 +64,13 @@ enabled = true
 [languageServers.pyright]
 enabled = true
 
-[languageServers.rust_analyzer]
+[languageServers.quint]
 enabled = true
+
+[languageServers.rust_analyzer]
+# rust LSP is owned by rustaceanvim (Option A) — see
+# ~/.config/nvim/deps/testing.toml. The binary stays installed via mise.
+enabled = false
 
 [languageServers.tombi]
 enabled = true

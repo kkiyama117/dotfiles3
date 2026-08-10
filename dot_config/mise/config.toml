@@ -76,6 +76,12 @@ usage = "latest" # This is only for `mise completion`
 "cargo:emmylua_ls" = "latest" # emmylua_ls (Rust EmmyLua analyzer; binary: emmylua_ls)
 "aqua:tombi-toml/tombi" = "latest" # tombi
 "aqua:JohnnyMorganz/StyLua" = "latest" # stylua (Lua formatter)
+"github:informalsystems/quint" = "latest" # quint (specification language; standalone binary from GitHub releases — npm: backend is broken by a protobufjs packaging bug)
+"npm:@informalsystems/quint-language-server" = "latest" # quint-language-server (LSP for .qnt; separate npm package from quint)
+# quint verify (Apalache) needs a modern JDK on PATH: the apalache-mc launcher
+# uses `java` from PATH (not JAVA_HOME), and the system java is 1.8 which rejects
+# the G1PeriodicGCInterval flag. See doc/agents/quint-verify-java-issue.md.
+java = "22.0.2"
 
 [settings.npm]
 package_manager = "pnpm"

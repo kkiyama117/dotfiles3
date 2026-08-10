@@ -9,9 +9,9 @@ gui:
 git:
   # delta は cargo install git-delta で入っている (/usr/bin/delta)。
   # lazygit 側でページングしているため delta は --paging=never で渡す。
-  pagers:
+  diffRenderers:
     - colorArg: always
-      pager: delta --paging=never --line-numbers --side-by-side
+      command: delta --paging=never --line-numbers --side-by-side
   commit:
     signOff: false
     verbose: true
