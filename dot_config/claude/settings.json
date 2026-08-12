@@ -38,28 +38,6 @@
     "deny": [],
     "defaultMode": "auto"
   },
-  "hooks": {
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/home/kiyama/.local/bin/claude-notify-hook notification"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/home/kiyama/.local/bin/claude-notify-hook stop"
-          }
-        ]
-      }
-    ]
-  },
   "worktree": {
     "baseRef": "fresh"
   },
