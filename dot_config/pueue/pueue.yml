@@ -32,16 +32,10 @@ daemon:
   callback_log_lines: 10
   shell_command: null
 shared:
-  pueue_directory: $XDG_DATA_HOME/pueue
-  runtime_directory: null
-  alias_file: null
+  # Omit path settings: pueue resolves XDG dirs itself (~/.local/share/pueue,
+  # runtime socket under $XDG_RUNTIME_DIR). It expands ~ only, not $VAR.
   use_unix_socket: true
-  unix_socket_path: $XDG_DATA_HOME/pueue/pueue_main.socket
   unix_socket_permissions: 448
   host: 127.0.0.1
   port: '6924'
-  pid_path: null
-  daemon_cert: $XDG_DATA_HOME/pueue/certs/daemon.cert
-  daemon_key: $XDG_DATA_HOME/pueue/certs/daemon.key
-  shared_secret_path: $XDG_DATA_HOME/pueue/shared_secret
 
