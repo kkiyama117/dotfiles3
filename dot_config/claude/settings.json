@@ -38,6 +38,21 @@
     "deny": [],
     "defaultMode": "auto"
   },
+  "model": "opus",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/home/kiyama/.claude/hooks/herdr-agent-state.sh' session",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
   "worktree": {
     "baseRef": "fresh"
   },
@@ -46,48 +61,11 @@
     "command": "/home/kiyama/.claude/statusline-command.sh",
     "padding": 0
   },
-  "enabledPlugins": {
-    "rust-analyzer-lsp@claude-plugins-official": false,
-    "code-review@claude-plugins-official": false,
-    "slack@claude-plugins-official": false,
-    "commit-commands@claude-plugins-official": true,
-    "superpowers@claude-plugins-official": true,
-    "skill-creator@claude-plugins-official": true,
-    "code-simplifier@claude-plugins-official": true,
-    "ecc@ecc": true,
-    "honcho@honcho": true,
-    "dev-workflow@my-own-skills": true
-  },
-  "extraKnownMarketplaces": {
-    "ecc": {
-      "source": {
-        "source": "git",
-        "url": "https://github.com/affaan-m/everything-claude-code.git"
-      },
-      "autoUpdate": true
-    },
-    "academic-research-skills": {
-      "source": {
-        "source": "github",
-        "repo": "Imbad0202/academic-research-skills"
-      }
-    },
-    "my-own-skills": {
-      "source": {
-        "source": "directory",
-        "path": "/data/prompts/my_own_skills"
-      }
-    },
-    "honcho": {
-      "source": {
-        "source": "github",
-        "repo": "plastic-labs/claude-honcho"
-      }
-    }
-  },
+  "enabledPlugins": {},
+  "extraKnownMarketplaces": {},
   "language": "Japanese",
   "alwaysThinkingEnabled": true,
-  "effortLevel": "high",
+  "effortLevel": "xhigh",
   "voice": {
     "enabled": true,
     "mode": "hold"
