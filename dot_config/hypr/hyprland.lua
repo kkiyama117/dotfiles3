@@ -1,18 +1,20 @@
 -- Hyprland Lua config entry point.
--- Split into modules under conf/ (mirrors the classic source-based layout).
+-- Two layers (end-4 style):
+--   conf/   = portable base config
+--   custom/ = machine-specific overrides (monitors, env, autostart)
 -- See https://wiki.hypr.land/Configuring/Start/
 
 -- ### MONITORS ###
-require("conf.monitors")
+require("custom.monitors")
 
 -- ### MY PROGRAMS ###
 require("conf.programs")
 
 -- ### AUTOSTART ###
-require("conf.autostart")
+require("custom.autostart")
 
 -- ### ENVIRONMENT VARIABLES ###
-require("conf.environment")
+require("custom.environment")
 
 -- ### LOOK AND FEEL ###
 require("conf.appearance")
