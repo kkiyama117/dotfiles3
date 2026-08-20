@@ -30,10 +30,10 @@ autoCommit = false
 autoPush = false
 
 [hooks.add.post]
-command = "bash"
-args = ["-c", "bash \"$(chezmoi source-path)/programs/chezmoi_pi_commit.sh\""]
+command = "env"
+args = ["CHEZMOI_SOURCE={{ .chezmoi.sourceDir }}", "bash", "{{ .chezmoi.sourceDir }}/programs/chezmoi_pi_commit.sh"]
 
 [hooks.edit.post]
-command = "bash"
-args = ["-c", "bash \"$(chezmoi source-path)/programs/chezmoi_pi_commit.sh\""]
+command = "env"
+args = ["CHEZMOI_SOURCE={{ .chezmoi.sourceDir }}", "bash", "{{ .chezmoi.sourceDir }}/programs/chezmoi_pi_commit.sh"]
 {{- end }}

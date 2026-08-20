@@ -63,6 +63,7 @@ python = "latest"
 julia = "latest"
 node = "latest"
 pnpm = "latest"
+bun = "latest"
 usage = "latest" # This is only for `mise completion`
 "aqua:earendil-works/pi" = "latest" # `PI` agent
 "aqua:ogulcancelik/herdr" = "latest" # terminal workspace manager
