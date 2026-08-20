@@ -6,5 +6,5 @@
 return {
     terminal    = "kitty",
     fileManager = "caja",
-    menu        = "hyprlauncher",
+    menu        = "fuzzel",
 }
