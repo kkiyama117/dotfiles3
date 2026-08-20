@@ -68,9 +68,7 @@ enabled = true
 enabled = true
 
 [languageServers.rust_analyzer]
-# rust LSP is owned by rustaceanvim (Option A) — see
-# ~/.config/nvim/deps/testing.toml. The binary stays installed via mise.
-enabled = false
+enabled = true
 
 [languageServers.tombi]
 enabled = true
