@@ -51,3 +51,11 @@ hl.config({
         enabled = true,
     },
 })
+
+-- Blur the waybar topbar (equivalent to `layerrule = blur on, namespace waybar`).
+-- waybar is host-installed (container has no GUI); see docs/issues/2026-08-20-hyprland-waybar-topbar.md
+hl.layer_rule({
+    name  = "blur-waybar",
+    match = { namespace = "waybar" },
+    blur  = true,
+})
