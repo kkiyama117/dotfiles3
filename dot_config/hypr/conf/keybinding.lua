@@ -20,6 +20,7 @@ hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager), { description = "[Syste
 hl.bind(mainMod .. " + F", hl.dsp.window.float({ action = "toggle" }), { description = "[Windows] Toggle float" })
 hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("cliphist list | rofi -dmenu | cliphist decode | wl-copy"), { description = "[System] Clipboard history" })
 hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(menu), { description = "[System] App launcher" })
+hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd("pkill -SIGUSR2 waybar"), { description = "[System] Reload waybar (topbar)" })
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo(), { description = "[Windows] Pseudo-tile" })
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"), { description = "[Windows] Toggle split" })
 

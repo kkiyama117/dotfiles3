@@ -25,6 +25,7 @@ Add a topbar to Hyprland: pick the bar, wire launch + blur, and decide install h
 - [x] `custom/autostart.lua` launches waybar on `hyprland.start`.
 - [x] `conf/appearance.lua` adds a `hl.layer_rule` blurring the `waybar` layer namespace.
 - [x] Rationale (host-only, no container install) documented in config comments and this issue.
+- [x] `conf/keybinding.lua` binds Super+Shift+B to reload waybar (`pkill -SIGUSR2 waybar`); SIGUSR2 is waybar's default reload signal (no config flag, no extra deps).
 - [ ] (Later) `dot_config/waybar/{config,style.css}` + module layout when modules are added; revisit `packages.toml` only if the container gains a GUI.
 
 ## Notes
