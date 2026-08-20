@@ -1,0 +1,37 @@
+// waybar config — minimal self-contained, Catppuccin Mocha.
+// Replaces the shipped default (sway/workspaces disabled on Hyprland + FontAwesome not installed).
+// Reference: https://github.com/ViegPhunt/Dotfiles/blob/main/.config/waybar/config
+{
+    "layer": "top",
+    "position": "top",
+    "height": 30,
+    "spacing": 4,
+    "modules-left": ["hyprland/workspaces"],
+    "modules-right": ["pulseaudio", "network", "clock", "tray"],
+    "hyprland/workspaces": {
+        "disable-scroll": true,
+        "all-outputs": true,
+        "warp-on-scroll": false,
+        "format": "{name}",
+        "cursor": true
+    },
+    "pulseaudio": {
+        "format": "{volume}% {icon}",
+        "format-muted": "󰖁 Muted",
+        "format-icons": { "default": ["󰕿", "󰖀", "󰕾"] },
+        "on-click": "pavucontrol"
+    },
+    "network": {
+        "format-wifi": "󰤨 {essid}",
+        "format-ethernet": "󰈀 {ipaddr}",
+        "format-disconnected": "󰪝 Disconnected",
+        "tooltip": false
+    },
+    "clock": {
+        "format": "{:%H:%M  %a %d}",
+        "tooltip-format": "<tt>{calendar}</tt>"
+    },
+    "tray": {
+        "spacing": 10
+    }
+}

@@ -1,0 +1,40 @@
+/* waybar style — self-contained Catppuccin Mocha (no external @import). */
+* {
+    font-family: "NotoSansM Nerd Font", "NotoMono Nerd Font", sans-serif;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+window#waybar {
+    background-color: rgba(30, 30, 46, 0.85);
+    color: #cdd6f4;
+}
+
+#workspaces button {
+    padding: 0 8px;
+    color: #6c7086;
+    border-radius: 8px;
+}
+#workspaces button.active {
+    color: #cba6f7;
+    background-color: alpha(#cba6f7, 0.25);
+}
+#workspaces button.urgent {
+    color: #f38ba8;
+}
+
+#pulseaudio {
+    color: #fab387;
+    padding: 0 10px;
+}
+#network {
+    color: #a6e3a1;
+    padding: 0 10px;
+}
+#clock {
+    color: #89b4fa;
+    padding: 0 10px;
+}
+#tray {
+    padding: 0 10px;
+}

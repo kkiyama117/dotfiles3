@@ -26,7 +26,8 @@ Add a topbar to Hyprland: pick the bar, wire launch + blur, and decide install h
 - [x] `conf/appearance.lua` adds a `hl.layer_rule` blurring the `waybar` layer namespace.
 - [x] Rationale (host-only, no container install) documented in config comments and this issue.
 - [x] `conf/keybinding.lua` binds Super+Shift+B to reload waybar (`pkill -SIGUSR2 waybar`); SIGUSR2 is waybar's default reload signal (no config flag, no extra deps).
-- [ ] (Later) `dot_config/waybar/{config,style.css}` + module layout when modules are added; revisit `packages.toml` only if the container gains a GUI.
+- [x] `dot_config/waybar/{config,style.css}` added (self-contained Catppuccin Mocha) with `hyprland/workspaces` + pulseaudio/network/clock/tray; replaces the shipped default (sway/workspaces, disabled on Hyprland). `packages.toml` still untouched (container has no GUI).
+- [ ] (Later) more modules / reference parity (bluetooth, battery, custom/power→wlogout) when those tools are installed.
 
 ## Notes
 
