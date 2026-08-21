@@ -59,3 +59,14 @@ hl.layer_rule({
     match = { namespace = "waybar" },
     blur  = true,
 })
+-- swaync control center + toast windows (host-only, same as waybar)
+hl.layer_rule({
+    name  = "blur-swaync-cc",
+    match = { namespace = "swaync-control-center" },
+    blur  = true,
+})
+hl.layer_rule({
+    name  = "blur-swaync-toast",
+    match = { namespace = "swaync-notification-window" },
+    blur  = true,
+})

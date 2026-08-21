@@ -23,6 +23,10 @@ window#waybar {
     color: #f38ba8;
 }
 
+#custom-notification {
+    color: #f9e2af;
+    padding: 0 10px;
+}
 #pulseaudio {
     color: #fab387;
     padding: 0 10px;

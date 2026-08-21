@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-20
 **Status:** in-progress
-**Related:** none yet (no design; change is small — see Notes)
+**Related:** [swaync replace wired](2026-08-21-swaync-replace-wired.md)
 
 ## Context
 

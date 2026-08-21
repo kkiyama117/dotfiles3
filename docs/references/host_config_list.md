@@ -149,7 +149,8 @@
 |---|---|
 | `~/.config/X11/xinitrc` | |
 | `~/.config/rofi/config.rasi` | |
-| `~/.config/wired/wired.ron` | 通知 |
+| `~/.config/waybar/{config,style.css}` | Hyprland topbar (host-only) |
+| swaync (host package; no chezmoi config yet) | 通知。Replaces wired. Not in packages.toml. |
 | `~/.config/gtk-3.0/settings.ini` | |
 
 ---
@@ -202,7 +203,6 @@
 |---|---|
 | `claude-notify-cleanup.service` / `.timer` | claude 通知クリーンアップ |
 | `claude-notifyd.service` / `.socket` | claude 通知デーモン |
-| `wired.service` | 通知デーモン |
 | `yaskkserv2.service` | SKK サーバ |
 
 ホスト側は `.chezmoiscripts/run_onchange_after_enable-claude-notify-cleanup.sh` 等で

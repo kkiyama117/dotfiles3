@@ -373,15 +373,6 @@ has_configs = false
 description = "tree-sitter command; that is used by `tree-sitter-manager.nvim`"
 
 [[tool]]
-name = "wired"
-manager = "paru"
-layer = 4
-# `~/.config/wired/wired.ron`
-# `~/.config/systemd/user/wired.service`
-has_configs = true
-description = "notification daemon"
-
-[[tool]]
 name = "xsel"
 manager = "paru"
 layer = 4

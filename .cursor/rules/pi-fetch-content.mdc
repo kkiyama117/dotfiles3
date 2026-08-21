@@ -1,0 +1,12 @@
+---
+description: Never hang on pi fetch_content mode=answer
+alwaysApply: true
+---
+
+# pi `fetch_content`
+
+HTTP extract is ~30s. `mode=answer` then runs a second LLM call with **no timeout** except abort.
+
+- Never `mode=answer` for docs, READMEs, or wikis. Use `mode=raw` on a **small** URL, `curl --max-time 8`, or skip.
+- Prefer `raw.githubusercontent.com` or a repo file over GitHub wiki HTML.
+- If a fetch is silent, stop. Do not retry `mode=answer`.

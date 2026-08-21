@@ -24,6 +24,6 @@ tealdeer  # tldr alternative
 tmux  # tmux multiplexer
 tree-sitter
 tree-sitter-cli  # tree-sitter command; that is used by `tree-sitter-manager.nvim`
-wired  # notification daemon
+xclip  # clipboard
 xsel  # clipboard
 zoxide  # Enhanced cd command

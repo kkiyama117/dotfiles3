@@ -150,7 +150,7 @@ Rendered from [`../../dependencies/packages.toml`](../../dependencies/packages.t
 | `tmux` | paru | no | tmux multiplexer |
 | `tree-sitter` | paru | no |  |
 | `tree-sitter-cli` | paru | no | tree-sitter command; that is used by `tree-sitter-manager.nvim` |
-| `wired` | paru | yes | notification daemon |
+| `xclip` | paru | no | clipboard |
 | `xsel` | paru | no | clipboard |
 | `zoxide` | paru | no | Enhanced cd command |
 
