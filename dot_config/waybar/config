@@ -7,7 +7,7 @@
     "height": 30,
     "spacing": 4,
     "modules-left": ["hyprland/workspaces"],
-    "modules-right": ["custom/notification", "pulseaudio", "network", "clock", "tray"],
+    "modules-right": ["tray", "custom/notification", "pulseaudio", "bluetooth", "network", "clock"],
     "hyprland/workspaces": {
         "disable-scroll": true,
         "all-outputs": true,
@@ -40,6 +40,17 @@
         "format-muted": "󰖁 Muted",
         "format-icons": { "default": ["󰕿", "󰖀", "󰕾"] },
         "on-click": "pavucontrol"
+    },
+    "bluetooth": {
+        "format": "󰂯",
+        "format-disabled": "󰂲",
+        "format-off": "󰂲",
+        "format-on": "󰂯",
+        "format-connected": "󰂱 {device_alias}",
+        "format-no-controller": "",
+        "tooltip-format": "{controller_alias}: {status}",
+        "tooltip-format-connected": "{device_alias} ({num_connections})",
+        "on-click": "kitty --class floatingterm -e bluetoothctl"
     },
     "network": {
         "format-wifi": "󰤨 {essid}",

@@ -26,8 +26,8 @@ Add a topbar to Hyprland: pick the bar, wire launch + blur, and decide install h
 - [x] `conf/appearance.lua` adds a `hl.layer_rule` blurring the `waybar` layer namespace.
 - [x] Rationale (host-only, no container install) documented in config comments and this issue.
 - [x] `conf/keybinding.lua` binds Super+Shift+B to reload waybar (`pkill -SIGUSR2 waybar`); SIGUSR2 is waybar's default reload signal (no config flag, no extra deps).
-- [x] `dot_config/waybar/{config,style.css}` added (self-contained Catppuccin Mocha) with `hyprland/workspaces` + pulseaudio/network/clock/tray; replaces the shipped default (sway/workspaces, disabled on Hyprland). `packages.toml` still untouched (container has no GUI).
-- [ ] (Later) more modules / reference parity (bluetooth, battery, custom/power→wlogout) when those tools are installed.
+- [x] `dot_config/waybar/{config,style.css}` added (self-contained Catppuccin Mocha) with `hyprland/workspaces` + pulseaudio/bluetooth/network/clock/tray; replaces the shipped default (sway/workspaces, disabled on Hyprland). `packages.toml` still untouched (container has no GUI).
+- [ ] (Later) more modules / reference parity (custom/power→wlogout) when those tools are installed.
 
 ## Notes
 
@@ -37,10 +37,10 @@ Add a topbar to Hyprland: pick the bar, wire launch + blur, and decide install h
 
 ## Remaining work (handoff to next agents)
 
-Status bar (waybar) is live with `hyprland/workspaces` + pulseaudio/network/clock/tray. Deferred/optional work, prioritized.
+Status bar (waybar) is live with `hyprland/workspaces` + tray, notification, pulseaudio, bluetooth, network, clock (`modules-right` 2026-08-21: tray immediately left of the SwayNC bell; bluetooth click opens `kitty --class floatingterm -e bluetoothctl`). Deferred/optional work, prioritized.
 
 ### P1 — functional gaps
-1. More modules for reference parity (the `(Later)` acceptance item): bluetooth (needs `blueman`), custom/power→`wlogout` (needs `wlogout`). battery is meaningless on this desktop (skip). After installing the tools on the GUI host, add module blocks to [`dot_config/waybar/config`](../../dot_config/waybar/config) + matching CSS in `style.css`.
+1. More modules for reference parity (the `(Later)` acceptance item): bluetooth is done 2026-08-21 (BlueZ/`bluetoothctl` only; no `blueman`). Remaining: custom/power→`wlogout` (needs `wlogout`). battery is meaningless on this desktop (skip). After installing the tools on the GUI host, add module blocks to [`dot_config/waybar/config`](../../dot_config/waybar/config) + matching CSS in `style.css`.
 2. Verify waybar auto-starts on a full Hyprland restart. [`custom/autostart.lua`](../../dot_config/hypr/custom/autostart.lua) runs `hl.exec_cmd("waybar")` on `hyprland.start`; only verified via a manual launch this session (PID 185151), not across a real restart.
 
 ### P2 — polish

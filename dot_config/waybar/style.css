@@ -31,6 +31,10 @@ window#waybar {
     color: #fab387;
     padding: 0 10px;
 }
+#bluetooth {
+    color: #89dceb;
+    padding: 0 10px;
+}
 #network {
     color: #a6e3a1;
     padding: 0 10px;

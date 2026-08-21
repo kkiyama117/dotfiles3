@@ -1,7 +1,7 @@
 # Replace wired with SwayNC; waybar module left of sound
 
 **Date:** 2026-08-21
-**Status:** in-progress
+**Status:** closed
 **Related:** [waybar topbar](2026-08-20-hyprland-waybar-topbar.md), [fetch hang](2026-08-21-pi-fetch-content-hang.md)
 
 ## Context
@@ -26,32 +26,30 @@ control center, and remove wired so the Notifications bus is free.
 
 - Host-install `swaync`. Do not add it to `packages.toml`.
 - Autostart `swaync` from `custom/autostart.lua` (same pattern as waybar).
-- Waybar `custom/notification` first on `modules-right`; `exec: swaync-client -swb`.
+- Waybar `custom/notification` on `modules-right` immediately left of pulseaudio (`exec: swaync-client -swb`). Tray moved left of the bell 2026-08-21: `tray, custom/notification, pulseaudio, network, clock`.
 - Delete wired source: packages.toml entry, generated layer list, systemd unit, `wired.ron`.
 - No custom `dot_config/swaync/` theme unless defaults look wrong (ponytail).
 
 ## Acceptance criteria
 
-- [x] `modules-right` starts with `custom/notification` then `pulseaudio`.
+- [x] `modules-right` is `tray, custom/notification, pulseaudio, network, clock` (tray left of the bell; bell left of pulseaudio). Updated 2026-08-21 after host leftover.
 - [x] Click toggles the SwayNC panel; right-click toggles DND (waybar `on-click` / `on-click-right`).
 - [x] `wired` gone from `packages.toml` / `layer_4/paru.txt` / 02 AUTO-GEN (`make gen-deps` 2026-08-21).
 - [x] `dot_config/wired/` and `wired.service` removed from chezmoi source.
-- [ ] Host: install `swaync` (sudo required; not done this session), stop `wired.service`, start `swaync`, `chezmoi apply`, reload waybar. `wired` is still `active` on the host as of 2026-08-21 09:28 JST.
+- [x] Host: `swaync` 0.12.6 running (`swaync.service` active, not enabled — autostart.lua owns launch). `wired` package gone. Notifications bus is SwayNotificationCenter. waybar `modules-right` is `tray, custom/notification, pulseaudio, network, clock`; SIGUSR2 reload 2026-08-21 10:00 JST. `swaync-client -swb` → `{"alt":"none",...}`.
 
-## Host leftover (run locally)
+## Host leftover (done 2026-08-21 09:57 JST)
 
 ```sh
-sudo pacman -S --needed swaync
-systemctl --user disable --now wired.service
-# dest files are not removed by deleting chezmoi source:
-rm -f ~/.config/systemd/user/wired.service
-# optional: paru -Rns wired
-swaync &
-pkill -SIGUSR2 waybar
+# already true by then: pacman -Q swaync; wired package not installed
+systemctl --user mask wired.service   # orphan /usr/lib/systemd/user/wired.service (no owning pkg)
+rm -rf ~/.config/wired
+kill -SIGUSR2 "$(pgrep -n waybar)"
 ```
+
+Skipped: `paru -Rns wired` (package already absent). Mask kept because the unpackaged user unit file still sits under `/usr/lib/systemd/user/` and was colliding on `org.freedesktop.Notifications`. `sudo rm` that file if you want the mask gone too.
 
 ## Notes
 
 - Design doc skipped (same as the waybar issue: GUI config, not a spec change).
-- Host leftover after `chezmoi apply`: `~/.config/wired/` and the enabled user
-  unit are not auto-deleted by chezmoi. Disable/stop the unit and `paru -Rns wired`.
+- chezmoi does not delete dest leftovers; host cleanup is in **Host leftover** above.
