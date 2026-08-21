@@ -15,7 +15,7 @@ hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd(terminal), { description = "[System] 
 hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.exec_cmd(terminal .. " --class floatingterm"), { description = "[System] Floating terminal (overlay)" })
 local closeWindowBind = hl.bind(mainMod .. " + C", hl.dsp.window.close(), { description = "[Windows] Close window" })
 -- closeWindowBind:set_enabled(false)
-hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"), { description = "[System] Exit / shutdown" })
+hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("wlogout -b 4 --protocol layer-shell"), { description = "[System] Power menu (wlogout)" })
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager), { description = "[System] File manager" })
 hl.bind(mainMod .. " + F", hl.dsp.window.float({ action = "toggle" }), { description = "[Windows] Toggle float" })
 hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("cliphist list | rofi -dmenu | cliphist decode | wl-copy"), { description = "[System] Clipboard history" })

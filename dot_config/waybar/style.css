@@ -1,48 +1,92 @@
-/* waybar style — self-contained Catppuccin Mocha (no external @import). */
+@import "../colors/colors.css";
+
 * {
     font-family: "NotoSansM Nerd Font", "NotoMono Nerd Font", sans-serif;
     font-size: 13px;
     font-weight: bold;
+    background-color: transparent;
+    border-radius: 5px;
+    min-height: 0;
 }
 
 window#waybar {
-    background-color: rgba(30, 30, 46, 0.85);
-    color: #cdd6f4;
+    background: alpha(@background, 0.85);
+    color: @foreground;
+    border-radius: 0;
+}
+
+tooltip {
+    background-color: @background;
+    color: @foreground;
+}
+
+#workspaces {
+    margin: 1px 0;
 }
 
 #workspaces button {
     padding: 0 8px;
-    color: #6c7086;
+    color: @overlay0;
+    border: none;
     border-radius: 8px;
 }
-#workspaces button.active {
-    color: #cba6f7;
-    background-color: alpha(#cba6f7, 0.25);
+
+#workspaces button:hover {
+    color: @purple;
+    background: alpha(@select, 0.6);
 }
+
+#workspaces button.active {
+    color: @purple;
+    background-color: alpha(@purple, 0.25);
+}
+
 #workspaces button.urgent {
-    color: #f38ba8;
+    color: @red;
+}
+
+#custom-power,
+#custom-notification,
+#pulseaudio,
+#bluetooth,
+#network,
+#clock,
+#tray {
+    margin: 1px 0;
+    padding: 0 10px;
+}
+
+#custom-power:hover,
+#custom-notification:hover,
+#pulseaudio:hover,
+#bluetooth:hover,
+#network:hover,
+#clock:hover {
+    background-color: alpha(@select, 0.6);
+}
+
+#custom-power {
+    color: @red;
+    margin-left: 6px;
 }
 
 #custom-notification {
-    color: #f9e2af;
-    padding: 0 10px;
+    color: @yellow;
 }
+
 #pulseaudio {
-    color: #fab387;
-    padding: 0 10px;
+    color: @orange;
 }
+
 #bluetooth {
-    color: #89dceb;
-    padding: 0 10px;
+    color: @sky;
 }
+
 #network {
-    color: #a6e3a1;
-    padding: 0 10px;
+    color: @green;
 }
+
 #clock {
-    color: #89b4fa;
-    padding: 0 10px;
-}
-#tray {
-    padding: 0 10px;
+    color: @blue;
+    margin-right: 6px;
 }

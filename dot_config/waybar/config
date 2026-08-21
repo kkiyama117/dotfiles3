@@ -1,19 +1,38 @@
-// waybar config — minimal self-contained, Catppuccin Mocha.
-// Replaces the shipped default (sway/workspaces disabled on Hyprland + FontAwesome not installed).
+// waybar config — Catppuccin Mocha. Colors live in ~/.config/colors/colors.css.
 // Reference: https://github.com/ViegPhunt/Dotfiles/blob/main/.config/waybar/config
 {
     "layer": "top",
     "position": "top",
     "height": 30,
     "spacing": 4,
-    "modules-left": ["hyprland/workspaces"],
+    "reload_style_on_change": true,
+    "modules-left": ["custom/power", "ext/workspaces"],
     "modules-right": ["tray", "custom/notification", "pulseaudio", "bluetooth", "network", "clock"],
-    "hyprland/workspaces": {
-        "disable-scroll": true,
+    "custom/power": {
+        "format": "⏻",
+        "tooltip": false,
+        "on-click": "wlogout -b 4 --protocol layer-shell"
+    },
+    "ext/workspaces": {
+        "format": "{icon}",
+        "on-click": "activate",
         "all-outputs": true,
-        "warp-on-scroll": false,
-        "format": "{name}",
-        "cursor": true
+        "sort-by-id": true,
+        "format-icons": {
+            "1": "1",
+            "2": "2",
+            "3": "3",
+            "4": "4",
+            "5": "5",
+            "6": "6",
+            "7": "7",
+            "8": "8",
+            "9": "9",
+            "10": "10",
+            "urgent": "",
+            "active": "",
+            "default": ""
+        }
     },
     "custom/notification": {
         "tooltip": false,
