@@ -6,18 +6,20 @@
     "height": 30,
     "spacing": 4,
     "reload_style_on_change": true,
-    "modules-left": ["custom/power", "ext/workspaces"],
+    "modules-left": ["custom/power", "hyprland/workspaces"],
     "modules-right": ["tray", "custom/notification", "pulseaudio", "bluetooth", "network", "clock"],
     "custom/power": {
         "format": "⏻",
         "tooltip": false,
         "on-click": "wlogout -b 4 --protocol layer-shell"
     },
-    "ext/workspaces": {
+    "hyprland/workspaces": {
         "format": "{icon}",
-        "on-click": "activate",
         "all-outputs": true,
-        "sort-by-id": true,
+        "sort-by": "number",
+        "persistent-workspaces": {
+            "*": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        },
         "format-icons": {
             "1": "1",
             "2": "2",
@@ -78,8 +80,24 @@
         "tooltip": false
     },
     "clock": {
-        "format": "{:%H:%M  %a %d}",
-        "tooltip-format": "<tt>{calendar}</tt>"
+        "format": "{:L%Y/%m/%d（%a）%H:%M}",
+        "tooltip-format": "<tt>{calendar}</tt>",
+        "calendar": {
+            "mode": "month",
+            "on-scroll": 1,
+            "format": {
+                "months": "<span color='#cba6f7'><b>{}</b></span>",
+                "days": "<span color='#cdd6f4'>{}</span>",
+                "weeks": "<span color='#6c7086'><b>W{}</b></span>",
+                "weekdays": "<span color='#f9e2af'><b>{}</b></span>",
+                "today": "<span color='#f38ba8'><b><u>{}</u></b></span>"
+            }
+        },
+        "actions": {
+            "on-click-right": "mode",
+            "on-scroll-up": "shift_up",
+            "on-scroll-down": "shift_down"
+        }
     },
     "tray": {
         "spacing": 10
