@@ -38,7 +38,7 @@ Add a topbar to Hyprland: pick the bar, wire launch + blur, and decide install h
 
 ## Remaining work (handoff to next agents)
 
-Status bar (waybar-git 0.15.0.r972.gd561b9d) is live with `custom/power` + `hyprland/workspaces` (persistent 1–10) + tray, notification, pulseaudio, bluetooth, network, clock. `custom/power` click / Super+M → `wlogout -b 4 --protocol layer-shell`. Bluetooth click opens `kitty --class floatingterm -e bluetoothctl`. Polish on 2026-08-21: shared `dot_config/colors/colors.css`, hover CSS, `reload_style_on_change`. Host: `cava` 0.10.7 installed; Noto Nerd Font kept (user: working). Clock tooltip calendar is Mocha-colored month view; scroll shifts month, right-click toggles year.
+Status bar (waybar-git 0.15.0.r972.gd561b9d) is live with `custom/power` + `hyprland/workspaces` (persistent 1–10) + tray, notification, pulseaudio, bluetooth, network, **cpu** (system-wide `{usage}%`), **memory** (`{percentage}%`, tooltip used/total GiB), clock. CPU/memory added 2026-08-22 (built-in modules, no extra packages). `custom/power` click / Super+M → `wlogout -b 4 --protocol layer-shell`. Bluetooth click opens `kitty --class floatingterm -e bluetoothctl`. Polish on 2026-08-21: shared `dot_config/colors/colors.css`, hover CSS, `reload_style_on_change`. Host: `cava` 0.10.7 installed; Noto Nerd Font kept (user: working). Clock tooltip calendar is Mocha-colored month view; scroll shifts month, right-click toggles year.
 
 ### P1 — functional gaps
 1. ~~More modules / wlogout leftover~~ done 2026-08-21 (`wlogout` installed; `custom/power` has no `exec-if` — that hid the button).

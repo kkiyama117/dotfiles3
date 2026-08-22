@@ -50,6 +50,8 @@ tooltip {
 #pulseaudio,
 #bluetooth,
 #network,
+#cpu,
+#memory,
 #clock,
 #tray {
     margin: 1px 0;
@@ -61,6 +63,8 @@ tooltip {
 #pulseaudio:hover,
 #bluetooth:hover,
 #network:hover,
+#cpu:hover,
+#memory:hover,
 #clock:hover {
     background-color: alpha(@select, 0.6);
 }
@@ -84,6 +88,14 @@ tooltip {
 
 #network {
     color: @green;
+}
+
+#cpu {
+    color: @pink;
+}
+
+#memory {
+    color: @purple;
 }
 
 #clock {

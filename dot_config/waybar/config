@@ -7,7 +7,7 @@
     "spacing": 4,
     "reload_style_on_change": true,
     "modules-left": ["custom/power", "hyprland/workspaces"],
-    "modules-right": ["tray", "custom/notification", "pulseaudio", "bluetooth", "network", "clock"],
+    "modules-right": ["tray", "custom/notification", "pulseaudio", "bluetooth", "network", "cpu", "memory", "clock"],
     "custom/power": {
         "format": "⏻",
         "tooltip": false,
@@ -78,6 +78,16 @@
         "format-ethernet": "󰈀 {ipaddr}",
         "format-disconnected": "󰪝 Disconnected",
         "tooltip": false
+    },
+    "cpu": {
+        "interval": 2,
+        "format": "{usage}% ",
+        "tooltip": false
+    },
+    "memory": {
+        "interval": 5,
+        "format": "{percentage}% ",
+        "tooltip-format": "{used:0.1f}GiB / {total:0.1f}GiB"
     },
     "clock": {
         "format": "{:L%Y/%m/%d（%a）%H:%M}",
