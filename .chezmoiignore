@@ -119,6 +119,9 @@ README.md
 # ============================================================
 .agents
 .claude
+# DSH: only settings.yaml is managed; the rest is runtime state
+.dsh/*
+!.dsh/settings.yaml
 {{ if not (eq .runtime "container") }}.pi{{ end }}
 .superpowers
 

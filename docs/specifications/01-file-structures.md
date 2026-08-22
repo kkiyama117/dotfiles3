@@ -25,6 +25,8 @@ the map of which top-level path serves which concern.
 ├── README.md           # repo readme (user entry point)
 ├── Makefile            # build/up/exec/down + codegen targets (see 03-makefile.md)
 ├── dot_zshenv.tmpl     # chezmoi-managed ~/.zshenv (template; XDG/PATH/toolchain env)
+├── dot_dsh/            # chezmoi-managed ~/.dsh/ (DSH settings only; runtime state ignored via .chezmoiignore)
+│   └── settings.yaml   # DSH settings (llm-pi-ai providers incl. openrouter; apiKeyEnv refs only, no secrets)
 ├── dot_config/         # chezmoi-managed ~/.config/ (XDG configs)
 │   ├── git/
 │   │   ├── config.tmpl  # chezmoi-managed ~/.config/git/config (identity from .chezmoidata; credential.helper host-only via `runtime`; SSH signing)

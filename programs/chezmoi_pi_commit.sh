@@ -41,14 +41,15 @@ fi
 
 prompt="$(sed '/^---$/,/^---$/d' "$prompt_file")"
 
+# No --no-extensions: it disables the pi-cursor-sdk npm extension that
+# registers the cursor provider, making --model unresolvable.
 if ! pi -p \
   --no-session \
   --no-approve \
-  --no-extensions \
   --no-skills \
   --no-prompt-templates \
   --tools bash,read \
-  --model "${PI_COMMIT_MODEL:-cursor/composer-2.5:fast}" \
+  --model "${PI_COMMIT_MODEL:-cursor/composer-2-5:fast}" \
   "$prompt"; then
   echo "chezmoi commit hook: pi commit failed — leaving changes uncommitted." >&2
   exit 0

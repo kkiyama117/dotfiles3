@@ -57,32 +57,23 @@ status = { missing_tools = "if_other_versions_installed", show_env = false, show
 [tools]
 # Latest stable releases of deno, go, and python are global defaults so
 # scratch shells have something usable without per-project setup.
+bun = "latest"
 deno = "latest"
 go = "latest"
 python = "latest"
+java = "22.0.2"
 julia = "latest"
 node = "latest"
 pnpm = "latest"
-bun = "latest"
 usage = "latest" # This is only for `mise completion`
 "aqua:earendil-works/pi" = "latest" # `PI` agent
 "aqua:ogulcancelik/herdr" = "latest" # terminal workspace manager
 "npm:pi-acp" = "latest" # ACP (Agent Communication Protocol) adapter for pi (TypeScript/npm package)
+
+# quint verify (Apalache) needs a modern JDK on PATH: the apalache-mc launcher
 # LSP servers & tools (replaces mason.nvim; keep in sync with
-# bridged_servers in vimrc.kakehashi_config of the nvim config and with
-# languageServers in dot_config/kakehashi/kakehashi.toml)
-"go:golang.org/x/tools/gopls" = "latest" # gopls
-"npm:pyright" = "latest" # pyright-langserver
-"npm:@vtsls/language-server" = "latest" # vtsls (npm:vtsls was unpublished)
-"cargo:emmylua_ls" = "latest" # emmylua_ls (Rust EmmyLua analyzer; binary: emmylua_ls)
-"aqua:tombi-toml/tombi" = "latest" # tombi
-"aqua:JohnnyMorganz/StyLua" = "latest" # stylua (Lua formatter)
 "github:informalsystems/quint" = "latest" # quint (specification language; standalone binary from GitHub releases — npm: backend is broken by a protobufjs packaging bug)
 "npm:@informalsystems/quint-language-server" = "latest" # quint-language-server (LSP for .qnt; separate npm package from quint)
-# quint verify (Apalache) needs a modern JDK on PATH: the apalache-mc launcher
-# uses `java` from PATH (not JAVA_HOME), and the system java is 1.8 which rejects
-# the G1PeriodicGCInterval flag. See doc/agents/quint-verify-java-issue.md.
-java = "22.0.2"
 
 [settings.npm]
 package_manager = "pnpm"
