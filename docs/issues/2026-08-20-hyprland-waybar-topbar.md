@@ -55,6 +55,9 @@ Status bar (waybar-git 0.15.0.r972.gd561b9d) is live with `custom/power` + `hypr
 ### P3 — ecosystem / closure
 8. ~~cava binary~~ already on host 2026-08-21 (`cava` 0.10.7-1; dest `~/.config/cava/config` present).
 9. Close this issue when modules are done: set Status `closed`, write a result-log under `docs/issues/` ([`00-document-management.md`](../specifications/00-document-management.md) §4/§6.6).
+### Incident 2026-09-06 — jsoncpp soname bump killed waybar (resolved same day)
+
+Full system upgrade 2026-09-06 00:08 JST moved `jsoncpp` 1.9.6-3 → 1.9.8-1 (soname `libjsoncpp.so.26` → `.so.27`). Host `waybar-git` 0.15.0.r1004.g6d60c8e (built 2026-08-28, AUR/paru) still linked `.so.26`, so `waybar` died at exec (`error while loading shared libraries: libjsoncpp.so.26`) and the topbar silently vanished — `custom/autostart.lua` `hl.exec_cmd("waybar")` has no supervision/retry. Only waybar was affected (`/usr/bin` ldd scan; cmake/openxr already on `.so.27`). Fix: rebuilt the same revision in `~/.cache/paru/clone/waybar-git` (`makepkg -f`; build needs no root), installed with `sudo pacman -U` at 10:05 JST, relaunched compositor-side with `hyprctl dispatch "hl.dsp.exec_cmd('waybar')"`. Verified: waybar PID 126372, `libjsoncpp.so.27` linked, layers 1920×30 (HDMI-A-1) + 2560×30 (DP-3), both monitors `reserved: 0 30 0 0`. Lesson: a `pacman -Syu` soname bump requires `paru -S --rebuild` for locally built AUR packages; system upgrade never rebuilds them.
 
 ### Environment notes (for the next agents)
 - chezmoi source = `/home/kiyama/.local/share/chezmoi` → symlink `/data/dotfiles3` (repo IS the source; `chezmoi apply` materializes to home).
