@@ -1,0 +1,4 @@
+# Read by /usr/bin/google-chrome-stable wrapper (one flag per line, '#' comments).
+# ~/.cache and /var are on HDD; keep the disk cache on NVMe (/tmp is on `/`)
+# to avoid IO stalls (see docs/issues/2026-10-31-chrome-freeze-hdd-io.md).
+--disk-cache-dir=/tmp/chrome-cache-{{ .chezmoi.username }}
