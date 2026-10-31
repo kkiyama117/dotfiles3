@@ -25,8 +25,6 @@ the map of which top-level path serves which concern.
 ├── README.md           # repo readme (user entry point)
 ├── Makefile            # build/up/exec/down + codegen targets (see 03-makefile.md)
 ├── dot_zshenv.tmpl     # chezmoi-managed ~/.zshenv (template; XDG/PATH/toolchain env)
-├── dot_dsh/            # chezmoi-managed ~/.dsh/ (DSH settings only; runtime state ignored via .chezmoiignore)
-│   └── settings.yaml   # DSH settings (llm-pi-ai providers incl. openrouter; apiKeyEnv refs only, no secrets)
 ├── dot_config/         # chezmoi-managed ~/.config/ (XDG configs)
 │   ├── git/
 │   │   ├── config.tmpl  # chezmoi-managed ~/.config/git/config (identity from .chezmoidata; credential.helper host-only via `runtime`; SSH signing)
@@ -103,6 +101,17 @@ the map of which top-level path serves which concern.
   example, `dot_local/share/cargo/config.toml` is managed because it is a
   static linker config, while `$CARGO_HOME/bin`, `registry/`, and `git/` are
   volume-owned and ignored via `.chezmoiignore`.
+- **I-FS7: `~/.dsh` (DSH harness home) is not chezmoi-managed.** The harness
+  owns that document surface: settings live in
+  `$DSH_HOME/profiles/<profile>/cordis.patch.yml` (the active profile patch its
+  settings UI writes) and `$DSH_HOME/cordis.patch.yml` (home-level patch applied
+  above the profile), both rewritten at runtime, so `.chezmoiignore` ignores
+  `.dsh` entirely. The former `dot_dsh/settings.yaml` was removed on 2026-10-05:
+  harness 0.2.1-alpha.1 dropped the root `settings.yaml` as a settings source (it
+  imports that file once into the active profile patch, then renames it to
+  `settings.yaml.imported`), so a managed copy would overwrite live settings on
+  the next boot — see
+  [`2026-10-05-dsh-settings-surface.md`](../issues/2026-10-05-dsh-settings-surface.md).
 
 ## 4. Open questions
 

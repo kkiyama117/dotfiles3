@@ -119,9 +119,10 @@ README.md
 # ============================================================
 .agents
 .claude
-# DSH: only settings.yaml is managed; the rest is runtime state
-.dsh/*
-!.dsh/settings.yaml
+# DSH: nothing here is chezmoi-managed. The harness owns $DSH_HOME: settings
+# live in profiles/<profile>/cordis.patch.yml (its settings UI writes it) and
+# cordis.patch.yml, both rewritten at runtime (spec 01 I-FS7).
+.dsh
 {{ if not (eq .runtime "container") }}.pi{{ end }}
 .superpowers
 
