@@ -18,8 +18,11 @@ Google Chrome intermittently freezes while CPU / memory / GPU are idle.
 
 ## Mitigation
 
-- `dot_config/chrome-flags.conf.tmpl`: `--disk-cache-dir=/tmp/chrome-cache-<user>`
-  (`/tmp` is on NVMe). Cache loss on reboot/cleanup is acceptable.
+- `dot_config/chrome-flags.conf.tmpl`: `--disk-cache-dir=/tmp/chrome-cache-<user>`.
+  Cache loss on reboot/cleanup is acceptable.
+- Correction (2026-11-05): `/tmp` is **tmpfs (RAM)**, not NVMe. The cache
+  reached 670 MB while RAM was tight (23/32 GiB used, 4.5 GiB swap), so
+  `--disk-cache-size=536870912` (512 MiB) was added to bound RAM use.
 
 ## Second cause: YouTube AV1 software decode
 
@@ -34,6 +37,16 @@ Google Chrome intermittently freezes while CPU / memory / GPU are idle.
 - Result: `dav1d-w*` threads gone, GPU-process CPU 40% -> 6%.
   Experimental: remove these flags if video turns green / Chrome is unstable.
 - Remaining: one renderer main thread at ~47% CPU (page JS, not decode).
+
+## 2026-11-05: UI hang (window could not be closed)
+
+- Browser main loop alive, no D-state, IO PSI low, Hyprland healthy.
+- 7 zombie children under the zygote: the browser was not reaping exited
+  renderers, i.e. stuck internally. SIGTERM exited cleanly; restarted.
+- Other load at the time: headless Android emulator (qemu, 100% CPU, 7 GB)
+  and a Unity game (~100% CPU).
+- Next step if it recurs: drop the experimental ANGLE/VA-API flags to
+  isolate them.
 
 ## Follow-up (not done)
 

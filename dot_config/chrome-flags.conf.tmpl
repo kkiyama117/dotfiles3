@@ -1,7 +1,9 @@
 # Read by /usr/bin/google-chrome-stable wrapper (one flag per line, '#' comments).
-# ~/.cache and /var are on HDD; keep the disk cache on NVMe (/tmp is on `/`)
-# to avoid IO stalls (see docs/issues/2026-10-31-chrome-freeze-hdd-io.md).
+# ~/.cache and /var are on HDD; keep the disk cache off the HDD to avoid IO
+# stalls (see docs/issues/2026-10-31-chrome-freeze-hdd-io.md). /tmp is tmpfs
+# (RAM), so cap the cache at 512 MiB.
 --disk-cache-dir=/tmp/chrome-cache-{{ .chezmoi.username }}
+--disk-cache-size=536870912
 
 # Hardware video decode (incl. AV1) via libva-nvidia-driver (NVDEC).
 # Requires LIBVA_DRIVER_NAME=nvidia (set in hypr/custom/environment.lua).
