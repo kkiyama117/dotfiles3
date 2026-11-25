@@ -2,7 +2,7 @@
 
 **Date:** 2026-11-25
 **Status:** in-progress
-**Related:** [design](../specifications/implementations/2026-11-25-rpi4-server-setup-design.md), [plan](../plans/2026-11-25-rpi4-server-setup-impl.md)
+**Related:** [result-log](2026-11-25-phase-rpi4-server-setup.md), [design](../specifications/implementations/2026-11-25-rpi4-server-setup-design.md), [plan](../plans/2026-11-25-rpi4-server-setup-impl.md)
 
 ## Context
 

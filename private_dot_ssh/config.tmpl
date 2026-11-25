@@ -103,6 +103,28 @@ Host colered
   RequestTTY yes
   ServerAliveInterval 60
 
+# Raspberry Pi 4 (Arch Linux ARM) in rabo
+Host colored
+  # Tailscale IP (MagicDNS: colored-1.colobus-powan.ts.net → rename to colored)
+  HostName 100.68.63.72
+  IdentityFile ~/.ssh/main
+  User alarm
+  Port 22
+  IdentitiesOnly yes
+  RequestTTY yes
+  ServerAliveInterval 60
+
+# Fallback: same LAN as polaris (Tailscale down).
+Host colored-lan
+  HostName 10.232.117.143
+  ProxyJump polaris
+  IdentityFile ~/.ssh/main
+  User alarm
+  Port 22
+  IdentitiesOnly yes
+  RequestTTY yes
+  ServerAliveInterval 60
+
 Host fornax
   HostName fornax
   IdentityFile ~/.ssh/fornax

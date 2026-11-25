@@ -91,7 +91,10 @@ passwd                                 # root password 変更
 passwd alarm
 pacman-key --init
 pacman-key --populate archlinuxarm
-pacman -Syu
+# 2026-11-25: 既定の geo-redirect (mirror.archlinuxarm.org) が同期遅れの mirror に
+# 振り分け 404 になったため、同期済みの近傍 mirror を先頭に固定する
+sed -i '1i Server = http://tw.mirror.archlinuxarm.org/$arch/$repo\nServer = http://tw2.mirror.archlinuxarm.org/$arch/$repo' /etc/pacman.d/mirrorlist
+pacman -Syyu
 pacman -S sudo
 # 作業ユーザーを作る場合
 useradd -m -G wheel <user>
@@ -137,8 +140,14 @@ Pi を host と別の LAN（例: 既存 ssh 先 `polaris` のいる LAN）で起
 ```sh
 ssh polaris 'bash -s' < programs/rpi4_setup/find-pi.sh
 # => PI  10.x.x.x  dc:a6:32:..  dev=enp5s0  ssh=open
-ssh -J polaris alarm@10.x.x.x          # jump host 経由で §6 / §6.1 を実施
+ssh -J polaris -i ~/.ssh/main -o IdentitiesOnly=yes alarm@10.x.x.x   # §6 / §6.1 を実施
 ```
+
+- `~/.ssh/main` は default identity ではないため `-i` 必須（無いと `Permission denied (publickey)`）
+- 2026-11-25 実機確認: 有線 IF 名は `end0`（`en.network` の `en*` に match）、
+  SD は `mmcblk1` として認識され `/boot` は UUID 指定 (I2) で正常 mount。
+  `pacman -Syu` で kernel 7.1.6 → 7.3.6 に更新・再起動後は `mmcblk0` に変わった
+  （公式手順の固定 `sed` では kernel 更新で起動失敗し得たことの実例、I2 の根拠）
 
 Tailscale 設定 (§6.1) 後は jump host 不要（`ssh alarm@colored`）。
 
