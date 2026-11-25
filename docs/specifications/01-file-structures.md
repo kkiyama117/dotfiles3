@@ -69,7 +69,8 @@ the map of which top-level path serves which concern.
 │       └── paru.txt    # GENERATED AUR install list (`manager = "paru"` entries only; I8)
 │
 ├── programs/           # host-side tooling / codegen
-│   └── generate_deps/  # implementation of `make gen-deps` (see 08-automations.md)
+│   ├── generate_deps/  # implementation of `make gen-deps` (see 08-automations.md)
+│   └── rpi4_setup/     # Raspberry Pi 4 (Arch Linux ARM) SD-card flashing + LAN discovery (see implementations/2026-11-25-rpi4-server-setup-design.md)
 ├── container/tests/    # host-side container/zsh regression tests, excluded from image build context
 │
 └── docs/               # documentation tree (placement: see [here](00-document-management.md))
