@@ -1,3 +1,13 @@
+# jobs =================================================================
+# github-preana
+Host github-preana
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519_kiyama_preana
+    IdentitiesOnly yes
+
+# 個人用 =================================================================
+
 # github
 Host github.com
     HostName github.com
@@ -23,6 +33,15 @@ Host sp_B
   ServerAliveInterval 120
 
 # General (merged from local ~/.ssh/config)
+Host aistore
+  HostName 133.242.186.40
+  IdentityFile ~/.ssh/aistore-vps
+  User debian
+  Port 22
+  IdentitiesOnly yes
+  RequestTTY yes
+  ServerAliveInterval 60
+
 Host aws
   HostName hinatan.jp
   IdentityFile ~/.ssh/main
@@ -93,19 +112,9 @@ Host hass_ip
   RequestTTY yes
   ServerAliveInterval 60
 
-Host colered
-  HostName 192.168.1.102
-  #HostName fd7a:115c:a1e0:ab12:4843:cd96:624f:5488
-  IdentityFile ~/.ssh/main
-  User kiyama
-  Port 22
-  IdentitiesOnly yes
-  RequestTTY yes
-  ServerAliveInterval 60
-
 # Raspberry Pi 4 (Arch Linux ARM) in rabo
 Host colored
-  # Tailscale IP (MagicDNS: colored-1.colobus-powan.ts.net → rename to colored)
+  # Tailscale IP (MagicDNS: colored.colobus-powan.ts.net)
   HostName 100.68.63.72
   IdentityFile ~/.ssh/main
   User alarm
@@ -140,6 +149,7 @@ Host fornax
 Host griffin
   HostName griffin
   IdentityFile ~/.ssh/miyake1
+  IdentityFile ~/.ssh/fornax
   User kkouh
   Port 22
   IdentitiesOnly yes
@@ -150,8 +160,8 @@ Host griffin
 
 Host polaris
   HostName polaris
-  IdentityFile ~/.ssh/miyake1
-  User miyakeken
+  IdentityFile ~/.ssh/main
+  User kiyama
   Port 22
   IdentitiesOnly yes
   #RequestTTY yes
@@ -159,7 +169,7 @@ Host polaris
   ForwardX11 yes
   ForwardX11Trusted yes
   # https://blog.bridgey.dev/2023/03/18/open-devcontainer-on-remote/
-  RemoteForward /run/user/1000/gnupg/d.7x6ks93nsxu1r8ynx6wp73oa/S.gpg-agent /run/user/1000/gnupg/d.acr6199gqekzjh8j8go4ybe8/S.gpg-agent.extra
+  #RemoteForward /run/user/1000/gnupg/d.7x6ks93nsxu1r8ynx6wp73oa/S.gpg-agent /run/user/1000/gnupg/d.acr6199gqekzjh8j8go4ybe8/S.gpg-agent.extra
 
 # (commented-out legacy hosts, kept from local ~/.ssh/config)
   #Host unimap-website
@@ -197,6 +207,14 @@ Host polaris
   #  IdentitiesOnly yes
   #  RequestTTY yes
   #  ServerAliveInterval 60
+
+# aistore VPS (Sakura), key ~/.ssh/aistore-vps
+Host aistore-vps
+  HostName 133.242.186.40
+  User debian
+  IdentityFile ~/.ssh/aistore-vps
+  IdentitiesOnly yes
+  Port 22
 
 # Include local SSH configs (especially for containers)
 Include ~/.ssh/config.d/local/*

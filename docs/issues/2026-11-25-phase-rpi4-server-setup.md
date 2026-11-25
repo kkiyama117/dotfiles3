@@ -33,12 +33,12 @@ Booted on the LAN of jump host `polaris` (`10.232.117.128/26`), not the host LAN
 |---|---|
 | packages | `tailscale` 1.104.7-1, `sudo` 1.9.17.p2-7 |
 | `tailscaled` | enabled / active |
-| tailnet | `100.68.63.72`, registered as `colored-1` (stale 2023 node `colored` 100.79.84.136 still in tailnet) |
+| tailnet | `100.68.63.72`; first registered as `colored-1` (stale 2023 node `colored` 100.79.84.136). Stale node removed, renamed to `colored`, key expiry disabled (admin console, user-confirmed) |
 | `ssh colored` (tailnet) | OK |
 | `ssh colored-lan` (ProxyJump polaris) | OK |
-| ssh config | `Host colored` / `colored-lan` added to `private_dot_ssh/config.tmpl` |
+| ssh config | `Host colored` / `colored-lan` added; `private_dot_ssh/config.tmpl` re-synced with live `~/.ssh/config` (`chezmoi diff` empty) |
 
 ## Remaining
 
-- Tailscale admin console: remove stale `colored` node, rename `colored-1` → `colored`, disable key expiry (manual, unconfirmed)
+- (done) Tailscale admin console cleanup
 - Phase 3 (Wi-Fi) not started
